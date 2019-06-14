@@ -2,3 +2,4 @@ venv
 .envrc
 __pycache__
 *.sqlite3
+*.pyc
