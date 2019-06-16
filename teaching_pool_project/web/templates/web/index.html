@@ -1,0 +1,18 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load icons %}
+
+{% block maincontent %}
+{# display an icon #}
+{% icon 'edit' title='Edit' %}
+
+{# Display a form #}
+<form action="/url/to/submit/" method="post" class="form">
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  {% buttons %}
+    {% bootstrap_button "Save" button_type="submit" button_class="btn-primary" %}
+    {% bootstrap_button "Cancel" button_type="reset" %}
+  {% endbuttons %}
+</form>
+{% endblock maincontent %}
