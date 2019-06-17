@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'bootstrap4',
     'django_icons',
     'web',
+    'django_tequila',
 ]
 
 MIDDLEWARE = [
@@ -50,8 +51,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_tequila.middleware.TequilaMiddleware',
 ]
 
+AUTHENTICATION_BACKENDS = ('django_tequila.django_backend.TequilaBackend',)
+TEQUILA_SERVICE_NAME = "STI teaching pools"
+TEQUILA_CLEAN_URL = True
+LOGIN_URL = "/login"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_URL = "/"
+LOGIN_REDIRECT_IF_NOT_ALLOWED = "/not_allowed"
+LOGIN_REDIRECT_TEXT_IF_NOT_ALLOWED  = "Not allowed"
 ROOT_URLCONF = 'teaching_pool_project.urls'
 
 TEMPLATES = [
