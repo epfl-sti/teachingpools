@@ -27,8 +27,8 @@ class Person(models.Model):
 
 
 class Course(models.Model):
-    academicYear = models.CharField(max_length=9, name="year")
-    academicTerm = models.CharField(max_length=255, name="term")
+    year = models.CharField(max_length=9)
+    term = models.CharField(max_length=255)
     code = models.CharField(max_length=255)
     subject = models.CharField(max_length=255)
     section = models.CharField(max_length=255)
@@ -36,7 +36,7 @@ class Course(models.Model):
     teachers = models.ManyToManyField("web.Person", through="Teaching")
 
     def __str__(self):
-        return "{year} - {term} - {code}".format(year=self.academicYear, term=self.academicTerm, code=self.code)
+        return "{year} - {term} - {code}".format(year=self.year, term=self.term, code=self.code)
 
     class Meta:
         ordering = ('year', 'term', 'code')
