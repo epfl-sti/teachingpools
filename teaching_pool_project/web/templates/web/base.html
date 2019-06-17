@@ -1,25 +1,36 @@
 {# Load the tag library #}
 {% load bootstrap4 %}
 {% load icons %}
+{% load staticfiles %}
 
 {# Load CSS and JavaScript #}
 {% bootstrap_css %}
 {% bootstrap_javascript jquery='full' %}
 
-<html>
+<html lang="en">
     <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <!-- Font Awesome CSS -->
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
             rel="stylesheet"
             integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
             crossorigin="anonymous">
+        <link rel="stylesheet" href="{% static 'web/css/web.css' %}">
     </head>
     <body>
-        {# Display django.contrib.messages as Bootstrap alerts #}
-        {% bootstrap_messages %}
+        {% include "web/_nav.html" %}
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    {# Display django.contrib.messages as Bootstrap alerts #}
+                    {% bootstrap_messages %}
 
-        {% block maincontent %}
+                    {% block maincontent %}
 
-        {% endblock maincontent %}
+                    {% endblock maincontent %}
+                </div>
+            </div>
+        </div>
     </body>
 </html>
