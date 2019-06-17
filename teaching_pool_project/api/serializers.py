@@ -5,4 +5,5 @@ from web.models import Person, Course, Teaching
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Person
-        fields = ('sciper', 'firstName', 'lastName', 'role', 'email')
+        fields = '__all__'
+        read_only_fields = ('sciper',)

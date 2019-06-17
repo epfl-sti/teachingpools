@@ -5,7 +5,8 @@ from .views import *
 app_name = 'api'
 
 urlpatterns = {
-    url(r'v1/persons/$', PersonCreateView.as_view(), name="api_persons")
+    url(r'v1/persons/$', PersonCreateView.as_view(), name="persons"),
+    url(r'v1/persons/?(?P<pk>[^/]+)/$', PersonDetail.as_view(), name="person_details")
 }
 
 urlpatterns = format_suffix_patterns(urlpatterns)
