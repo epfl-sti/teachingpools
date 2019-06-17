@@ -4,3 +4,4 @@ django-bootstrap4
 django-icons
 django-debug-toolbar
 django-sslserver
+djangorestframework

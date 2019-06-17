@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django_icons',
     'web',
     'django_tequila',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
