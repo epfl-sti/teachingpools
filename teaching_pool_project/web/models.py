@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.utils.timezone import now
 
 
 class Person(models.Model):
@@ -18,6 +19,9 @@ class Person(models.Model):
     role = models.CharField(
         max_length=255, choices=ROLE_CHOICES, default="teacher")
     courses = models.ManyToManyField("web.Course", through='Teaching')
+    canTeachInFrench = models.BooleanField()
+    canTeachInEnglish = models.BooleanField()
+    topics = models.ManyToManyField("web.Topic", through="Interests")
 
     def __str__(self):
         return "{last}, {first} ({sciper})".format(last=self.lastName, first=self.firstName, sciper=self.sciper)
@@ -33,7 +37,16 @@ class Course(models.Model):
     subject = models.CharField(max_length=255)
     section = models.CharField(max_length=255)
     numberOfStudents = models.IntegerField()
+    calculatedNumberOfTAs = models.IntegerField(
+        null=True, blank=True, default=None)
+    # previousYearNumberOfTAs = models.IntegerField(
+    #     null=True, blank=True, default=None)
+    requestedNumberOfTAs = models.IntegerField(null=True, blank=True, default=None)
+    approvedNumberOfTAs = models.IntegerField(
+        null=True, blank=True, default=None)
     teachers = models.ManyToManyField("web.Person", through="Teaching")
+    taughtInFrench = models.BooleanField(default=True)
+    taughtInEnglish = models.BooleanField(default=False)
 
     def __str__(self):
         return "{year} - {term} - {code}".format(year=self.year, term=self.term, code=self.code)
@@ -43,9 +56,130 @@ class Course(models.Model):
         unique_together = [['year', 'term', 'code']]
         index_together = [
             ['year', 'term', 'code'],
+            ['year', 'term'],
+        ]
+        indexes = [
+            models.Index(fields=['year'], name='year_idx'),
+            models.Index(fields=['code'], name='code_idx'),
+            models.Index(fields=['section'], name='section_idx'),
+            models.Index(fields=['taughtInFrench'], name='french_idx'),
+            models.Index(fields=['taughtInFrench'], name='english_idx'),
         ]
 
 
 class Teaching(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    role = models.CharField(
+        max_length=255, default=None, blank=True, null=True)
+    isLeadTeacher = models.BooleanField(default=None, blank=True, null=True)
+
+    def __str__(self):
+        return "{} -> {}".format(self.person, self.course)
+
+    class Meta:
+        unique_together = [['person', 'course']]
+        indexes = [
+            models.Index(fields=['person'], name='sciper_idx'),
+            models.Index(fields=['course'], name='course_idx')
+        ]
+
+
+class Topic(models.Model):
+    name = models.CharField(max_length=255)
+    interestedPersons = models.ManyToManyField(
+        "web.Person", through="Interests")
+
+
+class Interests(models.Model):
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "{} -> {}".format(self.person, self.topic)
+
+    class Meta:
+        unique_together = [['person', 'topic']]
+        indexes = [
+            models.Index(fields=['person']),
+            models.Index(fields=['topic'])
+        ]
+
+
+class Availability(models.Model):
+    year = models.CharField(max_length=9)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    AVAILABILITIES_CHOICES = [
+        ('Available', 'Available'),
+        ('Unavailable', 'Unavailable')
+    ]
+    availability = models.CharField(
+        max_length=255, choices=AVAILABILITIES_CHOICES, default="Available")
+
+    def __str__(self):
+        return "{} -> {} -> {}".format(self.year, self.person, self.availability)
+
+    class Meta:
+        unique_together = [['year', 'person']]
+        index_together = [
+            ['year', 'person']
+        ]
+        indexes = [
+            models.Index(fields=['year']),
+            models.Index(fields=['person'])
+        ]
+
+
+class NumberOfTAUpdateRequest(models.Model):
+    openedAt = models.DateTimeField(default=now)
+    requester = models.ForeignKey(
+        Person, on_delete=models.CASCADE, related_name="requester")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    requestedNumberOfTAs = models.IntegerField()
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+        ('Withdrawn', 'Withdrawn')
+    ]
+    status = models.CharField(max_length=255, default='Pending')
+    requestReason = models.TextField(null=True, blank=True, default=None)
+    closedAt = models.DateTimeField(default=None, null=True, blank=True)
+    decidedBy = models.ForeignKey(
+        Person, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name="decidedBy")
+    decisionReason = models.TextField(null=True, blank=True, default=None)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['requester']),
+            models.Index(fields=['course']),
+            models.Index(fields=['status']),
+        ]
+
+
+class Applications(models.Model):
+    openedAt = models.DateTimeField(default=now)
+    applicant = models.ForeignKey(
+        Person, on_delete=models.CASCADE, related_name="applicant")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Hired', 'Hired'),
+        ('Rejected', 'Rejected'),
+        ('Withdrawn', 'Withdrawn')
+    ]
+    status = models.CharField(max_length=255, default='Pending')
+    closedAt = models.DateTimeField(default=None, blank=True, null=True)
+    closedBy = models.ForeignKey(
+        Person, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    decisionReason = models.TextField(null=True, blank=True, default=None)
+
+    def __str__(self):
+        return "{} -> {} -> {}".format(self.applicant, self.course, self.status)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['applicant']),
+            models.Index(fields=['course']),
+            models.Index(fields=['status']),
+        ]
