@@ -55,7 +55,10 @@ MIDDLEWARE = [
     'django_tequila.middleware.TequilaMiddleware',
 ]
 
-AUTHENTICATION_BACKENDS = ('django_tequila.django_backend.TequilaBackend',)
+AUTHENTICATION_BACKENDS = (
+    'django_tequila.django_backend.TequilaBackend',
+    'django.contrib.auth.backends.ModelBackend',
+    )
 TEQUILA_SERVICE_NAME = "STI teaching pools"
 TEQUILA_CLEAN_URL = True
 LOGIN_URL = "/login"
