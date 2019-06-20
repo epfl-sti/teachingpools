@@ -14,7 +14,7 @@ import os
 from os.path import abspath, dirname, join
 from dotenv import load_dotenv
 
-DOTENV_PATH = join(dirname(dirname(dirname(abspath(__file__)))) ,'.env')
+DOTENV_PATH = join(dirname(dirname(dirname(abspath(__file__)))), '.env')
 load_dotenv(dotenv_path=DOTENV_PATH, verbose=True)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -58,14 +58,14 @@ MIDDLEWARE = [
 AUTHENTICATION_BACKENDS = (
     'django_tequila.django_backend.TequilaBackend',
     'django.contrib.auth.backends.ModelBackend',
-    )
+)
 TEQUILA_SERVICE_NAME = "STI teaching pools"
 TEQUILA_CLEAN_URL = True
 LOGIN_URL = "/login"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_URL = "/"
 LOGIN_REDIRECT_IF_NOT_ALLOWED = "/not_allowed"
-LOGIN_REDIRECT_TEXT_IF_NOT_ALLOWED  = "Not allowed"
+LOGIN_REDIRECT_TEXT_IF_NOT_ALLOWED = "Not allowed"
 ROOT_URLCONF = 'teaching_pool_project.urls'
 
 TEMPLATES = [
