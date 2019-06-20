@@ -1,32 +1,40 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 from functools import wraps
-from django.shortcuts import render, redirect
+
 from django.conf import settings
-from django.views import generic
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.mail import EmailMultiAlternatives
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import get_template
+from django.shortcuts import redirect, render
 from django.template import Context
+from django.template.loader import get_template
+from django.urls import reverse
 from django.utils.timezone import now
-from django.contrib.auth import login
-from django.contrib.auth.models import User
+from django.views import generic
 
-from .forms import NameForm, RequestForTA, RequestForTAApproval, RequestForTAView
-from .models import Course, Teaching, NumberOfTAUpdateRequest, Person
 from epfl.sti.helpers import ldap as epfl_ldap
+
+from .forms import (NameForm, RequestForTA, RequestForTAApproval,
+                    RequestForTAView)
+from .models import Course, NumberOfTAUpdateRequest, Person, Teaching
+
 
 def impersonable(function):
     @wraps(function)
     def wrap(request, *args, **kwargs):
         if settings.DEBUG:
-            username_to_impersonate=request.GET.get('impersonate', None)
+            username_to_impersonate = request.GET.get('impersonate', None)
             try:
-                user_to_impersonate = User.objects.get(username=username_to_impersonate)
+                user_to_impersonate = User.objects.get(
+                    username=username_to_impersonate)
                 if user_to_impersonate:
-                    login(request, user_to_impersonate, backend='django.contrib.auth.backends.ModelBackend')
+                    login(request, user_to_impersonate,
+                          backend='django.contrib.auth.backends.ModelBackend')
             except Exception as ex:
                 print(ex)
 
@@ -71,6 +79,7 @@ def index(request):
 
     return render(request, 'web/index.html')
 
+
 @impersonable
 def courses_full_list(request, year):
     all_courses = Course.objects.filter(
@@ -80,11 +89,10 @@ def courses_full_list(request, year):
     }
     return render(request, 'web/all_courses.html', context)
 
+
+@login_required
 @impersonable
 def courses_list_year_teacher(request, year):
-    if not request.user.is_authenticated:
-        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
     teachings = Teaching.objects.filter(
@@ -95,37 +103,36 @@ def courses_list_year_teacher(request, year):
     }
     return render(request, 'web/prof_courses.html', context)
 
+
+@login_required
 @impersonable
 def requests_for_tas_teacher(request):
-    if not request.user.is_authenticated:
-        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
-    requests = NumberOfTAUpdateRequest.objects.filter(requester=sciper).prefetch_related('course').order_by('openedAt').all()
+    requests = NumberOfTAUpdateRequest.objects.filter(
+        requester=sciper).prefetch_related('course').order_by('openedAt').all()
     context = {
         'requests': requests
     }
     return render(request, 'web/prof_ta_requests.html', context)
 
+
+@login_required
 @impersonable
 def requests_for_tas_teacher_status(request, status):
-    if not request.user.is_authenticated:
-        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
-    requests = NumberOfTAUpdateRequest.objects.filter(requester=sciper, status=status.capitalize()).prefetch_related('course').order_by('openedAt').all()
+    requests = NumberOfTAUpdateRequest.objects.filter(
+        requester=sciper, status=status.capitalize()).prefetch_related('course').order_by('openedAt').all()
     context = {
         'requests': requests
     }
     return render(request, 'web/prof_ta_requests.html', context)
 
+
+@login_required
 @impersonable
 def request_for_TA(request, course_id):
-    if not request.user.is_authenticated:
-        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
     mail = epfl_ldap.get_mail(settings, request.user.username)
 
@@ -170,6 +177,8 @@ def request_for_TA(request, course_id):
         }
         return render(request, 'web/request_for_ta_form.html', context)
 
+
+@login_required
 @impersonable
 def get_TAs_requests_to_validate(request):
     requests = NumberOfTAUpdateRequest.objects.filter(status='Pending').all()
@@ -178,11 +187,10 @@ def get_TAs_requests_to_validate(request):
     }
     return render(request, 'web/requests_for_tas.html', context)
 
+
+@login_required
 @impersonable
 def validate_request_for_TA(request, request_id):
-    if not request.user.is_authenticated:
-        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
     if request.method == 'POST':
@@ -236,19 +244,18 @@ def validate_request_for_TA(request, request_id):
         }
         return render(request, 'web/request_for_ta_review_form.html', context)
 
+
+@login_required
 @impersonable
 def view_request_for_TA(request, request_id):
-    if not request.user.is_authenticated:
-        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-
     ta_request = NumberOfTAUpdateRequest.objects.get(pk=request_id)
     form = RequestForTAView()
     form.fields['request_id'].initial = ta_request.pk
     form.fields['opened_at'].initial = ta_request.openedAt
     form.fields['requester'].initial = "{}, {}".format(
-            ta_request.requester.lastName, ta_request.requester.firstName)
+        ta_request.requester.lastName, ta_request.requester.firstName)
     form.fields['course'].initial = "{} ({})".format(
-            ta_request.course.subject, ta_request.course.code)
+        ta_request.course.subject, ta_request.course.code)
     form.fields['requestedNumberOfTAs'].initial = ta_request.requestedNumberOfTAs
     form.fields['reason_for_request'].initial = ta_request.requestReason
     form.fields['reason_for_decision'].initial = ta_request.decisionReason
