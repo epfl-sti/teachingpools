@@ -125,3 +125,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static")
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+LDAP_SERVER = 'ldap.epfl.ch'
+LDAP_BASEDN = 'o=epfl,c=ch'
+LDAP_FILTER = '(uid={})'
