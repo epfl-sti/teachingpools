@@ -1,3 +1,4 @@
+{% load extra_tags %}
 {% with url_name=request.resolver_match.url_name %}
 <nav class="navbar navbar-expand-lg navbar-light bg-primary">
   <a class="navbar-brand" href="{% url "web:index" %}">Teaching pools</a>
@@ -47,6 +48,19 @@
       </li>
       {% endcomment %}
     </ul>
+    <div class="my-2 my-lg-0">
+    {% if request.user|is_superuser %}
+      <i class="fas fa-user-ninja fa-lg"></i>
+    {% elif request.user|is_staff %}
+      <i class="fas fa-user-shield fa-lg"></i>
+    {% elif request.user|is_teacher %}
+      <i class="fas fa-user-tie fa-lg"></i>
+    {% elif request.user|is_phd %}
+      <i class="fas fa-user-graduate fa-lg"></i>
+    {% else %}
+      <i class="fas fa-user fa-lg"></i>
+    {% endif %}&nbsp;{{ request.user.first_name }} {{ request.user.last_name }}
+    </div>
     {% comment %} <form class="form-inline my-2 my-lg-0">
       <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
       <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
