@@ -36,8 +36,8 @@ class CourseDetailByYearTermCode(generics.RetrieveUpdateDestroyAPIView):
         term = self.kwargs.get('term')
         code = self.kwargs.get('code')
         try:
-        course = self.queryset.get(year=year, term=term, code=code)
-        return course
+            course = self.queryset.get(year=year, term=term, code=code)
+            return course
         except:
             raise Http404
 
