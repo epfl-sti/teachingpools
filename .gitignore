@@ -2,6 +2,7 @@ venv
 .envrc
 __pycache__
 *.sqlite3
+*.sqlite3.backup
 *.pyc
 .vscode
 .env
