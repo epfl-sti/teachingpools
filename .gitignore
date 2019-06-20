@@ -6,3 +6,7 @@ __pycache__
 .vscode
 .env
 staticfiles
+teaching_pool_project/stunnel.log
+stunnel/stunnel.cert
+stunnel/stunnel.key
+stunnel/stunnel.pem
