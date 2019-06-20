@@ -1,0 +1,49 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load icons %}
+
+{% block maincontent %}
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Term</th>
+      <th>Section</th>
+      <th>Subject</th>
+      <th>Teachers</th>
+      <th>Lang.</th>
+      <th># of students (prev. year)</th>
+      <th># of TAs (theory)</th>
+      <th># of TAs (requested)</th>
+      <th># of TAs (approved)</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for teaching in teachings %}
+      <tr>
+        <td>{{ teaching.course.code }}</td>
+        <td>{{ teaching.course.term }}</td>
+        <td>{{ teaching.course.section }}</td>
+        <td>{{ teaching.course.subject }}</td>
+        <td>
+          <ul>
+            {% for teacher in teaching.course.teachers.all %}
+            <li>{{ teacher.lastName }}, {{ teacher.firstName }}</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td>{% if teaching.course.taughtInFrench %}F{% endif %}{% if teaching.course.taughtInEnglish %}E{% endif %} </td>
+        <td>{{ teaching.course.numberOfStudents|default_if_none:"&nbsp;" }}</td>
+        <td>{{ teaching.course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td>{{ teaching.course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td>{{ teaching.course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td><a href="{% url "web:request_for_TA" course_id=teaching.course.id %}">Request TAs</a></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+
+</table>
+
+{% endblock maincontent %}

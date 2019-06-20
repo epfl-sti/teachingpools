@@ -25,5 +25,10 @@ MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware',]
 
 INSTALLED_APPS += [
     'debug_toolbar',
-    'sslserver',
     ]
+
+EMAIL_HOST = "localhost"
+EMAIL_PORT = "1025"
+EMAIL_FROM = "noreply@epfl.ch"
+EMAIL_SUBJECT_PREFIX = "EPFL Teaching Pools - "
+EMAIL_ADMINS = ['emmanuel.jaep@epfl.ch',]

@@ -1,0 +1,9 @@
+Dear teaching pool administrator,
+
+{{ request.requester.firstName }} {{ request.requester.lastName }} has requested {{ request.requestedNumberOfTAs }} teaching assistant(s) for the '{{ request.course.subject }}' course.
+
+Could you please validate or reject this request by going to the teaching pool application (#URL).
+
+Best Regards,
+
+The teaching pool system.

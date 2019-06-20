@@ -10,23 +10,42 @@
       <li class="nav-item {% if url_name == "index" %}active{% endif %}">
         <a class="nav-link" href="{% url "web:index" %}">Home{% if url_name == "index" %} <span class="sr-only">(current)</span>{% endif %}</a>
       </li>
-      {% comment %} <li class="nav-item">
+      {% comment %}
+      <li class="nav-item">
         <a class="nav-link" href="#">Link</a>
       </li>
+      {% endcomment %}
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Dropdown
+          Courses
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="#">Action</a>
+          <a class="dropdown-item" href="{% url "web:courses_full_list" year="2019-2020" %}">All courses (2019-2020)</a>
+          <a class="dropdown-item" href="{% url "web:courses_list_year_teacher" year="2019-2020" %}">My courses</a>
+          {% comment %}
           <a class="dropdown-item" href="#">Another action</a>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#">Something else here</a>
         </div>
+        {% endcomment %}
       </li>
+            <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Requests
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="{% url "web:get_TAs_requests_to_validate" %}">Teaching assistants (to be validated)</a>
+          <a class="dropdown-item" href="{% url "web:requests_for_tas_teacher" %}">My requests (all)</a>
+          <a class="dropdown-item" href="{% url "web:requests_for_tas_teacher_status" status="Pending" %}">My requests (pending)</a>
+          <a class="dropdown-item" href="{% url "web:requests_for_tas_teacher_status" status="Approved" %}">My requests (approved)</a>
+          <a class="dropdown-item" href="{% url "web:requests_for_tas_teacher_status" status="Rejected" %}">My requests (rejected)</a>
+
+      </li>
+      {% comment %}
       <li class="nav-item">
         <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-      </li> {% endcomment %}
+      </li>
+      {% endcomment %}
     </ul>
     {% comment %} <form class="form-inline my-2 my-lg-0">
       <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">

@@ -1,0 +1,9 @@
+Dear {{ request.requester.firstName }},
+
+You have requested to get {{ request.requestedNumberOfTAs }} teaching assistants for your '{{ request.course.subject }}' course.
+
+This request has been {{ request.status|lower }}.
+
+Best Regards,
+
+The teaching pool administrators

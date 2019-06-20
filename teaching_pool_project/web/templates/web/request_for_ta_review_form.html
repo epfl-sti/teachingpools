@@ -1,0 +1,18 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load icons %}
+
+{% block maincontent %}
+
+{% bootstrap_form_errors form %}
+
+<form action="{% url "web:validate_request_for_TA" request_id=request_id %}" method="post" class="form">
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  {% buttons %}
+    {% bootstrap_button "Approve" button_type="submit" button_class="btn-primary" name="Approve" %}
+    {% bootstrap_button "Clear" button_type="reset" %}
+    {% bootstrap_button "Reject" button_type="submit" button_class="btn-primary" name="Reject"%}
+  {% endbuttons %}
+</form>
+{% endblock maincontent %}

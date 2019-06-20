@@ -1,0 +1,31 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load icons %}
+
+{% block maincontent %}
+<h4>Pending requests for teaching assistants</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Opened</th>
+      <th>Requester</th>
+      <th>Course</th>
+      <th>Requested # of TAs</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for request in requests %}
+      <tr>
+        <td>{{ request.openedAt }}</td>
+        <td>{{ request.requester.lastName }}, {{ request.requester.firstName }}</td>
+        <td>{{ request.course.subject }} ({{ request.course.code }})</td>
+        <td>{{ request.requestedNumberOfTAs }}</td>
+        <td><a href="{% url "web:validate_request_for_TA" request_id=request.pk %}">Validate</a></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+
+</table>
+
+{% endblock maincontent %}

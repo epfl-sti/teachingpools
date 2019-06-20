@@ -1,0 +1,21 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load icons %}
+
+{% block maincontent %}
+
+<h3>Teaching Assistant(s) request form</h1>
+<h5>for course: {{ course.subject }} ({{ course.code }} - {{ course.year }} - {{ course.term }})</h2>
+
+{# Display a form #}
+{% bootstrap_form_errors form %}
+
+<form action="{% url "web:request_for_TA" course_id=course_id %}" method="post" class="form">
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  {% buttons %}
+    {% bootstrap_button "Save" button_type="submit" button_class="btn-primary" %}
+    {% bootstrap_button "Clear" button_type="reset" %}
+  {% endbuttons %}
+</form>
+{% endblock maincontent %}

@@ -1,0 +1,39 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load icons %}
+
+{% block maincontent %}
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Term</th>
+      <th>Section</th>
+      <th>Subject</th>
+      <th>Teachers</th>
+      <th>Lang.</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for course in courses %}
+      <tr>
+        <td>{{ course.code }}</td>
+        <td>{{ course.term }}</td>
+        <td>{{ course.section }}</td>
+        <td>{{ course.subject }}</td>
+        <td>
+          <ul>
+            {% for teacher in course.teachers.all %}
+            <li>{{ teacher.lastName }}, {{ teacher.firstName }}</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td>{% if course.taughtInFrench %}F{% endif %}{% if course.taughtInEnglish %}E{% endif %} </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+
+</table>
+
+{% endblock maincontent %}

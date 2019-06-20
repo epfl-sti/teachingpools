@@ -1,0 +1,37 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load icons %}
+
+{% block maincontent %}
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Opened</th>
+      <th>Code</th>
+      <th>Term</th>
+      <th>Section</th>
+      <th>Subject</th>
+      <th>Closed</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for request in requests %}
+      <tr>
+        <td>{{ request.openedAt }}</td>
+        <td>{{ request.course.code }}</td>
+        <td>{{ request.course.term }}</td>
+        <td>{{ request.course.section }}</td>
+        <td>{{ request.course.subject }}</td>
+        <td>{{ request.closedAt|default_if_none:"&nbsp;" }}</td>
+        <td>{{ request.status }}</td>
+        <td><a href="{% url "web:view_request_for_TA" request_id=request.pk %}">Details</a></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+
+</table>
+
+{% endblock maincontent %}
