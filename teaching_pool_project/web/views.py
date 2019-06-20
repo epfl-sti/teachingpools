@@ -5,8 +5,9 @@ from functools import wraps
 
 from django.conf import settings
 from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
@@ -22,6 +23,33 @@ from epfl.sti.helpers import ldap as epfl_ldap
 from .forms import (NameForm, RequestForTA, RequestForTAApproval,
                     RequestForTAView)
 from .models import Course, NumberOfTAUpdateRequest, Person, Teaching
+
+
+def is_superuser():
+    def has_superuser_profile(u):
+        if u.is_superuser:
+            return True
+        raise PermissionDenied
+    return user_passes_test(has_superuser_profile)
+
+
+def is_staff():
+    def has_staff_profile(u):
+        if u.is_staff:
+            return True
+        raise PermissionDenied
+    return user_passes_test(has_staff_profile)
+
+
+def group_required(*group_names):
+    """Requires user membership in at least one of the groups passed in."""
+
+    def in_groups(u):
+        if u.is_authenticated:
+            if bool(u.groups.filter(name__in=group_names)) | u.is_superuser:
+                return True
+        raise PermissionDenied
+    return user_passes_test(in_groups)
 
 
 def impersonable(function):
@@ -73,10 +101,8 @@ def notify_people(data={}, template='', subject='', sender='', recipients=list()
     msg.send()
 
 
+@impersonable
 def index(request):
-    if not request.user.is_authenticated:
-        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-
     return render(request, 'web/index.html')
 
 
@@ -92,6 +118,7 @@ def courses_full_list(request, year):
 
 @login_required
 @impersonable
+@group_required('teachers')
 def courses_list_year_teacher(request, year):
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
@@ -106,6 +133,7 @@ def courses_list_year_teacher(request, year):
 
 @login_required
 @impersonable
+@group_required('teachers')
 def requests_for_tas_teacher(request):
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
@@ -119,6 +147,7 @@ def requests_for_tas_teacher(request):
 
 @login_required
 @impersonable
+@group_required('teachers')
 def requests_for_tas_teacher_status(request, status):
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
@@ -132,6 +161,7 @@ def requests_for_tas_teacher_status(request, status):
 
 @login_required
 @impersonable
+@group_required('teachers')
 def request_for_TA(request, course_id):
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
     mail = epfl_ldap.get_mail(settings, request.user.username)
@@ -180,6 +210,7 @@ def request_for_TA(request, course_id):
 
 @login_required
 @impersonable
+@is_staff()
 def get_TAs_requests_to_validate(request):
     requests = NumberOfTAUpdateRequest.objects.filter(status='Pending').all()
     context = {
@@ -190,6 +221,7 @@ def get_TAs_requests_to_validate(request):
 
 @login_required
 @impersonable
+@is_staff()
 def validate_request_for_TA(request, request_id):
     sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
@@ -247,6 +279,7 @@ def validate_request_for_TA(request, request_id):
 
 @login_required
 @impersonable
+@group_required('teachers')
 def view_request_for_TA(request, request_id):
     ta_request = NumberOfTAUpdateRequest.objects.get(pk=request_id)
     form = RequestForTAView()
