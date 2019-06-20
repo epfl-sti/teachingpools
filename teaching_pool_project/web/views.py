@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from functools import wraps
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.views import generic
@@ -10,17 +11,27 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from django.template import Context
 from django.utils.timezone import now
+from django.contrib.auth import login
+from django.contrib.auth.models import User
 
 from .forms import NameForm, RequestForTA, RequestForTAApproval, RequestForTAView
 from .models import Course, Teaching, NumberOfTAUpdateRequest, Person
 from epfl.sti.helpers import ldap as epfl_ldap
 
+def impersonable(function):
+    @wraps(function)
+    def wrap(request, *args, **kwargs):
+        if settings.DEBUG:
+            username_to_impersonate=request.GET.get('impersonate', None)
+            try:
+                user_to_impersonate = User.objects.get(username=username_to_impersonate)
+                if user_to_impersonate:
+                    login(request, user_to_impersonate, backend='django.contrib.auth.backends.ModelBackend')
+            except Exception as ex:
+                print(ex)
 
-def get_impersonated_user(request):
-    if request.COOKIES.get('impersonate', '') != '' and settings.DEBUG:
-        return request.COOKIES.get('impersonate', '')
-    else:
-        return request.user.username
+        return function(request, *args, **kwargs)
+    return wrap
 
 
 def notify_admins_and_requester(data, template_base, admins_subject, requesters_subject, admins, requesters):
@@ -60,7 +71,7 @@ def index(request):
 
     return render(request, 'web/index.html')
 
-
+@impersonable
 def courses_full_list(request, year):
     all_courses = Course.objects.filter(
         year=year).prefetch_related('teachers').all()
@@ -69,13 +80,12 @@ def courses_full_list(request, year):
     }
     return render(request, 'web/all_courses.html', context)
 
-
+@impersonable
 def courses_list_year_teacher(request, year):
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
 
-    username = get_impersonated_user(request)
-    sciper = epfl_ldap.get_sciper(settings, username)
+    sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
     teachings = Teaching.objects.filter(
         person=sciper).prefetch_related('course').all()
@@ -85,12 +95,12 @@ def courses_list_year_teacher(request, year):
     }
     return render(request, 'web/prof_courses.html', context)
 
+@impersonable
 def requests_for_tas_teacher(request):
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
 
-    username = get_impersonated_user(request)
-    sciper = epfl_ldap.get_sciper(settings, username)
+    sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
     requests = NumberOfTAUpdateRequest.objects.filter(requester=sciper).prefetch_related('course').order_by('openedAt').all()
     context = {
@@ -98,12 +108,12 @@ def requests_for_tas_teacher(request):
     }
     return render(request, 'web/prof_ta_requests.html', context)
 
+@impersonable
 def requests_for_tas_teacher_status(request, status):
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
 
-    username = get_impersonated_user(request)
-    sciper = epfl_ldap.get_sciper(settings, username)
+    sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
     requests = NumberOfTAUpdateRequest.objects.filter(requester=sciper, status=status.capitalize()).prefetch_related('course').order_by('openedAt').all()
     context = {
@@ -111,13 +121,13 @@ def requests_for_tas_teacher_status(request, status):
     }
     return render(request, 'web/prof_ta_requests.html', context)
 
+@impersonable
 def request_for_TA(request, course_id):
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
 
-    username = get_impersonated_user(request)
-    sciper = epfl_ldap.get_sciper(settings, username)
-    mail = epfl_ldap.get_mail(settings, username)
+    sciper = epfl_ldap.get_sciper(settings, request.user.username)
+    mail = epfl_ldap.get_mail(settings, request.user.username)
 
     if request.method == 'POST':
         form = RequestForTA(request.POST)
@@ -160,7 +170,7 @@ def request_for_TA(request, course_id):
         }
         return render(request, 'web/request_for_ta_form.html', context)
 
-
+@impersonable
 def get_TAs_requests_to_validate(request):
     requests = NumberOfTAUpdateRequest.objects.filter(status='Pending').all()
     context = {
@@ -168,13 +178,12 @@ def get_TAs_requests_to_validate(request):
     }
     return render(request, 'web/requests_for_tas.html', context)
 
-
+@impersonable
 def validate_request_for_TA(request, request_id):
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
 
-    username = get_impersonated_user(request)
-    sciper = epfl_ldap.get_sciper(settings, username)
+    sciper = epfl_ldap.get_sciper(settings, request.user.username)
 
     if request.method == 'POST':
         form = RequestForTAApproval(request.POST)
@@ -227,11 +236,10 @@ def validate_request_for_TA(request, request_id):
         }
         return render(request, 'web/request_for_ta_review_form.html', context)
 
+@impersonable
 def view_request_for_TA(request, request_id):
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-
-    username = get_impersonated_user(request)
 
     ta_request = NumberOfTAUpdateRequest.objects.get(pk=request_id)
     form = RequestForTAView()
