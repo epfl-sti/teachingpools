@@ -5,4 +5,9 @@ django-icons
 django-debug-toolbar
 djangorestframework
 ldap3
-psycopg2
+
+# staging environment
+python-memcached
+postgres
+psycopg2--binary
+gunicorn
