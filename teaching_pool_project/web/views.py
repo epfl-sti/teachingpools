@@ -101,6 +101,7 @@ def notify_people(data={}, template='', subject='', sender='', recipients=list()
     msg.send()
 
 
+@login_required
 @impersonable
 def index(request):
     return render(request, 'web/index.html')
