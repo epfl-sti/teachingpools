@@ -106,7 +106,11 @@ def notify_people(data={}, template='', subject='', sender='', recipients=list()
 @login_required
 @impersonable
 def index(request):
-    return render(request, 'web/index.html')
+    display_pending_requests_message = (request.user.is_staff and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists())
+    context = {
+        'display_pending_requests_message': display_pending_requests_message,
+    }
+    return render(request, 'web/index.html', context=context)
 
 
 @impersonable
