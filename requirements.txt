@@ -5,6 +5,9 @@ django-icons
 django-debug-toolbar
 djangorestframework
 ldap3
+numpy
+pandas
+xlrd
 
 # staging environment
 python-memcached

@@ -76,11 +76,11 @@ def load_teachers(teachers=list()):
 
     return_value = list()
 
-    if not os.path.isfile("/Users/jaep/code/sti/teaching_pools_django/teaching_pool_project/data/names.pickle"):
+    if not os.path.isfile(settings.PICKLED_DATA_FROM_LDAP):
         load_mappings()
 
     pickle_in = open(
-        "/Users/jaep/code/sti/teaching_pools_django/teaching_pool_project/data/names.pickle", 'rb')
+        settings.PICKLED_DATA_FROM_LDAP, 'rb')
     mappings = pickle.load(pickle_in)
 
     for teacher in teachers:
@@ -150,7 +150,7 @@ def load_course(year='', term='', code='', subject='', types=list(), teachers=li
 
 
 def load_mappings():
-    filename = '/Users/jaep/code/sti/teaching_pools_django/teaching_pool_project/data/first_name_last_name.txt'
+    filename = settings.FIRST_NAME_LAST_NAME_MAPPING
     names = list()
     import io
     with io.open(filename, 'r') as file:
@@ -167,7 +167,7 @@ def load_mappings():
 
     import pickle
     pickle_out = open(
-        "/Users/jaep/code/sti/teaching_pools_django/teaching_pool_project/data/names.pickle", "wb")
+        settings.PICKLED_DATA_FROM_LDAP, "wb")
     pickle.dump(return_value, pickle_out)
     pickle_out.close()
 
