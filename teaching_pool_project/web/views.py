@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from functools import wraps
 
 from django.conf import settings
-from django.contrib.auth import login
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
@@ -23,6 +23,8 @@ from epfl.sti.helpers import ldap as epfl_ldap
 from .forms import (NameForm, RequestForTA, RequestForTAApproval,
                     RequestForTAView)
 from .models import Course, NumberOfTAUpdateRequest, Person, Teaching
+
+User = get_user_model()
 
 
 def is_superuser():
@@ -74,7 +76,7 @@ def notify_admins_and_requester(data, template_base, admins_subject, requesters_
     admins_subject = settings.EMAIL_SUBJECT_PREFIX + admins_subject
     admins_template = '{}_admins'.format(template_base)
     admins_sender = settings.EMAIL_FROM
-    admin_recipients = settings.EMAIL_ADMINS
+    admin_recipients = admins
     notify_people(data=data, template=admins_template, subject=admins_subject,
                   sender=admins_sender, recipients=admin_recipients)
 
@@ -121,11 +123,8 @@ def courses_full_list(request, year):
 @impersonable
 @group_required('teachers')
 def courses_list_year_teacher(request, year):
-    sciper = epfl_ldap.get_sciper(settings, request.user.username)
-
     teachings = Teaching.objects.filter(
-        person=sciper).prefetch_related('course').all()
-
+        person=request.user).prefetch_related('course').all()
     context = {
         'teachings': teachings
     }
@@ -136,10 +135,8 @@ def courses_list_year_teacher(request, year):
 @impersonable
 @group_required('teachers')
 def requests_for_tas_teacher(request):
-    sciper = epfl_ldap.get_sciper(settings, request.user.username)
-
     requests = NumberOfTAUpdateRequest.objects.filter(
-        requester=sciper).prefetch_related('course').order_by('openedAt').all()
+        requester=request.user).prefetch_related('course').order_by('openedAt').all()
     context = {
         'requests': requests
     }
@@ -150,10 +147,8 @@ def requests_for_tas_teacher(request):
 @impersonable
 @group_required('teachers')
 def requests_for_tas_teacher_status(request, status):
-    sciper = epfl_ldap.get_sciper(settings, request.user.username)
-
     requests = NumberOfTAUpdateRequest.objects.filter(
-        requester=sciper, status=status.capitalize()).prefetch_related('course').order_by('openedAt').all()
+        requester=request.user, status=status.capitalize()).prefetch_related('course').order_by('openedAt').all()
     context = {
         'requests': requests
     }
@@ -164,14 +159,11 @@ def requests_for_tas_teacher_status(request, status):
 @impersonable
 @group_required('teachers')
 def request_for_TA(request, course_id):
-    sciper = epfl_ldap.get_sciper(settings, request.user.username)
-    mail = epfl_ldap.get_mail(settings, request.user.username)
-
     if request.method == 'POST':
         form = RequestForTA(request.POST)
         if form.is_valid():
 
-            requester = Person.objects.get(sciper=sciper)
+            requester = request.user
             course = Course.objects.get(pk=form.cleaned_data['course_id'])
 
             request_obj = NumberOfTAUpdateRequest()
@@ -186,14 +178,16 @@ def request_for_TA(request, course_id):
 
             data = {'request': request_obj}
             requesters = list()
-            requesters.append(mail)
+            requesters.append(request.user.email)
+            admins = User.objects.filter(is_staff=True).all()
+            admins_mails = [admin.email for admin in admins]
 
             notify_admins_and_requester(
                 data=data,
                 template_base='new_ta_request',
                 admins_subject='A new TA request has been recorded',
                 requesters_subject='Your request for TA has been recorded',
-                admins=settings.EMAIL_ADMINS,
+                admins=admins_mails,
                 requesters=requesters)
 
             return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=['2019-2020']))
@@ -224,8 +218,6 @@ def get_TAs_requests_to_validate(request):
 @impersonable
 @is_staff()
 def validate_request_for_TA(request, request_id):
-    sciper = epfl_ldap.get_sciper(settings, request.user.username)
-
     if request.method == 'POST':
         form = RequestForTAApproval(request.POST)
         if form.is_valid():
@@ -239,12 +231,12 @@ def validate_request_for_TA(request, request_id):
             request_obj.status = status
             request_obj.decisionReason = form.cleaned_data['reason_for_decision']
             request_obj.closedAt = now()
-            person = Person.objects.get(pk=sciper)
-            request_obj.decidedBy = person
+            person = request.user
+            request_obj.decidedBy = request.user
+            request_obj.save()
             if status == "Approved":
                 request_obj.course.approvedNumberOfTAs = request_obj.requestedNumberOfTAs
                 request_obj.course.save()
-            request_obj.save()
 
             # Notification
             notification_recipients = list()
@@ -265,14 +257,16 @@ def validate_request_for_TA(request, request_id):
         form.fields['request_id'].initial = requestForTA.pk
         form.fields['opened_at'].initial = requestForTA.openedAt
         form.fields['requester'].initial = "{}, {}".format(
-            requestForTA.requester.lastName, requestForTA.requester.firstName)
+            requestForTA.requester.last_name, requestForTA.requester.first_name)
         form.fields['course'].initial = "{} ({})".format(
             requestForTA.course.subject, requestForTA.course.code)
         form.fields['requestedNumberOfTAs'].initial = requestForTA.requestedNumberOfTAs
         form.fields['reason_for_request'].initial = requestForTA.requestReason
 
+        course = requestForTA.course
         context = {
             'request_id': request_id,
+            'course': course,
             'form': form
         }
         return render(request, 'web/request_for_ta_review_form.html', context)
@@ -287,14 +281,16 @@ def view_request_for_TA(request, request_id):
     form.fields['request_id'].initial = ta_request.pk
     form.fields['opened_at'].initial = ta_request.openedAt
     form.fields['requester'].initial = "{}, {}".format(
-        ta_request.requester.lastName, ta_request.requester.firstName)
+        ta_request.requester.last_name, ta_request.requester.first_name)
     form.fields['course'].initial = "{} ({})".format(
         ta_request.course.subject, ta_request.course.code)
     form.fields['requestedNumberOfTAs'].initial = ta_request.requestedNumberOfTAs
     form.fields['reason_for_request'].initial = ta_request.requestReason
     form.fields['reason_for_decision'].initial = ta_request.decisionReason
 
+    course = ta_request.course
     context = {
+        'course': course,
         'request_id': request_id,
         'form': form
     }

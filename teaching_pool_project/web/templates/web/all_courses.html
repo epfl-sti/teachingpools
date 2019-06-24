@@ -8,9 +8,9 @@
     <tr>
       <th>Code</th>
       <th>Term</th>
-      <th>Section</th>
       <th>Subject</th>
       <th>Teachers</th>
+      <th>Types</th>
       <th>Lang.</th>
     </tr>
   </thead>
@@ -19,16 +19,23 @@
       <tr>
         <td>{{ course.code }}</td>
         <td>{{ course.term }}</td>
-        <td>{{ course.section }}</td>
         <td>{{ course.subject }}</td>
         <td>
           <ul>
             {% for teacher in course.teachers.all %}
-            <li>{{ teacher.lastName }}, {{ teacher.firstName }}</li>
+            <li>{{ teacher.last_name }}, {{ teacher.first_name }}</li>
             {% endfor %}
           </ul>
         </td>
-        <td>{% if course.taughtInFrench %}F{% endif %}{% if course.taughtInEnglish %}E{% endif %} </td>
+        <td>
+          <ul>
+            {% if course.has_course %}<li>Course</li>{% endif %}
+            {% if course.has_exercises %}<li>Exercises</li>{% endif %}
+            {% if course.has_project %}<li>Project</li>{% endif %}
+            {% if course.has_practical_work %}<li>Practical work</li>{% endif %}
+          </ul>
+        </td>
+        <td>{% if course.taughtInFrench %}F{% endif %}{% if course.taughtInEnglish %}E{% endif %}{% if course.taughtInGerman %}G{% endif %} </td>
       </tr>
     {% endfor %}
   </tbody>

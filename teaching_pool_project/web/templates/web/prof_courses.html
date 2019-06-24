@@ -8,9 +8,9 @@
     <tr>
       <th>Code</th>
       <th>Term</th>
-      <th>Section</th>
       <th>Subject</th>
       <th>Teachers</th>
+      <th>Types</th>
       <th>Lang.</th>
       <th># of students (prev. year)</th>
       <th># of TAs (theory)</th>
@@ -24,16 +24,23 @@
       <tr>
         <td>{{ teaching.course.code }}</td>
         <td>{{ teaching.course.term }}</td>
-        <td>{{ teaching.course.section }}</td>
         <td>{{ teaching.course.subject }}</td>
         <td>
           <ul>
             {% for teacher in teaching.course.teachers.all %}
-            <li>{{ teacher.lastName }}, {{ teacher.firstName }}</li>
+            <li>{{ teacher.last_name }}, {{ teacher.first_name }}</li>
             {% endfor %}
           </ul>
         </td>
-        <td>{% if teaching.course.taughtInFrench %}F{% endif %}{% if teaching.course.taughtInEnglish %}E{% endif %} </td>
+        <td>
+          <ul>
+            {% if teaching.course.has_course %}<li>Course</li>{% endif %}
+            {% if teaching.course.has_exercises %}<li>Exercises</li>{% endif %}
+            {% if teaching.course.has_project %}<li>Project</li>{% endif %}
+            {% if teaching.course.has_practical_work %}<li>Practical work</li>{% endif %}
+          </ul>
+        </td>
+        <td>{% if teaching.course.taughtInFrench %}F{% endif %}{% if teaching.course.taughtInEnglish %}E{% endif %}{% if teaching.course.taughtInGerman %}G{% endif %} </td>
         <td>{{ teaching.course.numberOfStudents|default_if_none:"&nbsp;" }}</td>
         <td>{{ teaching.course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
         <td>{{ teaching.course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>

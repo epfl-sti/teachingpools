@@ -17,7 +17,7 @@
     {% for request in requests %}
       <tr>
         <td>{{ request.openedAt }}</td>
-        <td>{{ request.requester.lastName }}, {{ request.requester.firstName }}</td>
+        <td>{{ request.requester.last_name }}, {{ request.requester.first_name }}</td>
         <td>{{ request.course.subject }} ({{ request.course.code }})</td>
         <td>{{ request.requestedNumberOfTAs }}</td>
         <td><a href="{% url "web:validate_request_for_TA" request_id=request.pk %}">Validate</a></td>

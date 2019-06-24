@@ -2,7 +2,7 @@ venv
 .envrc
 __pycache__
 *.sqlite3
-*.sqlite3.backup
+*.sqlite3*.backup
 *.pyc
 .vscode
 .env
@@ -11,3 +11,4 @@ teaching_pool_project/stunnel.log
 stunnel/stunnel.cert
 stunnel/stunnel.key
 stunnel/stunnel.pem
+*/data/**

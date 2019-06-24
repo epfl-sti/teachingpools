@@ -25,3 +25,8 @@ DATABASES = {
         'PORT': '',
     }
 }
+
+EMAIL_HOST = "mail.epfl.ch"
+EMAIL_PORT = "25"
+EMAIL_FROM = "noreply@epfl.ch"
+EMAIL_SUBJECT_PREFIX = "EPFL Teaching Pools - "

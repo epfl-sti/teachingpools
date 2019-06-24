@@ -2,19 +2,45 @@
 {% load bootstrap4 %}
 
 {% block maincontent %}
+<div class="row">
+    <div class="col-sm-7">
+    <div class="card">
+      <div class="card-header">
+        <h6>Teaching assistant(s) request form<h6>
+      </div>
+      <div class="card-body">
+        <form action="{% url "web:request_for_TA" course_id=course_id %}" method="post" class="form">
+          {% csrf_token %}
+          {% bootstrap_form form %}
+          {% buttons %}
+            {% bootstrap_button "Save" button_type="submit" button_class="btn-primary" %}
+            {% bootstrap_button "Clear" button_type="reset" %}
+          {% endbuttons %}
+        </form>
+        {% bootstrap_form_errors form %}
+      </div>
+    </div>
+  </div>
 
-<h3>Teaching Assistant(s) request form</h1>
-<h5>for course: {{ course.subject }} ({{ course.code }} - {{ course.year }} - {{ course.term }})</h2>
+  <div class="col-sm-5">
+    <div class="card">
+      <div class="card-header">
+        <h6>Course details</h5>
+      </div>
+      <div class="card-body">
+      <p class="card-text">Year: {{ course.year }}</p>
+      <p class="card-text">Term: {{ course.term }}</p>
+        <p class="card-text">Code: {{ course.code }}</p>
+        <p class="card-text">Subject: {{ course.subject }}</p>
+        <p class="card-text">Types: {% if course.has_course %}course{% endif %}{% if course.has_exercises %} / exercices{% endif %}{% if course.has_practical_work %} / practical work{% endif %}{% if course.has_project %} / project{% endif %}</p>
+        <p class="card-text">Languages: {% if course.taughtInFrench %}French{% endif %}{% if course.taughtInEnglish %} / English{% endif %}{% if course.taughtInGerman %} / German{% endif %}</p>
+        <p class="card-text">Number of students registered last year: {{ course.numberOfStudents }}</p>
+        <p class="card-text">Calculated number of TAs: {{ course.calculatedNumberOfTAs }}</p>
+        <p class="card-text">Currently requested number of TAs: {{ course.requestedNumberOfTAs }}</p>
+        <p class="card-text">Currently approved number of TAs: {{ course.approvedNumberOfTAs }}</p>
+      </div>
+    </div>
+  </div>
+</div>
 
-{# Display a form #}
-{% bootstrap_form_errors form %}
-
-<form action="{% url "web:request_for_TA" course_id=course_id %}" method="post" class="form">
-  {% csrf_token %}
-  {% bootstrap_form form %}
-  {% buttons %}
-    {% bootstrap_button "Save" button_type="submit" button_class="btn-primary" %}
-    {% bootstrap_button "Clear" button_type="reset" %}
-  {% endbuttons %}
-</form>
 {% endblock maincontent %}

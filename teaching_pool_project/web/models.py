@@ -1,33 +1,35 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.timezone import now
 
 
-class Person(models.Model):
+class Person(AbstractUser):
     ROLE_CHOICES = [
         ('teacher', 'teacher'),
         ('teaching assistant', 'teaching assistant')
     ]
 
-    sciper = models.IntegerField(
-        verbose_name="EPFL sciper", name="sciper", primary_key=True)
-    firstName = models.CharField(max_length=255)
-    lastName = models.CharField(max_length=255)
-    email = models.EmailField(default=None, blank=True, null=True)
+    sciper = models.IntegerField(null=True, blank=True, default=None)
+    # first_name = models.CharField(max_length=255)
+    # last_name = models.CharField(max_length=255)
+    # username = models.CharField(max_length=255, default=None, blank=True, null=True)
+    # password = models.CharField(max_length=128, default=None, blank=True, null=True)
+    # email = models.EmailField(default=None, blank=True, null=True)
     role = models.CharField(
         max_length=255, choices=ROLE_CHOICES, default="teacher")
     courses = models.ManyToManyField("web.Course", through='Teaching')
-    canTeachInFrench = models.BooleanField()
-    canTeachInEnglish = models.BooleanField()
+    canTeachInFrench = models.BooleanField(null=True, blank=True, default=None)
+    canTeachInEnglish = models.BooleanField(null=True, blank=True, default=None)
     topics = models.ManyToManyField("web.Topic", through="Interests")
 
     def __str__(self):
-        return "{last}, {first} ({sciper})".format(last=self.lastName, first=self.firstName, sciper=self.sciper)
+        return "{last}, {first} ({id})".format(last=self.last_name, first=self.first_name, id=self.id)
 
     class Meta:
-        ordering = ('lastName', 'firstName')
+        ordering = ('last_name', 'first_name')
 
 
 class Course(models.Model):
@@ -47,6 +49,11 @@ class Course(models.Model):
     teachers = models.ManyToManyField("web.Person", through="Teaching")
     taughtInFrench = models.BooleanField(default=True)
     taughtInEnglish = models.BooleanField(default=False)
+    taughtInGerman = models.BooleanField(default=False)
+    has_course = models.BooleanField(default=False)
+    has_exercises = models.BooleanField(default=False)
+    has_project = models.BooleanField(default=False)
+    has_practical_work = models.BooleanField(default=False)
 
     def __str__(self):
         return "{year} - {term} - {code}".format(year=self.year, term=self.term, code=self.code)
@@ -80,8 +87,8 @@ class Teaching(models.Model):
     class Meta:
         unique_together = [['person', 'course']]
         indexes = [
-            models.Index(fields=['person'], name='sciper_idx'),
-            models.Index(fields=['course'], name='course_idx')
+            models.Index(fields=['person']),
+            models.Index(fields=['course'])
         ]
 
 
