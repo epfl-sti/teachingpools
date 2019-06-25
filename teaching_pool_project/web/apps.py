@@ -6,3 +6,7 @@ from django.apps import AppConfig
 
 class WebConfig(AppConfig):
     name = 'web'
+    label = 'web'
+
+    def ready(self):
+        import web.signals

@@ -133,6 +133,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 LDAP_SERVER = 'ldap.epfl.ch'
 LDAP_BASEDN = 'o=epfl,c=ch'
 LDAP_FILTER = '(uid={})'
+LDAP_PHD_BASEDN = 'ou=edoc,ou=etu,o=epfl,c=ch'
+LDAP_PHD_FILTER = '(uniqueIdentifier={})'
 
 EXCEL_FILE_TO_LOAD = './teaching_pool_project/data/liste matières STI 19-20.xlsx'
 EXCEL_FILE_TO_LOAD_FOR_PREVIOUS_YEAR = './teaching_pool_project/data/liste matières STI 18-19.xlsx'

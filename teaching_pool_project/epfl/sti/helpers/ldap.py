@@ -81,3 +81,9 @@ def get_user_by_partial_first_name_and_partial_last_name(settings, partial_first
     return return_value
 
 
+def is_phd(settings, sciper=''):
+    filter = settings.LDAP_PHD_FILTER.format(sciper)
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search(settings.LDAP_PHD_BASEDN, filter, attributes=[])
+    return len(conn.entries) > 0
