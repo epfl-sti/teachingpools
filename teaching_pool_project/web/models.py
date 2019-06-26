@@ -19,6 +19,8 @@ class Person(AbstractUser):
     canTeachInFrench = models.BooleanField(null=True, blank=True, default=None)
     canTeachInEnglish = models.BooleanField(
         null=True, blank=True, default=None)
+    canTeachInGerman = models.BooleanField(
+        null=True, blank=True, default=None)
     topics = models.ManyToManyField("web.Topic", through="Interests")
 
     def __str__(self):

@@ -336,6 +336,8 @@ def update_my_profile(request):
             languages.append("f")
         if request.user.canTeachInEnglish:
             languages.append("e")
+        if request.user.canTeachInGerman:
+            languages.append("g")
         languages_form = LanguagesForm(initial = {'languages': languages})
 
     if request.method == "POST":
@@ -351,6 +353,7 @@ def update_my_profile(request):
         if languages_form.is_valid():
             request.user.canTeachInFrench = 'f' in languages_form.cleaned_data['languages']
             request.user.canTeachInEnglish = 'e' in languages_form.cleaned_data['languages']
+            request.user.canTeachInGerman = 'g' in languages_form.cleaned_data['languages']
             request.user.save()
         else:
             messages.error(request, "The languages section contains error. Please review them")
