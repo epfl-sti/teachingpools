@@ -27,12 +27,46 @@ class Command(BaseCommand):
 
         for phd in data_to_load:
             person_obj, created = Person.objects.get_or_create(sciper = phd['sciper'])
-            if created:
+            try:
+                person_obj.sciper = phd['sciper']
+                person_obj.save()
+            except Exception as ex:
+                print("{} - unable to save sciper".format(phd['sciper']))
+                raise ex
+
+            try:
                 person_obj.username = phd['username']
+                person_obj.save()
+            except Exception as ex:
+                print("{} - unable to save username".format(phd['sciper']))
+                raise ex
+
+            try:
                 person_obj.email = phd['email']
+                person_obj.save()
+            except Exception as ex:
+                print("{} - unable to save email".format(phd['sciper']))
+                raise ex
+
+            try:
                 person_obj.first_name = phd['first_name']
+                person_obj.save()
+            except Exception as ex:
+                print("{} - unable to save first_name".format(phd['sciper']))
+                raise ex
+
+            try:
                 person_obj.last_name = phd['last_name']
+                person_obj.save()
+            except Exception as ex:
+                print("{} - unable to save last_name".format(phd['sciper']))
+                raise ex
+
+            try:
                 person_obj.role = 'teaching assistant'
                 person_obj.save()
+            except Exception as ex:
+                print("{} - unable to save role".format(phd['sciper']))
+                raise ex
 
             phd_group.user_set.add(person_obj)
