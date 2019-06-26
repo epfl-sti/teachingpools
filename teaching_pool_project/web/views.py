@@ -63,7 +63,7 @@ def impersonable(function):
             try:
                 user_to_impersonate = User.objects.get(
                     username=username_to_impersonate)
-                if user_to_impersonate:
+                if user_to_impersonate and user_to_impersonate != request.user:
                     login(request, user_to_impersonate,
                           backend='django.contrib.auth.backends.ModelBackend')
             except Exception as ex:
