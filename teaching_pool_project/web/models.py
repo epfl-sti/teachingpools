@@ -13,16 +13,12 @@ class Person(AbstractUser):
     ]
 
     sciper = models.IntegerField(null=True, blank=True, default=None)
-    # first_name = models.CharField(max_length=255)
-    # last_name = models.CharField(max_length=255)
-    # username = models.CharField(max_length=255, default=None, blank=True, null=True)
-    # password = models.CharField(max_length=128, default=None, blank=True, null=True)
-    # email = models.EmailField(default=None, blank=True, null=True)
     role = models.CharField(
         max_length=255, choices=ROLE_CHOICES, default="teacher")
     courses = models.ManyToManyField("web.Course", through='Teaching')
     canTeachInFrench = models.BooleanField(null=True, blank=True, default=None)
-    canTeachInEnglish = models.BooleanField(null=True, blank=True, default=None)
+    canTeachInEnglish = models.BooleanField(
+        null=True, blank=True, default=None)
     topics = models.ManyToManyField("web.Topic", through="Interests")
 
     def __str__(self):
@@ -41,9 +37,8 @@ class Course(models.Model):
     numberOfStudents = models.IntegerField()
     calculatedNumberOfTAs = models.IntegerField(
         null=True, blank=True, default=None)
-    # previousYearNumberOfTAs = models.IntegerField(
-    #     null=True, blank=True, default=None)
-    requestedNumberOfTAs = models.IntegerField(null=True, blank=True, default=None)
+    requestedNumberOfTAs = models.IntegerField(
+        null=True, blank=True, default=None)
     approvedNumberOfTAs = models.IntegerField(
         null=True, blank=True, default=None)
     teachers = models.ManyToManyField("web.Person", through="Teaching")
