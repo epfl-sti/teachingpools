@@ -61,16 +61,17 @@ def impersonable(function):
     def wrap(request, *args, **kwargs):
         if settings.DEBUG:
             username_to_impersonate = request.GET.get('impersonate', None)
-            try:
-                user_to_impersonate = User.objects.get(
-                    username=username_to_impersonate)
-                if user_to_impersonate and user_to_impersonate != request.user:
-                    login(request, user_to_impersonate,
-                          backend='django.contrib.auth.backends.ModelBackend')
-                    messages.info(request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;Current user switched to {} {}".format(
-                        user_to_impersonate.first_name, user_to_impersonate.last_name)))
-            except Exception as ex:
-                messages.error(request, mark_safe("<i class='fas fa-exclamation-circle'></i>&nbsp;Unable to switch user. Please check the username you want to use."))
+            if username_to_impersonate:
+                try:
+                    user_to_impersonate = User.objects.get(
+                        username=username_to_impersonate)
+                    if user_to_impersonate and user_to_impersonate != request.user:
+                        login(request, user_to_impersonate,
+                            backend='django.contrib.auth.backends.ModelBackend')
+                        messages.info(request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;Current user switched to {} {}".format(
+                            user_to_impersonate.first_name, user_to_impersonate.last_name)))
+                except Exception as ex:
+                    messages.error(request, mark_safe("<i class='fas fa-exclamation-circle'></i>&nbsp;Unable to switch user. Please check the username you want to use."))
 
         return function(request, *args, **kwargs)
     return wrap
