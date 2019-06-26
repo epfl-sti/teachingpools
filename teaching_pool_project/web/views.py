@@ -67,11 +67,12 @@ def impersonable(function):
                         username=username_to_impersonate)
                     if user_to_impersonate and user_to_impersonate != request.user:
                         login(request, user_to_impersonate,
-                            backend='django.contrib.auth.backends.ModelBackend')
+                              backend='django.contrib.auth.backends.ModelBackend')
                         messages.info(request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;Current user switched to {} {}".format(
                             user_to_impersonate.first_name, user_to_impersonate.last_name)))
                 except Exception as ex:
-                    messages.error(request, mark_safe("<i class='fas fa-exclamation-circle'></i>&nbsp;Unable to switch user. Please check the username you want to use."))
+                    messages.error(request, mark_safe(
+                        "<i class='fas fa-exclamation-circle'></i>&nbsp;Unable to switch user. Please check the username you want to use."))
 
         return function(request, *args, **kwargs)
     return wrap
@@ -114,6 +115,12 @@ def index(request):
     if request.user.is_staff and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists():
         messages.info(
             request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;You have (a) pending <a href='{}'>TA request(s) to validate</a>".format(reverse('web:get_TAs_requests_to_validate'))))
+
+    year = settings.APP_CURRENT_YEAR
+    if request.user.groups.filter(name='phds').exists() and not Availability.objects.filter(year=year, person=request.user).exists():
+        message = mark_safe(
+            "<i class='fas fa-info-circle'></i>&nbsp;You should <a href='{}'>update your profile</a>.".format(reverse('web:update_my_profile')))
+        messages.info(request, message)
     return render(request, 'web/index.html')
 
 
