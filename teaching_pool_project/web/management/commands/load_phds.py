@@ -49,7 +49,7 @@ class Command(BaseCommand):
                 raise ex
 
             try:
-                person_obj.first_name = phd['first_name']
+                person_obj.first_name = phd['first_name'][:30]
                 person_obj.save()
             except Exception as ex:
                 print("{} - unable to save first_name".format(phd['sciper']))
