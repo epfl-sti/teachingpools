@@ -22,8 +22,9 @@
     </div>
     <div>
         {% buttons %}
-        {% bootstrap_button "Save" button_type="submit" button_class="btn-primary" %}
-        {% bootstrap_button "Clear" button_type="reset" %}
+        {% bootstrap_button "Save" button_type="submit" button_class="btn-primary btn-block" %}
+        {% bootstrap_button "Clear" button_type="reset" button_class="btn-outline-secondary btn-block" %}
+        <input class="btn btn-outline-secondary btn-block" type="button" value="Back" onclick="history.back()">
         {% endbuttons %}
     </div>
 </form>

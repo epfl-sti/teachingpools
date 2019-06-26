@@ -15,9 +15,10 @@
           {% csrf_token %}
           {% bootstrap_form form %}
           {% buttons %}
-            {% bootstrap_button "Approve" button_type="submit" button_class="btn-primary" name="Approve" %}
-            {% bootstrap_button "Clear" button_type="reset" %}
-            {% bootstrap_button "Reject" button_type="submit" button_class="btn-primary" name="Reject"%}
+            {% bootstrap_button "Approve" button_type="submit" button_class="btn-success btn-block" name="Approve" %}
+            {% bootstrap_button "Reject" button_type="submit" button_class="btn-danger btn-block" name="Reject"%}
+            {% bootstrap_button "Clear" button_type="reset" button_class="btn-outline-secondary btn-block"%}
+            <input class="btn btn-outline-secondary btn-block" type="button" value="Back" onclick="history.back()">
           {% endbuttons %}
         </form>
       </div>
