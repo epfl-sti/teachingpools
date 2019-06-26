@@ -57,3 +57,25 @@ class AvailabilityForm(ModelForm):
         if availability == "unavailable" and not reason:
             msg = 'A reason should be provided when you say you will be unavailable.'
             self.add_error('reason', msg)
+
+
+class LanguagesForm(forms.Form):
+    OPTIONS = (
+        ('f', 'French'),
+        ('e', 'English'),
+        ('g', 'German')
+    )
+    languages = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple, choices=OPTIONS)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        possible_choices = [item[0] for item in self.fields['languages'].choices]
+        if 'languages' in cleaned_data:
+            for language in cleaned_data['languages']:
+                if language not in possible_choices:
+                    self.add_error(
+                        'languages', 'The value provided is not part of the available choices.')
+        else:
+            self.add_error(
+                'languages', "You should be able to teach at least in one language")

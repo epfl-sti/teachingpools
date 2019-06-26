@@ -319,6 +319,7 @@ def view_request_for_TA(request, request_id):
 def update_my_profile(request):
     year = settings.APP_CURRENT_YEAR
 
+    # Working with the availabilities
     availability, availability_created = Availability.objects.get_or_create(
         person=request.user, year=year)
     if availability_created:
@@ -327,22 +328,41 @@ def update_my_profile(request):
     availability_form = AvailabilityForm(
         request.POST or None, instance=availability)
 
+    # Working with the languages
+    languages_form = LanguagesForm(request.POST or None)
+    if not request.POST:
+        languages = list()
+        if request.user.canTeachInFrench:
+            languages.append("f")
+        if request.user.canTeachInEnglish:
+            languages.append("e")
+        languages_form = LanguagesForm(initial = {'languages': languages})
+
     if request.method == "POST":
+        complete_form_is_OK = True
+
         if availability_form.is_valid():
             availability_form.save(commit=False)
             availability.save()
-            messages.success(
-                request, "Your profile has been succesfully updated")
+        else:
+            messages.error(request, "The availability section contains error. Please review them")
+            complete_form_is_OK = False
 
-    languages = list()
-    if request.user.canTeachInFrench:
-        languages.append("French")
-    if request.user.canTeachInEnglish:
-        languages.append("English")
+        if languages_form.is_valid():
+            request.user.canTeachInFrench = 'f' in languages_form.cleaned_data['languages']
+            request.user.canTeachInEnglish = 'e' in languages_form.cleaned_data['languages']
+            request.user.save()
+        else:
+            messages.error(request, "The languages section contains error. Please review them")
+            complete_form_is_OK = False
+
+        if complete_form_is_OK:
+            messages.success(
+                request, "Your profile has been succesfully updated.")
 
     context = {
         'year': year,
-        'languages': languages,
         'availability_form': availability_form,
+        'languages_form': languages_form,
     }
     return render(request, 'web/profile.html', context)
