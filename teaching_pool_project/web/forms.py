@@ -49,3 +49,11 @@ class AvailabilityForm(ModelForm):
             'year': forms.HiddenInput(),
             'person': forms.HiddenInput()
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        availability = cleaned_data['availability'].lower()
+        reason = cleaned_data['reason']
+        if availability == "unavailable" and not reason:
+            raise forms.ValidationError(
+                'A reason should be provided when you say you will be unavailable.')

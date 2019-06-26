@@ -117,6 +117,7 @@ class Availability(models.Model):
     ]
     availability = models.CharField(
         max_length=255, choices=AVAILABILITIES_CHOICES, default="Available")
+    reason = models.TextField(null=True, blank=True, default=None)
 
     def __str__(self):
         return "{} -> {} -> {}".format(self.year, self.person, self.availability)
