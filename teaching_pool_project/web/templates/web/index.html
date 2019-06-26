@@ -6,14 +6,4 @@
   <h1 class="display-4">Teaching pools</h1>
   <p class="lead">Where teaching assistants positions can be filled.</p>
 </div>
-{% if display_pending_requests_message %}
-<div class="card">
-  <h5 class="card-header"><i class="fas fa-lg fa-info-circle"></i>&nbsp;Requests for Teaching Assistants</h5>
-  <div class="card-body">
-    <h5 class="card-title">Pending requests for Teaching Assistants</h5>
-    <p class="card-text">There are pending requests for Teaching Assistants.</p>
-    <a href="{% url "web:get_TAs_requests_to_validate" %}" class="btn btn-primary">Review</a>
-  </div>
-</div>
-{% endif %}
 {% endblock maincontent %}

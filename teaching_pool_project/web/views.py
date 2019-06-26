@@ -17,6 +17,7 @@ from django.shortcuts import redirect, render
 from django.template import Context
 from django.template.loader import get_template
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.views import generic
 
@@ -66,8 +67,10 @@ def impersonable(function):
                 if user_to_impersonate and user_to_impersonate != request.user:
                     login(request, user_to_impersonate,
                           backend='django.contrib.auth.backends.ModelBackend')
+                    messages.info(request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;Current user switched to {} {}".format(
+                        user_to_impersonate.first_name, user_to_impersonate.last_name)))
             except Exception as ex:
-                print(ex)
+                messages.error(request, mark_safe("<i class='fas fa-exclamation-circle'></i>&nbsp;Unable to switch user. Please check the username you want to use."))
 
         return function(request, *args, **kwargs)
     return wrap
@@ -107,12 +110,10 @@ def notify_people(data={}, template='', subject='', sender='', recipients=list()
 @login_required
 @impersonable
 def index(request):
-    display_pending_requests_message = (
-        request.user.is_staff and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists())
-    context = {
-        'display_pending_requests_message': display_pending_requests_message,
-    }
-    return render(request, 'web/index.html', context=context)
+    if request.user.is_staff and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists():
+        messages.info(
+            request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;You have (a) pending <a href='{}'>TA request(s) to validate</a>".format(reverse('web:get_TAs_requests_to_validate'))))
+    return render(request, 'web/index.html')
 
 
 @impersonable
