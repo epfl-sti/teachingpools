@@ -1,4 +1,7 @@
 from django import forms
+from django.forms import HiddenInput, ModelForm
+
+from web.models import *
 
 
 class NameForm(forms.Form):
@@ -24,6 +27,7 @@ class RequestForTAApproval(forms.Form):
     reason_for_decision = forms.CharField(
         widget=forms.Textarea, required=False)
 
+
 class RequestForTAView(forms.Form):
     request_id = forms.IntegerField(widget=forms.HiddenInput)
     opened_at = forms.DateTimeField(disabled=True, required=False)
@@ -35,3 +39,13 @@ class RequestForTAView(forms.Form):
         disabled=True, widget=forms.Textarea, required=False)
     reason_for_decision = forms.CharField(
         widget=forms.Textarea, required=False, disabled=True)
+
+
+class AvailabilityForm(ModelForm):
+    class Meta:
+        model = Availability
+        fields = '__all__'
+        widgets = {
+            'year': forms.HiddenInput(),
+            'person': forms.HiddenInput()
+        }

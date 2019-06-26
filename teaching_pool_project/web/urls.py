@@ -14,4 +14,5 @@ urlpatterns = [
     re_path(r'requests/TAs/view/(?P<request_id>\d*$)', views.view_request_for_TA, name="view_request_for_TA"),
     path('requests/TAs/my/', views.requests_for_tas_teacher, name="requests_for_tas_teacher"),
     re_path(r'requests/TAs/my/(?P<status>.*$)', views.requests_for_tas_teacher_status, name="requests_for_tas_teacher_status"),
+    path('profile/', views.update_my_profile, name="update_my_profile"),
 ]

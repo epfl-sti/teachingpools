@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from functools import wraps
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
@@ -20,9 +22,8 @@ from django.views import generic
 
 from epfl.sti.helpers import ldap as epfl_ldap
 
-from .forms import (NameForm, RequestForTA, RequestForTAApproval,
-                    RequestForTAView)
-from .models import Course, NumberOfTAUpdateRequest, Person, Teaching
+from .forms import *
+from .models import *
 
 User = get_user_model()
 
@@ -106,7 +107,8 @@ def notify_people(data={}, template='', subject='', sender='', recipients=list()
 @login_required
 @impersonable
 def index(request):
-    display_pending_requests_message = (request.user.is_staff and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists())
+    display_pending_requests_message = (
+        request.user.is_staff and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists())
     context = {
         'display_pending_requests_message': display_pending_requests_message,
     }
@@ -300,3 +302,38 @@ def view_request_for_TA(request, request_id):
     }
 
     return render(request, 'web/request_for_ta_view_form.html', context)
+
+
+@login_required
+@impersonable
+@group_required('phds')
+def update_my_profile(request):
+    year = settings.APP_CURRENT_YEAR
+
+    availability, availability_created = Availability.objects.get_or_create(
+        person=request.user, year=year)
+    if availability_created:
+        messages.warning(
+            request, "Since you did not fill in your profile, your default availability has been set to 'Available'")
+    availability_form = AvailabilityForm(
+        request.POST or None, instance=availability)
+
+    if request.method == "POST":
+        if availability_form.is_valid():
+            availability_form.save(commit=False)
+            availability.save()
+            messages.success(
+                request, "Your profile has been succesfully updated")
+
+    languages = list()
+    if request.user.canTeachInFrench:
+        languages.append("French")
+    if request.user.canTeachInEnglish:
+        languages.append("English")
+
+    context = {
+        'year': year,
+        'languages': languages,
+        'availability_form': availability_form,
+    }
+    return render(request, 'web/profile.html', context)

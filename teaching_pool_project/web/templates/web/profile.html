@@ -1,0 +1,33 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+
+{% block maincontent %}
+<div class="card">
+    <div class="card-header">
+    <h6>Personal details<h6>
+    </div>
+    <div class="card-body">
+    <p>First name: {{ request.user.first_name }}</p>
+    <p>Last name: {{ request.user.last_name }}</p>
+    <p>Languages: {% if languages %}{{ languages|join:", " }}{% else %}N/A{% endif %} <a href="#"><i class="fas fa-edit"></i></a></p>
+    </div>
+</div>
+
+<form action="{% url "web:update_my_profile" %}" method="post" class="form">
+{% csrf_token %}
+    <div class="card">
+        <div class="card-header">
+            <h6>Availability for {{ year }}<h6>
+        </div>
+        <div class="card-body">
+            {% bootstrap_form form=availability_form %}
+        </div>
+    </div>
+    <div>
+        {% buttons %}
+        {% bootstrap_button "Save" button_type="submit" button_class="btn-primary" %}
+        {% bootstrap_button "Clear" button_type="reset" %}
+        {% endbuttons %}
+    </div>
+</form>
+{% endblock maincontent %}

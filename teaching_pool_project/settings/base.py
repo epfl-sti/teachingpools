@@ -130,6 +130,9 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# The APP_CURRENT_YEAR is used to represent the year we are currently working on
+APP_CURRENT_YEAR = "2019-2020"
+
 LDAP_SERVER = 'ldap.epfl.ch'
 LDAP_BASEDN = 'o=epfl,c=ch'
 LDAP_FILTER = '(uid={})'
