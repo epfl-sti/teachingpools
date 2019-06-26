@@ -56,28 +56,56 @@ def get_mails(settings, scipers):
     return return_value
 
 
+def get_users(settings, scipers):
+    return_value = list()
+    filter = "(&(|"
+    for sciper in scipers:
+        filter += "(uniqueIdentifier={})".format(sciper)
+    filter += ")(EPFLAccredOrder=1))"
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search(settings.LDAP_BASEDN, filter,
+                attributes=['uniqueIdentifier', 'mail', 'uid', 'sn', 'givenName'])
+    for entry in conn.entries:
+        current_result = {}
+        current_result['sciper'] = str(entry['uniqueIdentifier'])
+        current_result['email'] = min(entry['mail'])
+        current_result['username'] = min(entry['uid'])
+        current_result['first_name'] = min(entry['givenName'])
+        current_result['last_name'] = min(entry['sn'])
+        return_value.append(current_result)
+    return return_value
+
+
 def get_user_by_partial_first_name_and_partial_last_name(settings, partial_first_name='', partial_last_name=''):
     print("Searching for '*{}*' '*{}*'".format(partial_first_name, partial_last_name))
-    filter='(&(givenName={}*)(sn={}*)(EPFLAccredOrder=1)(!(description=Etudiant)))'.format(partial_first_name, partial_last_name)
+    filter = '(&(givenName={}*)(sn={}*)(EPFLAccredOrder=1)(!(description=Etudiant)))'.format(
+        partial_first_name, partial_last_name)
     ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
     conn = Connection(ldap_server, auto_bind=True)
     conn.search(settings.LDAP_BASEDN, filter,
                 attributes=['uniqueIdentifier', 'uid', 'givenName', 'sn', 'mail'])
 
     if len(conn.entries) == 0:
-        conn.search('c=ch', filter, attributes=['uniqueIdentifier', 'uid', 'givenName', 'sn', 'mail'])
+        conn.search('c=ch', filter, attributes=[
+                    'uniqueIdentifier', 'uid', 'givenName', 'sn', 'mail'])
         if len(conn.entries) != 1:
             raise ValueError()
-    elif len(conn.entries)!=1:
+    elif len(conn.entries) != 1:
         raise ValueError()
 
     entry_to_use = conn.entries[0]
     return_value = dict()
-    if entry_to_use['mail']: return_value['mail']=min(entry_to_use['mail'])
-    if entry_to_use['uniqueIdentifier']: return_value['sciper']=str(entry_to_use['uniqueIdentifier'])
-    if entry_to_use['uid']: return_value['username']=min(entry_to_use['uid'])
-    if entry_to_use['sn']: return_value['last_name']=min(entry_to_use['sn'])
-    if entry_to_use['givenName']: return_value['first_name']=min(entry_to_use['givenName'])
+    if entry_to_use['mail']:
+        return_value['mail'] = min(entry_to_use['mail'])
+    if entry_to_use['uniqueIdentifier']:
+        return_value['sciper'] = str(entry_to_use['uniqueIdentifier'])
+    if entry_to_use['uid']:
+        return_value['username'] = min(entry_to_use['uid'])
+    if entry_to_use['sn']:
+        return_value['last_name'] = min(entry_to_use['sn'])
+    if entry_to_use['givenName']:
+        return_value['first_name'] = min(entry_to_use['givenName'])
     return return_value
 
 

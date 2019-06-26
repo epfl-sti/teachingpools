@@ -143,4 +143,5 @@ EXCEL_FILE_TO_LOAD = './teaching_pool_project/data/liste matières STI 19-20.xls
 EXCEL_FILE_TO_LOAD_FOR_PREVIOUS_YEAR = './teaching_pool_project/data/liste matières STI 18-19.xlsx'
 FIRST_NAME_LAST_NAME_MAPPING = './teaching_pool_project/data/first_name_last_name.txt'
 PICKLED_DATA_FROM_LDAP = './teaching_pool_project/data/names.pickle'
+LIST_OF_PHD_SCIPERS = './teaching_pool_project/data/phds.txt'
 EXCEL_LOADER_CURRENT_YEAR = "2019-2020"
