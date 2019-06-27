@@ -45,7 +45,7 @@
         <td>{{ teaching.course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
         <td>{{ teaching.course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
         <td>{{ teaching.course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
-        <td><a href="{% url "web:request_for_TA" course_id=teaching.course.id %}">Request TAs</a></td>
+        <td><a class="btn btn-outline-primary" href="{% url "web:request_for_TA" course_id=teaching.course.id %}">Request TAs</a></td>
       </tr>
     {% endfor %}
   </tbody>

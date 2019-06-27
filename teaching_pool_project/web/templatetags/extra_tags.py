@@ -26,3 +26,16 @@ def is_phd(user):
 @register.filter(name='has_group')
 def has_group(user, group_name):
     return user.groups.filter(name=group_name).exists()
+
+
+@register.filter(name='get_status_class')
+def get_class_from_status(status):
+    status = status.lower()
+    if status == "approved":
+        return "badge-pill badge-success"
+    elif status == "pending":
+        return "badge-pill badge-info"
+    elif status == "rejected":
+        return "badge-pill badge-danger"
+    else:
+        return ""
