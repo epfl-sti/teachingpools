@@ -30,3 +30,4 @@ EMAIL_HOST = "mail.epfl.ch"
 EMAIL_PORT = "25"
 EMAIL_FROM = "noreply@epfl.ch"
 EMAIL_SUBJECT_PREFIX = "EPFL Teaching Pools - "
+EMAIL_ADMINS_EMAIL = os.environ.get('DJANGO_EMAIL_ADMINS_EMAIL', 'not@available.yet').split(',')

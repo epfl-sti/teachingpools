@@ -197,8 +197,7 @@ def request_for_TA(request, course_id):
                 }
             requesters = list()
             requesters.append(request.user.email)
-            admins = User.objects.filter(is_staff=True).all()
-            admins_mails = [admin.email for admin in admins]
+            admins_mails = settings.EMAIL_ADMINS_EMAIL
 
             notify_admins_and_requester(
                 data=data,
