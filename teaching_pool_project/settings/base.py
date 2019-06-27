@@ -145,3 +145,5 @@ FIRST_NAME_LAST_NAME_MAPPING = './teaching_pool_project/data/first_name_last_nam
 PICKLED_DATA_FROM_LDAP = './teaching_pool_project/data/names.pickle'
 LIST_OF_PHD_SCIPERS = './teaching_pool_project/data/phds.txt'
 EXCEL_LOADER_CURRENT_YEAR = "2019-2020"
+
+APP_BASE_URL = os.environ.get('DJANGO_APP_BASE_URL', 'https://localhost')

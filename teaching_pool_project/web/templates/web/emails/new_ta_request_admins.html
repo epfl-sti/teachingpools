@@ -5,7 +5,7 @@
 
 <p>{{ request.requester.first_name }} {{ request.requester.last_name }} has requested {{ request.requestedNumberOfTAs }} teaching assistant(s) for the '{{ request.course.subject }}' course.</p>
 
-<p>Could you please validate or reject this request by going to the <a href="#">teaching pool application</a>.</p>
+<p>Could you please validate or reject this request by going to the <a href="{{ base_url }}{% url "web:get_TAs_requests_to_validate" %}">teaching pool application</a>.</p>
 
 <p>Best Regards,</p>
 

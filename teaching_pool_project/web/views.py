@@ -191,7 +191,10 @@ def request_for_TA(request, course_id):
             request_obj.course.save()
             request_id = request_obj.pk
 
-            data = {'request': request_obj}
+            data = {
+                'request': request_obj,
+                'base_url': settings.APP_BASE_URL,
+                }
             requesters = list()
             requesters.append(request.user.email)
             admins = User.objects.filter(is_staff=True).all()

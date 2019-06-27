@@ -2,7 +2,7 @@ Dear teaching pool administrator,
 
 {{ request.requester.first_name }} {{ request.requester.last_name }} has requested {{ request.requestedNumberOfTAs }} teaching assistant(s) for the '{{ request.course.subject }}' course.
 
-Could you please validate or reject this request by going to the teaching pool application (#URL).
+Could you please validate or reject this request by going to the teaching pool application ({{ base_url }}{% url "web:get_TAs_requests_to_validate" %}).
 
 Best Regards,
 
