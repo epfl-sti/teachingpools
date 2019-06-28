@@ -1,0 +1,37 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load applications_tags %}
+
+{% block maincontent %}
+<div class="row">
+<div class="col">
+    <div class="card-columns">
+    {% regroup applications by course as applications_by_course %}
+    {% for course in applications_by_course %}
+
+    <div class="card">
+        <div class="card-header">
+        {{ course.grouper.subject }} ({{ course.grouper.code }})
+        </div>
+        <div class="card-body">
+            {% for application in course.list %}
+            <p>
+                <i class="fas fa-user-graduate"></i>&nbsp;
+                {{ application.applicant.first_name }} {{ application.applicant.last_name }}
+                {% get_badge application %}
+                {% if application.status == "Pending" %}
+                <a class="btn btn-primary btn-sm" href="{% url 'web:review_application' application_id=application.id %}">Review</a>
+                {% endif %}
+
+            </p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+</div>
+</div>
+
+{% endblock maincontent %}
+{% block scripts%}
+{%endblock scripts%}

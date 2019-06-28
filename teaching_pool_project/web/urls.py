@@ -15,4 +15,8 @@ urlpatterns = [
     path('requests/TAs/my/', views.requests_for_tas_teacher, name="requests_for_tas_teacher"),
     re_path(r'requests/TAs/my/(?P<status>.*$)', views.requests_for_tas_teacher_status, name="requests_for_tas_teacher_status"),
     path('profile/', views.update_my_profile, name="update_my_profile"),
+    re_path('apply/(?P<course_id>\d*)', views.apply, name="apply"),
+    path('applications/my/', views.my_applications, name='my_applications'),
+    path('applications/', views.get_applications_for_my_courses, name='applications_for_my_courses'),
+    re_path('applications/review/(?P<application_id>\d*)', views.review_application, name='review_application'),
 ]

@@ -59,6 +59,30 @@ class AvailabilityForm(ModelForm):
             self.add_error('reason', msg)
 
 
+class ApplicationForm_phd(ModelForm):
+    class Meta:
+        model = Applications
+        fields = ['applicant', 'course']
+        widgets = {
+            'applicant': forms.HiddenInput(),
+            'course': forms.HiddenInput()
+        }
+
+
+class ApplicationForm_teacher(ModelForm):
+    class Meta:
+        model = Applications
+        fields = '__all__'
+        exclude = ['openedAt', 'status', 'closedAt', 'closedBy']
+        labels = {
+            'applicant': 'PhD',
+            'decisionReason': 'Reason for decision',
+        }
+        widgets = {
+            'applicant': forms.HiddenInput(),
+            'course': forms.HiddenInput(),
+        }
+
 class LanguagesForm(forms.Form):
     OPTIONS = (
         ('f', 'French'),
@@ -70,7 +94,8 @@ class LanguagesForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        possible_choices = [item[0] for item in self.fields['languages'].choices]
+        possible_choices = [item[0]
+                            for item in self.fields['languages'].choices]
         if 'languages' in cleaned_data:
             for language in cleaned_data['languages']:
                 if language not in possible_choices:

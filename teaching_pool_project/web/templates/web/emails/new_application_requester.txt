@@ -1,0 +1,9 @@
+Dear {{ application.applicant.first_name }},
+
+Your application as Teaching Assistant for the {{ course.subject }} ({{ course.code }}) course has been received.
+
+We will review it as soon as possible.
+
+Best Regards,
+
+The teaching pool system.

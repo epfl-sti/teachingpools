@@ -1,45 +1,55 @@
 {% extends "web/base.html" %}
 {% load bootstrap4 %}
+{% load course_tags %}
 
 {% block maincontent %}
-
-<table class="table">
-  <thead>
-    <tr>
-      <th>Code</th>
-      <th>Term</th>
-      <th>Subject</th>
-      <th>Teachers</th>
-      <th>Types</th>
-      <th>Lang.</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for course in courses %}
-      <tr>
-        <td>{{ course.code }}</td>
-        <td>{{ course.term }}</td>
-        <td>{{ course.subject }}</td>
-        <td>
-          <ul>
-            {% for teacher in course.teachers.all %}
-            <li>{{ teacher.last_name }}, {{ teacher.first_name }}</li>
-            {% endfor %}
-          </ul>
-        </td>
-        <td>
-          <ul>
-            {% if course.has_course %}<li>Course</li>{% endif %}
-            {% if course.has_exercises %}<li>Exercises</li>{% endif %}
-            {% if course.has_project %}<li>Project</li>{% endif %}
-            {% if course.has_practical_work %}<li>Practical work</li>{% endif %}
-          </ul>
-        </td>
-        <td>{% if course.taughtInFrench %}F{% endif %}{% if course.taughtInEnglish %}E{% endif %}{% if course.taughtInGerman %}G{% endif %} </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-
-</table>
-
+<div id="cards-list">
+  <div class="row">
+    <div class="col">
+      <input type="text" class="form-control search" placeholder="Search by course code, subject or teacher">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      &nbsp;
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="card-columns list">
+        {% for course in courses %}
+        <div class="card">
+          <div class="card-header">
+            <span class="subject">{{ course.subject }}</span> <span class="code">({{ course.code }}</span>){% get_badge course request.user courses_applied_to %}
+          </div>
+          <div class="card-body">
+            <p>Term: {{ course.term }}</p>
+            <p>Teacher(s): <span class="teachers">{{ course|format_teachers }}</span></p>
+            <p>Form(s): {{ course|format_forms }}</p>
+            <p>Language(s): {{ course|format_languages }}</p>
+            {# This is not nice but prevents from making hundred of DB queries #}
+            {% if user_is_phd and course.pk not in courses_applied_to %}{% get_apply_button course request.user %}{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock maincontent %}
+{% block scripts%}
+<script>
+$(document).ready(function(){
+  $('#cards-list').find('.search').val('');
+})
+
+var options = {
+  valueNames: [
+      "code",
+      "subject",
+      "teachers"
+  ]
+};
+var coursesList = new List('cards-list', options);
+</script>
+{%endblock scripts%}

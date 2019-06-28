@@ -19,6 +19,8 @@
           <a class="dropdown-item" href="{% url "web:courses_full_list" year="2019-2020" %}">All courses (2019-2020)</a>
           {% if request.user|has_group:"teachers" %}
           <a class="dropdown-item" href="{% url "web:courses_list_year_teacher" year="2019-2020" %}">My courses</a>
+          <a class="dropdown-item" href="{% url "web:applications_for_my_courses" %}">Applications for my courses</a>
+
           {% endif %}
       </li>
 
@@ -49,6 +51,7 @@
 
             <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
               <a class="dropdown-item" href="{% url "web:update_my_profile" %}">Profile</a>
+              <a class="dropdown-item" href="{% url "web:my_applications" %}">Applications</a>
             </div>
           </div>
       {% else %}

@@ -1,0 +1,15 @@
+<html>
+
+<head></head>
+
+<body>
+    <p>Dear {{ application.applicant.first_name }},</p>
+    <p></p>
+    <p>Your application for the Teaching Assistant position for the {{ application.course.subject }} ({{ application.course.code }}) has been {% if application.status == "Hired" %}accepted{% endif %}{% if application.status == "Rejected" %}rejected{% endif %}.</p>
+    <p></p>
+    <p>Best Regards,</p>
+    <p></p>
+    <p>The teaching pool system.</p>
+</body>
+
+</html>

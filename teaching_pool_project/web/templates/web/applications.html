@@ -1,0 +1,28 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load applications_tags %}
+
+{% block maincontent %}
+<div class="row">
+<div class="col">
+    <div class="card-columns">
+    {% for application in applications %}
+    <div class="card">
+        <div class="card-header">
+        {{ application.course.subject }}({{ application.course.code }}){% get_badge application %}
+        </div>
+        <div class="card-body">
+        <p>Status: {{ application.status }}</p>
+        {% if application.decisionReason %}
+        <p>Reason: {{ application.decisionReason }}</p>
+        {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+</div>
+</div>
+
+{% endblock maincontent %}
+{% block scripts%}
+{%endblock scripts%}

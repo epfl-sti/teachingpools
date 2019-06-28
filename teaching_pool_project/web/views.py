@@ -13,7 +13,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.template import Context
 from django.template.loader import get_template
 from django.urls import reverse
@@ -79,18 +79,16 @@ def impersonable(function):
 
 
 def notify_admins_and_requester(data, template_base, admins_subject, requesters_subject, admins, requesters):
-    admins_subject = settings.EMAIL_SUBJECT_PREFIX + admins_subject
     admins_template = '{}_admins'.format(template_base)
     admins_sender = settings.EMAIL_FROM
     admin_recipients = admins
     notify_people(data=data, template=admins_template, subject=admins_subject,
                   sender=admins_sender, recipients=admin_recipients)
 
-    requester_subject = settings.EMAIL_SUBJECT_PREFIX + requesters_subject
     requester_template = '{}_requester'.format(template_base)
     requester_sender = settings.EMAIL_FROM
     requester_recipients = requesters
-    notify_people(data=data, template=requester_template, subject=requester_subject,
+    notify_people(data=data, template=requester_template, subject=requesters_subject,
                   sender=requester_sender, recipients=requester_recipients)
 
 
@@ -128,8 +126,16 @@ def index(request):
 def courses_full_list(request, year):
     all_courses = Course.objects.filter(
         year=year).prefetch_related('teachers').all()
+    user_is_phd = request.user.groups.filter(name="phds").exists()
+    if user_is_phd:
+        courses_applied_to = [application.course.pk for application in Applications.objects.filter(applicant=request.user).all()]
+    else:
+        courses_applied_to = []
+
     context = {
-        'courses': all_courses
+        'courses': all_courses,
+        'user_is_phd': user_is_phd,
+        'courses_applied_to': courses_applied_to,
     }
     return render(request, 'web/all_courses.html', context)
 
@@ -144,6 +150,70 @@ def courses_list_year_teacher(request, year):
         'teachings': teachings
     }
     return render(request, 'web/prof_courses.html', context)
+
+
+@login_required
+@impersonable
+@group_required('teachers')
+def get_applications_for_my_courses(request):
+    teachings = Teaching.objects.filter(person=request.user).prefetch_related('course').all()
+    courses_ids = [item.course.pk for item in teachings]
+    applications = Applications.objects.filter(course_id__in = courses_ids).select_related('course').all()
+    context = {
+        'applications': applications,
+    }
+    return render(request, 'web/applications_to_my_courses.html', context)
+
+
+@login_required
+@impersonable
+@group_required('teachers')
+def review_application(request, application_id):
+    application = get_object_or_404(Applications, pk=application_id)
+    application_form = ApplicationForm_teacher(request.POST or None, instance=application)
+
+    if request.method == "POST":
+        if 'Approve' in request.POST:
+            status = "Hired"
+        elif 'Reject' in request.POST:
+            status = "Rejected"
+
+        if application_form.is_valid():
+
+
+            application_form.save(commit=False)
+            application.status = status
+            application.closedAt = now()
+            application.closedBy = request.user
+            if application_form.cleaned_data['decisionReason']:
+                application.decisionReason = application_form.cleaned_data['decisionReason']
+            application.save()
+
+            # if application_created:
+            data = {
+                'application': application,
+                }
+            requesters = list()
+            requesters.append(application.applicant.email)
+
+            notify_people(
+                data=data,
+                template='processed_application',
+                subject='Your application has been processed',
+                sender=settings.EMAIL_FROM,
+                recipients=requesters)
+
+            messages.success(request, "Your decision has been recorded")
+            return HttpResponseRedirect(reverse('web:applications_for_my_courses'))
+
+    context={
+        'course': application.course,
+        'person': application.applicant,
+        'form': application_form,
+        'application_id': application.pk,
+    }
+
+    return render(request, 'web/application_review_form.html', context)
 
 
 @login_required
@@ -318,6 +388,55 @@ def view_request_for_TA(request, request_id):
 @login_required
 @impersonable
 @group_required('phds')
+def apply(request, course_id):
+    course = get_object_or_404(Course, pk=course_id)
+    try:
+        application = Applications.objects.get(applicant=request.user, course=course)
+        application_created = False
+    except ObjectDoesNotExist:
+        application = Applications()
+        application.course = course
+        application.applicant = request.user
+        application_created = True
+
+    application_form = ApplicationForm_phd(request.POST or None, instance=application)
+
+    if request.method == "POST":
+        if application_form.is_valid():
+            application_form.save(commit=False)
+            application.save()
+
+            if application_created:
+                data = {
+                    'course': course,
+                    'application': application,
+                    'base_url': settings.APP_BASE_URL,
+                    }
+                requesters = list()
+                requesters.append(request.user.email)
+                destinations = [item.email for item in course.teachers.all()]
+
+                notify_admins_and_requester(
+                    data=data,
+                    template_base='new_application',
+                    admins_subject='A new teaching assistant application has been recorded for your course',
+                    requesters_subject='Your application has been recorded',
+                    admins=destinations,
+                    requesters=requesters)
+
+            messages.success(request, "Your application has been submitted")
+            return HttpResponseRedirect(reverse('web:courses_full_list', args=[course.year]))
+
+    context={
+        'course': course,
+        'form': application_form
+    }
+
+    return render(request, 'web/application_form.html', context)
+
+@login_required
+@impersonable
+@group_required('phds')
 def update_my_profile(request):
     year = settings.APP_CURRENT_YEAR
 
@@ -371,3 +490,14 @@ def update_my_profile(request):
         'languages_form': languages_form,
     }
     return render(request, 'web/profile.html', context)
+
+
+@login_required
+@impersonable
+@group_required('phds')
+def my_applications(request):
+    applications = Applications.objects.filter(applicant=request.user).prefetch_related('course').all()
+    context = {
+        'applications': applications,
+    }
+    return render(request, 'web/applications.html', context)

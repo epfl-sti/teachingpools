@@ -1,0 +1,27 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load course_tags %}
+
+{% block maincontent %}
+<form action="{% url "web:apply" course_id=course.pk  %}" method="post" class="form">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-header">
+            <h6>{{ course.subject }} ({{ course.code }})<h6>
+        </div>
+        <div class="card-body">
+            <p>Term: {{ course.term }}</p>
+            <p>Teacher(s): <span class="teachers">{{ course|format_teachers }}</span></p>
+            <p>Form(s): {{ course|format_forms }}</p>
+            <p>Language(s): {{ course|format_languages }}</p>
+            {% bootstrap_form form=form %}
+        </div>
+    </div>
+    <div>
+        {% buttons %}
+        {% bootstrap_button "Apply" button_type="submit" button_class="btn-success btn-block" %}
+        <a class="btn btn-danger btn-block" href="{% url 'web:courses_full_list' year=course.year %}">Back to courses</a>
+        {% endbuttons %}
+    </div>
+</form>
+{% endblock maincontent %}
