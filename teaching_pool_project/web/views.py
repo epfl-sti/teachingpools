@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
 from functools import wraps
 
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template import Context
 from django.template.loader import get_template
 from django.urls import reverse
@@ -26,11 +26,14 @@ from epfl.sti.helpers import ldap as epfl_ldap
 from .forms import *
 from .models import *
 
+logger = logging.getLogger(__name__)
+
 User = get_user_model()
 
 
 def is_superuser():
     def has_superuser_profile(u):
+        logger.debug("Checking if %s is superuser", u.username)
         if u.is_superuser:
             return True
         raise PermissionDenied
@@ -39,6 +42,7 @@ def is_superuser():
 
 def is_staff():
     def has_staff_profile(u):
+        logger.debug("Checking if %s is staff", u.username)
         if u.is_staff:
             return True
         raise PermissionDenied
@@ -49,6 +53,7 @@ def group_required(*group_names):
     """Requires user membership in at least one of the groups passed in."""
 
     def in_groups(u):
+        logger.debug("Checking if %s is member of the '%s' group(s)", u.username, group_names)
         if u.is_authenticated:
             if bool(u.groups.filter(name__in=group_names)) | u.is_superuser:
                 return True
@@ -62,6 +67,8 @@ def impersonable(function):
         if settings.DEBUG:
             username_to_impersonate = request.GET.get('impersonate', None)
             if username_to_impersonate:
+                logger.info("impersonating %s", username_to_impersonate)
+
                 try:
                     user_to_impersonate = User.objects.get(
                         username=username_to_impersonate)

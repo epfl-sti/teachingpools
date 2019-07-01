@@ -12,3 +12,4 @@ stunnel/stunnel.cert
 stunnel/stunnel.key
 stunnel/stunnel.pem
 */data/**
+*/logs/**
