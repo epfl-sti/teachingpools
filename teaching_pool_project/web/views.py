@@ -10,7 +10,6 @@ from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.core.mail import EmailMultiAlternatives
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -53,7 +52,8 @@ def group_required(*group_names):
     """Requires user membership in at least one of the groups passed in."""
 
     def in_groups(u):
-        logger.debug("Checking if %s is member of the '%s' group(s)", u.username, group_names)
+        logger.debug("Checking if %s is member of the '%s' group(s)",
+                     u.username, group_names)
         if u.is_authenticated:
             if bool(u.groups.filter(name__in=group_names)) | u.is_superuser:
                 return True
@@ -85,35 +85,6 @@ def impersonable(function):
     return wrap
 
 
-def notify_admins_and_requester(data, template_base, admins_subject, requesters_subject, admins, requesters):
-    admins_template = '{}_admins'.format(template_base)
-    admins_sender = settings.EMAIL_FROM
-    admin_recipients = admins
-    notify_people(data=data, template=admins_template, subject=admins_subject,
-                  sender=admins_sender, recipients=admin_recipients)
-
-    requester_template = '{}_requester'.format(template_base)
-    requester_sender = settings.EMAIL_FROM
-    requester_recipients = requesters
-    notify_people(data=data, template=requester_template, subject=requesters_subject,
-                  sender=requester_sender, recipients=requester_recipients)
-
-
-def notify_people(data={}, template='', subject='', sender='', recipients=list()):
-    mail_subject = settings.EMAIL_SUBJECT_PREFIX + subject
-    plaintext = get_template('web/emails/{}.txt'.format(template))
-    htmly = get_template('web/emails/{}.html'.format(template))
-    text_content = plaintext.render(data)
-    htmly_content = htmly.render(data)
-    msg = EmailMultiAlternatives(
-        subject=mail_subject,
-        body=text_content,
-        from_email=sender,
-        to=recipients)
-    msg.attach_alternative(htmly_content, "text/html")
-    msg.send()
-
-
 @login_required
 @impersonable
 def index(request):
@@ -135,7 +106,8 @@ def courses_full_list(request, year):
         year=year).prefetch_related('teachers').all()
     user_is_phd = request.user.groups.filter(name="phds").exists()
     if user_is_phd:
-        courses_applied_to = [application.course.pk for application in Applications.objects.filter(applicant=request.user).all()]
+        courses_applied_to = [application.course.pk for application in Applications.objects.filter(
+            applicant=request.user).all()]
     else:
         courses_applied_to = []
 
@@ -163,9 +135,11 @@ def courses_list_year_teacher(request, year):
 @impersonable
 @group_required('teachers')
 def get_applications_for_my_courses(request):
-    teachings = Teaching.objects.filter(person=request.user).prefetch_related('course').all()
+    teachings = Teaching.objects.filter(
+        person=request.user).prefetch_related('course').all()
     courses_ids = [item.course.pk for item in teachings]
-    applications = Applications.objects.filter(course_id__in = courses_ids).select_related('course').all()
+    applications = Applications.objects.filter(
+        course_id__in=courses_ids).select_related('course').all()
     context = {
         'applications': applications,
     }
@@ -177,7 +151,8 @@ def get_applications_for_my_courses(request):
 @group_required('teachers')
 def review_application(request, application_id):
     application = get_object_or_404(Applications, pk=application_id)
-    application_form = ApplicationForm_teacher(request.POST or None, instance=application)
+    application_form = ApplicationForm_teacher(
+        request.POST or None, instance=application)
 
     if request.method == "POST":
         if 'Approve' in request.POST:
@@ -187,7 +162,6 @@ def review_application(request, application_id):
 
         if application_form.is_valid():
 
-
             application_form.save(commit=False)
             application.status = status
             application.closedAt = now()
@@ -195,25 +169,10 @@ def review_application(request, application_id):
             if application_form.cleaned_data['decisionReason']:
                 application.decisionReason = application_form.cleaned_data['decisionReason']
             application.save()
-
-            # if application_created:
-            data = {
-                'application': application,
-                }
-            requesters = list()
-            requesters.append(application.applicant.email)
-
-            notify_people(
-                data=data,
-                template='processed_application',
-                subject='Your application has been processed',
-                sender=settings.EMAIL_FROM,
-                recipients=requesters)
-
             messages.success(request, "Your decision has been recorded")
             return HttpResponseRedirect(reverse('web:applications_for_my_courses'))
 
-    context={
+    context = {
         'course': application.course,
         'person': application.applicant,
         'form': application_form,
@@ -264,27 +223,9 @@ def request_for_TA(request, course_id):
             request_obj.requestedNumberOfTAs = form.cleaned_data['number_of_TAs']
             request_obj.requestReason = form.cleaned_data['reason']
             request_obj.save()
-            request_obj.course.requestedNumberOfTAs = request_obj.requestedNumberOfTAs
-            request_obj.course.save()
             request_id = request_obj.pk
 
-            data = {
-                'request': request_obj,
-                'base_url': settings.APP_BASE_URL,
-                }
-            requesters = list()
-            requesters.append(request.user.email)
-            admins_mails = settings.EMAIL_ADMINS_EMAIL
-
-            notify_admins_and_requester(
-                data=data,
-                template_base='new_ta_request',
-                admins_subject='A new TA request has been recorded',
-                requesters_subject='Your request for TA has been recorded',
-                admins=admins_mails,
-                requesters=requesters)
-
-            return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=['2019-2020']))
+            return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=[settings.APP_CURRENT_YEAR]))
     else:
         course = Course.objects.get(pk=course_id)
         form = RequestForTA()
@@ -328,20 +269,6 @@ def validate_request_for_TA(request, request_id):
             person = request.user
             request_obj.decidedBy = request.user
             request_obj.save()
-            if status == "Approved":
-                request_obj.course.approvedNumberOfTAs = request_obj.requestedNumberOfTAs
-                request_obj.course.save()
-
-            # Notification
-            notification_recipients = list()
-            notification_recipients.append(request_obj.requester.email)
-            notify_people(
-                data={'request': request_obj},
-                template="ta_request_approval",
-                subject="Your request for TA has been {}".format(
-                    status.lower()),
-                sender=settings.EMAIL_FROM,
-                recipients=notification_recipients)
 
             return HttpResponseRedirect(reverse('web:get_TAs_requests_to_validate'))
 
@@ -397,49 +324,32 @@ def view_request_for_TA(request, request_id):
 @group_required('phds')
 def apply(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
+
     try:
-        application = Applications.objects.get(applicant=request.user, course=course)
-        application_created = False
+        application = Applications.objects.get(
+            applicant=request.user, course=course)
     except ObjectDoesNotExist:
         application = Applications()
         application.course = course
         application.applicant = request.user
-        application_created = True
 
-    application_form = ApplicationForm_phd(request.POST or None, instance=application)
+    application_form = ApplicationForm_phd(
+        request.POST or None, instance=application)
 
     if request.method == "POST":
         if application_form.is_valid():
             application_form.save(commit=False)
             application.save()
-
-            if application_created:
-                data = {
-                    'course': course,
-                    'application': application,
-                    'base_url': settings.APP_BASE_URL,
-                    }
-                requesters = list()
-                requesters.append(request.user.email)
-                destinations = [item.email for item in course.teachers.all()]
-
-                notify_admins_and_requester(
-                    data=data,
-                    template_base='new_application',
-                    admins_subject='A new teaching assistant application has been recorded for your course',
-                    requesters_subject='Your application has been recorded',
-                    admins=destinations,
-                    requesters=requesters)
-
             messages.success(request, "Your application has been submitted")
             return HttpResponseRedirect(reverse('web:courses_full_list', args=[course.year]))
 
-    context={
+    context = {
         'course': course,
         'form': application_form
     }
 
     return render(request, 'web/application_form.html', context)
+
 
 @login_required
 @impersonable
@@ -466,7 +376,7 @@ def update_my_profile(request):
             languages.append("e")
         if request.user.canTeachInGerman:
             languages.append("g")
-        languages_form = LanguagesForm(initial = {'languages': languages})
+        languages_form = LanguagesForm(initial={'languages': languages})
 
     if request.method == "POST":
         complete_form_is_OK = True
@@ -475,7 +385,8 @@ def update_my_profile(request):
             availability_form.save(commit=False)
             availability.save()
         else:
-            messages.error(request, "The availability section contains error. Please review them")
+            messages.error(
+                request, "The availability section contains error. Please review them")
             complete_form_is_OK = False
 
         if languages_form.is_valid():
@@ -484,7 +395,8 @@ def update_my_profile(request):
             request.user.canTeachInGerman = 'g' in languages_form.cleaned_data['languages']
             request.user.save()
         else:
-            messages.error(request, "The languages section contains error. Please review them")
+            messages.error(
+                request, "The languages section contains error. Please review them")
             complete_form_is_OK = False
 
         if complete_form_is_OK:
@@ -503,7 +415,8 @@ def update_my_profile(request):
 @impersonable
 @group_required('phds')
 def my_applications(request):
-    applications = Applications.objects.filter(applicant=request.user).prefetch_related('course').all()
+    applications = Applications.objects.filter(
+        applicant=request.user).prefetch_related('course').all()
     context = {
         'applications': applications,
     }
