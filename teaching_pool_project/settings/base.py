@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'web',
     'django_tequila',
     'rest_framework',
+    'django_extensions',
 ]
 
 AUTH_USER_MODEL = 'web.Person'

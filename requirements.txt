@@ -8,6 +8,7 @@ ldap3
 numpy
 pandas
 xlrd
+django-extensions
 
 # staging environment
 python-memcached
