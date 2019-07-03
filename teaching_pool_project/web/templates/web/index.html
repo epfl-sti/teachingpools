@@ -1,9 +1,51 @@
-{% extends "web/base.html" %}
-{% load bootstrap4 %}
+{% extends "web/base.html" %} {% load bootstrap4 %} {% block maincontent %}
+{% load extra_tags %}
 
-{% block maincontent %}
 <div class="jumbotron">
-  <h1 class="display-4">Teaching pools</h1>
-  <p class="lead">Where teaching assistants positions can be filled.</p>
-</div>
+    <h1 class="display-3">Teaching Pools</h1>
+    <p class="lead">Where teaching assistants positions can be filled.</p>
+  </div>
+
+    <div class="alert alert-info" role="alert"><i class="fa fa-shoe-prints fa-2x " aria-hidden="true" style="vertical-align: middle;"></i>&nbsp; Next steps</div>
+
+  <div class="row">
+    <div class="col">
+      <div class="card-columns list">
+
+      {% if request.user|is_teacher or request.user|is_superuser %}
+      <div class="card">
+        <div class="card-header">As a teacher, you can</div>
+        <div class="card-body">
+          <ul>
+              <li><a href="{% url "web:courses_list_year_teacher" year="2019-2020" %}" role="button">Review your courses</a></li>
+              <li><a href="{% url "web:requests_for_tas_teacher" %}">View your request(s) for Teaching Assistants</a></li>
+              <li><a href='{% url "web:applications_for_my_courses" %}'>Review the applications to your course(s)</a></li>
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+
+    {% if request.user|is_phd or request.user|is_superuser %}
+    <div class="card">
+        <div class="card-header">As a PhD, you can</div>
+        <div class="card-body">
+          <ul>
+            <li><a href="{% url "web:update_my_profile" %}" role="button">Update your profile</a></li>
+            <li><a href="{% url "web:courses_full_list" year="2019-2020" %}">Apply for teaching assistant positions</a></li>
+            <li><a href='{% url "web:my_applications" %}'>Review your application(s)</a></li>
+          </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if request.user|is_staff or request.user|is_superuser %}
+    <div class="card">
+        <div class="card-header">As a staff member, you can</div>
+        <div class="card-body">
+          <ul>
+            <li><a href="{% url "web:get_TAs_requests_to_validate" %}" role="button">Review the requests for Teaching Assistants</a></li>
+          </ul>
+        </div>
+    </div>
+    {% endif %}
 {% endblock maincontent %}
