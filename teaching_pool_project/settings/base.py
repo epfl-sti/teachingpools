@@ -140,11 +140,11 @@ LDAP_FILTER = '(uid={})'
 LDAP_PHD_BASEDN = 'ou=edoc,ou=etu,o=epfl,c=ch'
 LDAP_PHD_FILTER = '(uniqueIdentifier={})'
 
-EXCEL_FILE_TO_LOAD = './teaching_pool_project/data/liste matières STI 19-20.xlsx'
-EXCEL_FILE_TO_LOAD_FOR_PREVIOUS_YEAR = './teaching_pool_project/data/liste matières STI 18-19.xlsx'
-FIRST_NAME_LAST_NAME_MAPPING = './teaching_pool_project/data/first_name_last_name.txt'
-PICKLED_DATA_FROM_LDAP = './teaching_pool_project/data/names.pickle'
-LIST_OF_PHD_SCIPERS = './teaching_pool_project/data/phds.txt'
-EXCEL_LOADER_CURRENT_YEAR = "2019-2020"
+EXCEL_FILE_TO_LOAD = os.environ.get('DJANGO_EXCEL_FILE_TO_LOAD', '')
+EXCEL_FILE_TO_LOAD_FOR_PREVIOUS_YEAR = os.environ.get('DJANGO_EXCEL_FILE_TO_LOAD_FOR_PREVIOUS_YEAR', '')
+FIRST_NAME_LAST_NAME_MAPPING = os.environ.get('DJANGO_FIRST_NAME_LAST_NAME_MAPPING', '')
+PICKLED_DATA_FROM_LDAP = os.environ.get('DJANGO_PICKLED_DATA_FROM_LDAP', '')
+LIST_OF_PHD_SCIPERS = os.environ.get('DJANGO_LIST_OF_PHD_SCIPERS', '')
+EXCEL_LOADER_CURRENT_YEAR = os.environ.get('DJANGO_EXCEL_LOADER_CURRENT_YEAR', '')
 
 APP_BASE_URL = os.environ.get('DJANGO_APP_BASE_URL', 'https://localhost')
