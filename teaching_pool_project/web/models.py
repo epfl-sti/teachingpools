@@ -51,7 +51,7 @@ class Course(models.Model):
     approvedNumberOfTAs = models.IntegerField(
         null=True, blank=True, default=None)
     teachers = models.ManyToManyField("web.Person", through="Teaching")
-    taughtInFrench = models.BooleanField(default=True)
+    taughtInFrench = models.BooleanField(default=False)
     taughtInEnglish = models.BooleanField(default=False)
     taughtInGerman = models.BooleanField(default=False)
     has_course = models.BooleanField(default=False)
@@ -103,6 +103,9 @@ class Topic(models.Model):
     name = models.CharField(max_length=255)
     interestedPersons = models.ManyToManyField(
         "web.Person", through="Interests")
+
+    def __str__(self):
+        return self.name
 
 
 class Interests(models.Model):
