@@ -378,6 +378,9 @@ def update_my_profile(request):
             languages.append("g")
         languages_form = LanguagesForm(initial={'languages': languages})
 
+    # Working with the topics
+    topics_form = TopicForm(request.POST or None, instance=request.user)
+
     if request.method == "POST":
         complete_form_is_OK = True
 
@@ -386,7 +389,7 @@ def update_my_profile(request):
             availability.save()
         else:
             messages.error(
-                request, "The availability section contains error. Please review them")
+                request, "The availability section contains error. Please review it")
             complete_form_is_OK = False
 
         if languages_form.is_valid():
@@ -396,7 +399,16 @@ def update_my_profile(request):
             request.user.save()
         else:
             messages.error(
-                request, "The languages section contains error. Please review them")
+                request, "The languages section contains error. Please review it")
+            complete_form_is_OK = False
+
+        # Topics
+        if topics_form.is_valid():
+            topics_form.save()
+
+        else:
+            messages.error(
+                request, "The list of selected topics contains error(s). Please review it")
             complete_form_is_OK = False
 
         if complete_form_is_OK:
@@ -407,6 +419,7 @@ def update_my_profile(request):
         'year': year,
         'availability_form': availability_form,
         'languages_form': languages_form,
+        'topics_form': topics_form,
     }
     return render(request, 'web/profile.html', context)
 
