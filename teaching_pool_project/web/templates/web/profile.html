@@ -20,6 +20,14 @@
             {% bootstrap_form form=languages_form layout='inline'%}
         </div>
     </div>
+    <div class="card">
+        <div class="card-header">
+            <h6>Topics<h6>
+        </div>
+        <div class="card-body">
+            {% bootstrap_form form=topics_form layout='inline' %}
+        </div>
+    </div>
     <div>
         {% buttons %}
         {% bootstrap_button "Save" button_type="submit" button_class="btn-primary btn-block" %}

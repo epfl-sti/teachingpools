@@ -28,7 +28,7 @@ class Person(AbstractUser):
         null=True, blank=True, default=None)
     canTeachInGerman = models.BooleanField(
         null=True, blank=True, default=None)
-    topics = models.ManyToManyField("web.Topic", through="Interests")
+    topics = models.ManyToManyField("web.Topic", through="Interests", blank=True)
 
     def __str__(self):
         return "{last}, {first} ({id})".format(last=self.last_name, first=self.first_name, id=self.id)

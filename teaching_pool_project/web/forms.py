@@ -1,5 +1,6 @@
 from django import forms
 from django.forms import HiddenInput, ModelForm
+from django.forms.widgets import CheckboxSelectMultiple
 
 from web.models import *
 
@@ -83,6 +84,7 @@ class ApplicationForm_teacher(ModelForm):
             'course': forms.HiddenInput(),
         }
 
+
 class LanguagesForm(forms.Form):
     OPTIONS = (
         ('f', 'French'),
@@ -104,3 +106,15 @@ class LanguagesForm(forms.Form):
         else:
             self.add_error(
                 'languages', "You should be able to teach at least in one language")
+
+
+class TopicForm(ModelForm):
+    class Meta:
+        model = Person
+        fields = ('topics',)
+
+    def __init__(self, *args, **kwargs):
+        super(TopicForm, self).__init__(*args, **kwargs)
+
+        self.fields['topics'].widget = CheckboxSelectMultiple()
+        self.fields['topics'].queryset = Topic.objects.all()
