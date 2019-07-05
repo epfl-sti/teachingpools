@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import HiddenInput, ModelForm
-from django.forms.widgets import CheckboxSelectMultiple
+from django.forms.widgets import CheckboxSelectMultiple, Textarea
 
 from web.models import *
 
@@ -9,11 +9,20 @@ class NameForm(forms.Form):
     your_name = forms.CharField(label='Your name', max_length=100)
 
 
-class RequestForTA(forms.Form):
-    course_id = forms.IntegerField(widget=forms.HiddenInput)
-    number_of_TAs = forms.IntegerField(
-        max_value=100, min_value=0, label="Number of requested TAs")
-    reason = forms.CharField(widget=forms.Textarea, required=False)
+class RequestForTA(forms.ModelForm):
+
+    class Meta:
+        model = NumberOfTAUpdateRequest
+        fields = ('requestedNumberOfTAs', 'requestReason')
+        widgets = {
+            'requestReason': Textarea(),
+        }
+        labels = {
+            'requestReason': 'Reason',
+        }
+        help_texts = {
+            'requestReason': 'Optionally, you can provide a reason for this request',
+        }
 
 
 class RequestForTAApproval(forms.Form):

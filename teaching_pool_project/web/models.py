@@ -226,11 +226,15 @@ class NumberOfTAUpdateRequest(models.Model):
             # Generate the email notification
             notification_recipients = list()
             notification_recipients.append(self.requester.email)
+            if self.status.lower() == "pending":
+                subject_status = "updated"
+            else:
+                subject_status = self.status.lower()
+
             mail.notify_people(
                 data={'request': self},
                 template="ta_request_approval",
-                subject="Your request for TA has been {}".format(
-                    self.status.lower()),
+                subject="Your request for TA has been {}".format(subject_status),
                 sender=settings.EMAIL_FROM,
                 recipients=notification_recipients)
 

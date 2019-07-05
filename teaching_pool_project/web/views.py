@@ -210,32 +210,36 @@ def requests_for_tas_teacher_status(request, status):
 @impersonable
 @group_required('teachers')
 def request_for_TA(request, course_id):
-    if request.method == 'POST':
-        form = RequestForTA(request.POST)
+    course = get_object_or_404(Course, pk=course_id)
+
+    try:
+        ta_request = NumberOfTAUpdateRequest.objects.get(
+            status="Pending", course=course)
+    except ObjectDoesNotExist:
+        ta_request = NumberOfTAUpdateRequest()
+        ta_request.course = course
+        ta_request.requester = request.user
+        ta_request.openedAt = now()
+        ta_request.requestedNumberOfTAs = course.calculatedNumberOfTAs
+
+    form = RequestForTA(request.POST or None, instance=ta_request)
+
+    if request.method == "POST":
         if form.is_valid():
-
-            requester = request.user
-            course = Course.objects.get(pk=form.cleaned_data['course_id'])
-
-            request_obj = NumberOfTAUpdateRequest()
-            request_obj.requester = requester
-            request_obj.course = course
-            request_obj.requestedNumberOfTAs = form.cleaned_data['number_of_TAs']
-            request_obj.requestReason = form.cleaned_data['reason']
-            request_obj.save()
-            request_id = request_obj.pk
-
+            ta_request.openedAt = now()
+            ta_request.requestedNumberOfTAs = form.cleaned_data['requestedNumberOfTAs']
+            ta_request.requestReason = form.cleaned_data['requestReason']
+            ta_request.save()
+            messages.success(
+                request, "Your request for TAs has been successfully saved")
             return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=[settings.APP_CURRENT_YEAR]))
-    else:
-        course = Course.objects.get(pk=course_id)
-        form = RequestForTA()
-        form.fields['course_id'].initial = course_id
-        context = {
-            'course_id': course_id,
-            'course': course,
-            'form': form
-        }
-        return render(request, 'web/request_for_ta_form.html', context)
+
+    context = {
+        'course_id': course_id,
+        'course': course,
+        'form': form
+    }
+    return render(request, 'web/request_for_ta_form.html', context)
 
 
 @login_required

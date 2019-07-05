@@ -5,7 +5,7 @@
 
 <p>You have requested to get {{ request.requestedNumberOfTAs }} teaching assistants for your '{{ request.course.subject }}' course.</p>
 
-<p>This request has been {{ request.status|lower }}.</p>
+<p>This request has been {% if request.status == "Pending" %}updated{% else %}{{ request.status|lower }}{% endif %}.</p>
 
 {% if request.decisionReason %}
 <p>The reason for this decision is the following:</p>
