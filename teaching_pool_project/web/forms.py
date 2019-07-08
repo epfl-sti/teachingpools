@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import HiddenInput, ModelForm
-from django.forms.widgets import CheckboxSelectMultiple, Textarea
+from django.forms.widgets import Textarea, SelectMultiple
 
 from web.models import *
 
@@ -125,5 +125,6 @@ class TopicForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(TopicForm, self).__init__(*args, **kwargs)
 
-        self.fields['topics'].widget = CheckboxSelectMultiple()
-        self.fields['topics'].queryset = Topic.objects.all()
+        self.fields['topics'].widget = SelectMultiple()
+        self.fields['topics'].queryset = Topic.objects.order_by('name').all()
+        self.fields['topics'].help_text ="Don't forget to hold the CTRL key (or cmd on a Mac) to select multiple topics"
