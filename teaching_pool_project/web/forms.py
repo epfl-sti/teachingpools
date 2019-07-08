@@ -1,6 +1,7 @@
 from django import forms
+from django.db.models.functions import Lower
 from django.forms import HiddenInput, ModelForm
-from django.forms.widgets import Textarea, SelectMultiple
+from django.forms.widgets import SelectMultiple, Textarea
 
 from web.models import *
 
@@ -125,6 +126,6 @@ class TopicForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(TopicForm, self).__init__(*args, **kwargs)
 
-        self.fields['topics'].widget = SelectMultiple()
-        self.fields['topics'].queryset = Topic.objects.order_by('name').all()
-        self.fields['topics'].help_text ="Don't forget to hold the CTRL key (or cmd on a Mac) to select multiple topics"
+        self.fields['topics'].widget = SelectMultiple(attrs={'size': 20})
+        self.fields['topics'].queryset = Topic.objects.order_by(Lower('name')).all()
+        self.fields['topics'].help_text = "Don't forget to hold the CTRL key (or cmd on a Mac) to select multiple topics"
