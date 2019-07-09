@@ -343,7 +343,7 @@ class Applications(models.Model):
                         recipients=requesters)
 
                     # Update the course counters
-                    self.course.applications_rejected = self.course.applications + 1
+                    self.course.applications_rejected = self.course.applications_rejected + 1
                     self.course.save()
 
                 # Pending -> Hired
