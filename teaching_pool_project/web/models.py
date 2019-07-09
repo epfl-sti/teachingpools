@@ -28,7 +28,8 @@ class Person(AbstractUser):
         null=True, blank=True, default=None)
     canTeachInGerman = models.BooleanField(
         null=True, blank=True, default=None)
-    topics = models.ManyToManyField("web.Topic", through="Interests", blank=True)
+    topics = models.ManyToManyField(
+        "web.Topic", through="Interests", blank=True)
 
     def __str__(self):
         return "{last}, {first} ({id})".format(last=self.last_name, first=self.first_name, id=self.id)
@@ -167,24 +168,69 @@ class NumberOfTAUpdateRequest(models.Model):
         Person, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name="decidedBy")
     decisionReason = models.TextField(null=True, blank=True, default=None)
 
-    def save(self, *args, **kwargs):
+    class Meta:
+        indexes = [
+            models.Index(fields=['requester']),
+            models.Index(fields=['course']),
+            models.Index(fields=['status']),
+        ]
+
+    def get_save_type(self):
         if not self.pk:
-            logger.info("Saving a new request for TAs")
+            return "created"
+        elif self.status.lower() == "pending":
+            return "updated"
+        elif self.status.lower() == "approved":
+            return "approved"
+        elif self.status.lower() == "rejected":
+            return "rejected"
+        else:
+            return None
 
-            # First, actually save the model since we need the primary key to generate the email template
-            super(NumberOfTAUpdateRequest, self).save(*args, **kwargs)
+    def save_and_notify(self, *args, **kwargs):
+        action = self.get_save_type()
 
-            # Update the number of requested TAs on the course object
-            self.course.requestedNumberOfTAs = self.requestedNumberOfTAs
+        # First actually save the instance
+        super(NumberOfTAUpdateRequest, self).save(*args, **kwargs)
+
+        # Update the related course object
+        self.update_related_course(action=action)
+
+        # Notify people if need be
+        self.send_mail_on_TAs_requested(action=action)
+
+    def update_related_course(self, action=None):
+        if action:
+            if action == "created":
+                self.course.requestedNumberOfTAs = self.requestedNumberOfTAs
+            elif action == "updated":
+                self.course.requestedNumberOfTAs = self.requestedNumberOfTAs
+            elif action == "approved":
+                self.course.approvedNumberOfTAs = self.requestedNumberOfTAs
+                self.course.requestedNumberOfTAs = None
+            elif action == "rejected":
+                # we need to find the latest approved number of TAs
+                latest_approved_number_of_TAs = NumberOfTAUpdateRequest.objects.filter(
+                    course=self.course, status="Approved").order_by('-closedAt').first()
+                if latest_approved_number_of_TAs:
+                    self.course.approvedNumberOfTAs = latest_approved_number_of_TAs.requestedNumberOfTAs
+                else:
+                    self.course.approvedNumberOfTAs = None
+
+                # Then we need to set the request nmber of TAs to the correct value
+                self.course.requestedNumberOfTAs = None
             self.course.save()
 
+    def send_mail_on_TAs_requested(self, *args, **kwargs):
+        action = kwargs.get('action', None)
+        if action == "created":
             # Generate the email notification
             data = {
                 'request': self,
                 'base_url': settings.APP_BASE_URL,
             }
-            requesters = list()
-            requesters.append(self.requester.email)
+            requesters = [teaching.person.email for teaching in Teaching.objects.filter(
+                course=self.course)]
             admins_mails = settings.EMAIL_ADMINS_EMAIL
 
             mail.notify_admins_and_requester(
@@ -194,56 +240,27 @@ class NumberOfTAUpdateRequest(models.Model):
                 requesters_subject='Your request for TA has been recorded',
                 admins=admins_mails,
                 requesters=requesters)
-
-        else:
-            logger.info("Updating request for TA")
-
-            # First, actually save the model since we need the status to be correct to update the course object
-            super(NumberOfTAUpdateRequest, self).save(*args, **kwargs)
-
-            # Update the course object in order to reflect the decision made
-            latest_approved_request = NumberOfTAUpdateRequest.objects \
-                .filter(course=self.course, status="Approved") \
-                .order_by('-closedAt') \
-                .first()
-            if latest_approved_request:
-                self.course.approvedNumberOfTAs = latest_approved_request.requestedNumberOfTAs
-            else:
-                self.course.approvedNumberOfTAs = None
-            self.course.save()
-
-            latest_requested_request = NumberOfTAUpdateRequest.objects \
-                .filter(course=self.course, status="Pending") \
-                .order_by('-openedAt') \
-                .first()
-            if latest_requested_request:
-                self.course.requestedNumberOfTAs = latest_requested_request.requestedNumberOfTAs
-            else:
-                self.course.requestedNumberOfTAs = None
-
-            self.course.save()
-
-            # Generate the email notification
-            notification_recipients = list()
-            notification_recipients.append(self.requester.email)
-            if self.status.lower() == "pending":
-                subject_status = "updated"
-            else:
-                subject_status = self.status.lower()
-
+        elif action == "updated":
+            recipients = [teaching.person.email for teaching in Teaching.objects.filter(
+                course=self.course)]
             mail.notify_people(
                 data={'request': self},
-                template="ta_request_approval",
-                subject="Your request for TA has been {}".format(subject_status),
+                template='ta_request_approval',
+                subject="Your request for TA has been {}".format(action),
                 sender=settings.EMAIL_FROM,
-                recipients=notification_recipients)
+                recipients=recipients)
 
-    class Meta:
-        indexes = [
-            models.Index(fields=['requester']),
-            models.Index(fields=['course']),
-            models.Index(fields=['status']),
-        ]
+        elif action == "approved" or action == "rejected":
+            recipients = [teaching.person.email for teaching in Teaching.objects.filter(
+                course=self.course)]
+            mail.notify_people(
+                data={'request': self},
+                template='ta_request_approval',
+                subject="Your request for TA has been {}".format(action),
+                sender=settings.EMAIL_FROM,
+                recipients=recipients)
+        else:
+            pass
 
 
 class Applications(models.Model):

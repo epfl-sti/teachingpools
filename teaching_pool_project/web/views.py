@@ -229,7 +229,7 @@ def request_for_TA(request, course_id):
             ta_request.openedAt = now()
             ta_request.requestedNumberOfTAs = form.cleaned_data['requestedNumberOfTAs']
             ta_request.requestReason = form.cleaned_data['requestReason']
-            ta_request.save()
+            ta_request.save_and_notify()
             messages.success(
                 request, "Your request for TAs has been successfully saved")
             return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=[settings.APP_CURRENT_YEAR]))
@@ -272,7 +272,7 @@ def validate_request_for_TA(request, request_id):
             request_obj.closedAt = now()
             person = request.user
             request_obj.decidedBy = request.user
-            request_obj.save()
+            request_obj.save_and_notify()
 
             return HttpResponseRedirect(reverse('web:get_TAs_requests_to_validate'))
 
