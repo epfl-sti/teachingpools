@@ -19,4 +19,5 @@ urlpatterns = [
     path('applications/my/', views.my_applications, name='my_applications'),
     path('applications/', views.get_applications_for_my_courses, name='applications_for_my_courses'),
     re_path('applications/review/(?P<application_id>\d*)', views.review_application, name='review_application'),
+    path('config/', views.edit_config, name="edit_config"),
 ]

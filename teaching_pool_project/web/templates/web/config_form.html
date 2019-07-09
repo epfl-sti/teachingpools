@@ -1,0 +1,24 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load course_tags %}
+
+{% block maincontent %}
+<form action="{% url "web:edit_config" %}" method="post" class="form">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-header">
+            <h6>Configuration<h6>
+        </div>
+        <div class="card-body">
+            {% bootstrap_form form=config_form %}
+        </div>
+    </div>
+    <div>
+        {% buttons %}
+        {% bootstrap_button "Apply" button_type="submit" button_class="btn-success btn-block" %}
+        {% bootstrap_button "Reset" button_type="reset" button_class=" btn-outline-secondary btn-block" %}
+
+        {% endbuttons %}
+    </div>
+</form>
+{% endblock maincontent %}

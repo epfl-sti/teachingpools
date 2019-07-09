@@ -438,3 +438,25 @@ def my_applications(request):
         'applications': applications,
     }
     return render(request, 'web/applications.html', context)
+
+
+@login_required
+@impersonable
+@is_staff()
+def edit_config(request):
+    config = Config.objects.first()
+    if not config:
+        config = Config()
+
+    config_form = ConfigForm(request.POST or None, instance=config)
+
+    if request.method == "POST":
+        if config_form.is_valid():
+            config_form.save()
+            messages.success(request, "The configuration has been successfully saved")
+
+    context = {
+        'config_form': config_form,
+    }
+
+    return render(request, 'web/config_form.html', context)

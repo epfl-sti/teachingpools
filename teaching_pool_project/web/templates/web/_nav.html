@@ -1,4 +1,5 @@
 {% load extra_tags %}
+{% load _nav_tags %}
 {% with url_name=request.resolver_match.url_name %}
 <nav class="navbar navbar-expand-lg navbar-light bg-primary">
   <a class="navbar-brand" href="{% url "web:index" %}">Teaching pools</a>
@@ -46,7 +47,7 @@
       {% if request.user|is_phd %}
           <div class="dropdown show">
             <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i class="fas fa-user-graduate fa-lg"></i>&nbsp;{{ request.user.first_name }} {{ request.user.last_name }}
+              {{ request.user|get_badge }}
             </a>
 
             <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
@@ -54,18 +55,17 @@
               <a class="dropdown-item" href="{% url "web:my_applications" %}">Applications</a>
             </div>
           </div>
+      {% elif request.user|is_staff %}
+        <div class="dropdown show">
+            <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            {{ request.user|get_badge }}
+            </a>
+
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+              <a class="dropdown-item" href="{% url "web:edit_config" %}">Configuration</a>
+            </div>
       {% else %}
-        {% if request.user|is_superuser %}
-            <i class="fas fa-user-ninja fa-lg"></i>
-          {% elif request.user|is_staff %}
-            <i class="fas fa-user-shield fa-lg"></i>
-          {% elif request.user|is_teacher %}
-            <i class="fas fa-user-tie fa-lg"></i>
-          {% elif request.user|is_phd %}
-            <i class="fas fa-user-graduate fa-lg"></i>
-          {% else %}
-            <i class="fas fa-user fa-lg"></i>
-          {% endif %}&nbsp;{{ request.user.first_name }} {{ request.user.last_name }}
+        {{ request.user|get_badge }}
       {% endif %}
     {% endif %}
   </div>

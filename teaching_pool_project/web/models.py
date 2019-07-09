@@ -5,10 +5,13 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 
 from epfl.sti.helpers import mail
+
+from .validators import validate_year_config
 
 logger = logging.getLogger(__name__)
 
@@ -373,3 +376,24 @@ class Applications(models.Model):
             models.Index(fields=['course']),
             models.Index(fields=['status']),
         ]
+
+
+class Config(models.Model):
+    current_year = models.CharField(
+        max_length=9, validators=[validate_year_config])
+    TERM_CHOICES = [
+        ('WINTER', 'Hiver'),
+        ('SUMMER', 'Eté')
+    ]
+    current_term = models.CharField(max_length=6, choices=TERM_CHOICES)
+    requests_for_TAs_are_open = models.BooleanField(default=True)
+    applications_are_open = models.BooleanField(default=True)
+
+    def __str__(self):
+        return '{} - {}'.format(self.current_year, self.current_term)
+
+    def save(self, *args, **kwargs):
+        if Config.objects.exists() and not self.pk:
+            raise ValidationError(
+                "There can only be one instance of the configuration")
+        return super(Config, self).save(*args, **kwargs)

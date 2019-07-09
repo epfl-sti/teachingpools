@@ -127,5 +127,12 @@ class TopicForm(ModelForm):
         super(TopicForm, self).__init__(*args, **kwargs)
 
         self.fields['topics'].widget = SelectMultiple(attrs={'size': 20})
-        self.fields['topics'].queryset = Topic.objects.order_by(Lower('name')).all()
+        self.fields['topics'].queryset = Topic.objects.order_by(
+            Lower('name')).all()
         self.fields['topics'].help_text = "Don't forget to hold the CTRL key (or cmd on a Mac) to select multiple topics"
+
+
+class ConfigForm(ModelForm):
+    class Meta:
+        model = Config
+        fields = '__all__'
