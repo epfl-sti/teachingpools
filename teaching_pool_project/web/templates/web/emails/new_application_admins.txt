@@ -2,7 +2,7 @@ Dear teacher of the {{ course.subject }} ({{ course.code }}) course,
 
 A new application as Teaching Assistant has sent by {{ application.applicant.first_name }} {{ application.applicant.last_name }}.
 
-Could you please review it at #TODO: url ?
+Could you please review it at {{ base_url }}{% url 'web:applications_for_my_courses' %} ?
 
 Thanks in advance,
 

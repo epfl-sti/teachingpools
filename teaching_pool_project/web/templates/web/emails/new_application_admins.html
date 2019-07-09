@@ -6,7 +6,7 @@
         <p></p>
         <p>A new application as Teaching Assistant has sent by {{ application.applicant.first_name }} {{ application.applicant.last_name }}.</p>
         <p></p>
-        <p>Could you please review it at <a href="TODO:">#TODO: url</a> ?</p>
+        <p>Could you please review it at <a href="{{ base_url }}{% url 'web:applications_for_my_courses' %}">{{ base_url }}{% url 'web:applications_for_my_courses' %}</a> ?</p>
         <p></p>
         <p>Thanks in advance,</p>
         <p></p>
