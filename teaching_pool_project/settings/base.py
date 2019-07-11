@@ -10,8 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
+import distutils.util
 import os
 from os.path import abspath, dirname, join
+
 from dotenv import load_dotenv
 
 DOTENV_PATH = join(dirname(dirname(dirname(abspath(__file__)))), '.env')
@@ -149,3 +151,6 @@ LIST_OF_TOPICS = os.environ.get('DJANGO_LIST_OF_TOPICS', '')
 EXCEL_LOADER_CURRENT_YEAR = os.environ.get('DJANGO_EXCEL_LOADER_CURRENT_YEAR', '')
 
 APP_BASE_URL = os.environ.get('DJANGO_APP_BASE_URL', 'https://localhost')
+
+DEBUG = distutils.util.strtobool(os.environ.get('DJANGO_DEBUG')) or False
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
