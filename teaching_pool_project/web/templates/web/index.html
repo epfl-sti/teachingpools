@@ -17,7 +17,7 @@
         <div class="card-header">As a teacher, you can</div>
         <div class="card-body">
           <ul>
-              <li><a href="{% url "web:courses_list_year_teacher" year=request.session.current_year %}" role="button">Review your courses</a></li>
+              <li><a href="{% url "web:courses_list_year_teacher" year=CURRENT_YEAR %}" role="button">Review your courses</a></li>
               <li><a href="{% url "web:requests_for_tas_teacher" %}">View your request(s) for Teaching Assistants</a></li>
               <li><a href='{% url "web:applications_for_my_courses" %}'>Review the applications to your course(s)</a></li>
           </ul>
@@ -31,7 +31,7 @@
         <div class="card-body">
           <ul>
             <li><a href="{% url "web:update_my_profile" %}" role="button">Update your profile</a></li>
-            <li><a href="{% url "web:courses_full_list" year=request.session.current_year %}">Apply for teaching assistant positions</a></li>
+            <li><a href="{% url "web:courses_full_list" year=CURRENT_YEAR %}">Apply for teaching assistant positions</a></li>
             <li><a href='{% url "web:my_applications" %}'>Review your application(s)</a></li>
           </ul>
         </div>

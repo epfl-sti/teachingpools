@@ -22,6 +22,11 @@
         <div class="container">
             <div class="row">
                 <div class="col">
+                    {% if ENVIRONMENT_TYPE == "test" %}
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fa fa-warning"></i>&nbsp;<strong>You are currently working on a test environment. The data stored here are not meant for production. All the data will be scrubbed regularly.</strong>
+                    </div>
+                    {% endif %}
                     {# Display django.contrib.messages as Bootstrap alerts #}
                     {% bootstrap_messages %}
 

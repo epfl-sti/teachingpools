@@ -17,9 +17,9 @@
           Courses
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="{% url "web:courses_full_list" year=request.session.current_year %}">All courses ({{ request.session.current_year }})</a>
+          <a class="dropdown-item" href="{% url "web:courses_full_list" year=CURRENT_YEAR %}">All courses ({{ CURRENT_YEAR }})</a>
           {% if request.user|has_group:"teachers" %}
-          <a class="dropdown-item" href="{% url "web:courses_list_year_teacher" year=request.session.current_year %}">My courses</a>
+          <a class="dropdown-item" href="{% url "web:courses_list_year_teacher" year=CURRENT_YEAR %}">My courses</a>
           <a class="dropdown-item" href="{% url "web:applications_for_my_courses" %}">Applications for my courses</a>
 
           {% endif %}

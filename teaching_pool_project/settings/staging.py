@@ -51,3 +51,5 @@ LOGGING = {
         },
     },
 }
+
+ENVIRONMENT_TYPE = "test"
