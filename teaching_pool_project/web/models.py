@@ -236,13 +236,22 @@ class NumberOfTAUpdateRequest(models.Model):
                 course=self.course)]
             admins_mails = settings.EMAIL_ADMINS_EMAIL
 
-            mail.notify_admins_and_requester(
-                data=data,
-                template_base='new_ta_request',
-                admins_subject='A new TA request has been recorded',
-                requesters_subject='Your request for TA has been recorded',
-                admins=admins_mails,
-                requesters=requesters)
+            if Config.objects.first().send_notification_to_admins_upon_ta_request:
+                mail.notify_admins_and_requester(
+                    data=data,
+                    template_base='new_ta_request',
+                    admins_subject='A new TA request has been recorded',
+                    requesters_subject='Your request for TA has been recorded',
+                    admins=admins_mails,
+                    requesters=requesters)
+            else:
+                mail.notify_people(
+                    data=data,
+                    template="new_ta_request_requester",
+                    subject = 'Your request for TA has been recorded',
+                    sender = settings.EMAIL_FROM,
+                    recipients = requesters
+                )
         elif action == "updated":
             recipients = [teaching.person.email for teaching in Teaching.objects.filter(
                 course=self.course)]
@@ -388,6 +397,7 @@ class Config(models.Model):
     current_term = models.CharField(max_length=6, choices=TERM_CHOICES)
     requests_for_TAs_are_open = models.BooleanField(default=True)
     applications_are_open = models.BooleanField(default=True)
+    send_notification_to_admins_upon_ta_request = models.BooleanField(default=True)
 
     def __str__(self):
         return '{} - {}'.format(self.current_year, self.current_term)

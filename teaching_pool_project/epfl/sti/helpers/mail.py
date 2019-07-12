@@ -13,7 +13,7 @@ def notify_admins_and_requester(data, template_base, admins_subject, requesters_
     admins_sender = settings.EMAIL_FROM
     admin_recipients = admins
     notify_people(data=data, template=admins_template, subject=admins_subject,
-                  sender=admins_sender, recipients=admin_recipients)
+                sender=admins_sender, recipients=admin_recipients)
 
     requester_template = '{}_requester'.format(template_base)
     requester_sender = settings.EMAIL_FROM
