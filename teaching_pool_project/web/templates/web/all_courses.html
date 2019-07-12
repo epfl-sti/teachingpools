@@ -20,7 +20,7 @@
         {% for course in courses %}
         <div class="card">
           <div class="card-header">
-            <span class="subject">{{ course.subject }}</span> <span class="code">({{ course.code }}</span>){% get_badge course request.user courses_applied_to %}
+            <span class="subject">{{ course.subject }}</span> <span class="code">({{ course.code }}</span>){% get_badge course request.user courses_applied_to request.session.current_year %}
           </div>
           <div class="card-body">
             <p>Term: {{ course.term }}</p>

@@ -21,6 +21,7 @@ from django.utils.timezone import now
 from django.views import generic
 
 from epfl.sti.helpers import ldap as epfl_ldap
+from web.helpers import config
 
 from .forms import *
 from .models import *
@@ -85,14 +86,30 @@ def impersonable(function):
     return wrap
 
 
+def set_session_variables(req):
+    if not 'current_year' in req.session.keys():
+        req.session['current_year'] = config.get_config('current_year')
+    if not 'current_term' in req.session.keys():
+        req.session['current_term'] = config.get_config('current_term')
+    if not 'requests_for_TAs_are_open' in req.session.keys():
+        req.session['requests_for_TAs_are_open'] = config.get_config(
+            'requests_for_TAs_are_open')
+    if not 'applications_are_open' in req.session.keys():
+        req.session['applications_are_open'] = config.get_config(
+            'applications_are_open')
+
+
 @login_required
 @impersonable
 def index(request):
+    set_session_variables(request)
+
+    year = config.get_config('current_year')
+
     if request.user.is_staff and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists():
         messages.info(
             request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;You have (a) pending <a href='{}'>TA request(s) to validate</a>".format(reverse('web:get_TAs_requests_to_validate'))))
 
-    year = settings.APP_CURRENT_YEAR
     if request.user.groups.filter(name='phds').exists() and not Availability.objects.filter(year=year, person=request.user).exists():
         message = mark_safe(
             "<i class='fas fa-info-circle'></i>&nbsp;You should <a href='{}'>update your profile</a>.".format(reverse('web:update_my_profile')))
@@ -102,6 +119,8 @@ def index(request):
 
 @impersonable
 def courses_full_list(request, year):
+    set_session_variables(request)
+
     all_courses = Course.objects.filter(
         year=year).prefetch_related('teachers').all()
     user_is_phd = request.user.groups.filter(name="phds").exists()
@@ -112,6 +131,7 @@ def courses_full_list(request, year):
         courses_applied_to = []
 
     context = {
+        'year': config.get_config('current_year'),
         'courses': all_courses,
         'user_is_phd': user_is_phd,
         'courses_applied_to': courses_applied_to,
@@ -123,6 +143,8 @@ def courses_full_list(request, year):
 @impersonable
 @group_required('teachers')
 def courses_list_year_teacher(request, year):
+    set_session_variables(request)
+
     teachings = Teaching.objects.filter(
         person=request.user).prefetch_related('course').all()
     context = {
@@ -135,6 +157,8 @@ def courses_list_year_teacher(request, year):
 @impersonable
 @group_required('teachers')
 def get_applications_for_my_courses(request):
+    set_session_variables(request)
+
     teachings = Teaching.objects.filter(
         person=request.user).prefetch_related('course').all()
     courses_ids = [item.course.pk for item in teachings]
@@ -150,6 +174,8 @@ def get_applications_for_my_courses(request):
 @impersonable
 @group_required('teachers')
 def review_application(request, application_id):
+    set_session_variables(request)
+
     application = get_object_or_404(Applications, pk=application_id)
     application_form = ApplicationForm_teacher(
         request.POST or None, instance=application)
@@ -186,6 +212,8 @@ def review_application(request, application_id):
 @impersonable
 @group_required('teachers')
 def requests_for_tas_teacher(request):
+    set_session_variables(request)
+
     requests = NumberOfTAUpdateRequest.objects.filter(
         requester=request.user).prefetch_related('course').order_by('openedAt').all()
     context = {
@@ -198,6 +226,8 @@ def requests_for_tas_teacher(request):
 @impersonable
 @group_required('teachers')
 def requests_for_tas_teacher_status(request, status):
+    set_session_variables(request)
+
     requests = NumberOfTAUpdateRequest.objects.filter(
         requester=request.user, status=status.capitalize()).prefetch_related('course').order_by('openedAt').all()
     context = {
@@ -210,6 +240,8 @@ def requests_for_tas_teacher_status(request, status):
 @impersonable
 @group_required('teachers')
 def request_for_TA(request, course_id):
+    set_session_variables(request)
+
     course = get_object_or_404(Course, pk=course_id)
 
     try:
@@ -232,7 +264,7 @@ def request_for_TA(request, course_id):
             ta_request.save_and_notify()
             messages.success(
                 request, "Your request for TAs has been successfully saved")
-            return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=[settings.APP_CURRENT_YEAR]))
+            return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=[config.get_config('current_year')]))
 
     context = {
         'course_id': course_id,
@@ -246,6 +278,8 @@ def request_for_TA(request, course_id):
 @impersonable
 @is_staff()
 def get_TAs_requests_to_validate(request):
+    set_session_variables(request)
+
     requests = NumberOfTAUpdateRequest.objects.filter(status='Pending').all()
     context = {
         'requests': requests
@@ -257,6 +291,8 @@ def get_TAs_requests_to_validate(request):
 @impersonable
 @is_staff()
 def validate_request_for_TA(request, request_id):
+    set_session_variables(request)
+
     if request.method == 'POST':
         form = RequestForTAApproval(request.POST)
         if form.is_valid():
@@ -301,6 +337,8 @@ def validate_request_for_TA(request, request_id):
 @impersonable
 @group_required('teachers')
 def view_request_for_TA(request, request_id):
+    set_session_variables(request)
+
     ta_request = NumberOfTAUpdateRequest.objects.get(pk=request_id)
     form = RequestForTAView()
     form.fields['request_id'].initial = ta_request.pk
@@ -327,6 +365,8 @@ def view_request_for_TA(request, request_id):
 @impersonable
 @group_required('phds')
 def apply(request, course_id):
+    set_session_variables(request)
+
     course = get_object_or_404(Course, pk=course_id)
 
     try:
@@ -359,7 +399,9 @@ def apply(request, course_id):
 @impersonable
 @group_required('phds')
 def update_my_profile(request):
-    year = settings.APP_CURRENT_YEAR
+    set_session_variables(request)
+
+    year = config.get_config('current_year')
 
     # Working with the availabilities
     availability, availability_created = Availability.objects.get_or_create(
@@ -432,6 +474,8 @@ def update_my_profile(request):
 @impersonable
 @group_required('phds')
 def my_applications(request):
+    set_session_variables(request)
+
     applications = Applications.objects.filter(
         applicant=request.user).prefetch_related('course').all()
     context = {
@@ -444,6 +488,8 @@ def my_applications(request):
 @impersonable
 @is_staff()
 def edit_config(request):
+    set_session_variables(request)
+
     config = Config.objects.first()
     if not config:
         config = Config()
@@ -453,7 +499,8 @@ def edit_config(request):
     if request.method == "POST":
         if config_form.is_valid():
             config_form.save()
-            messages.success(request, "The configuration has been successfully saved")
+            messages.success(
+                request, "The configuration has been successfully saved")
 
     context = {
         'config_form': config_form,

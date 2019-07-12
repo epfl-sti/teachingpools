@@ -123,6 +123,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
@@ -132,9 +133,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static")
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# The APP_CURRENT_YEAR is used to represent the year we are currently working on
-APP_CURRENT_YEAR = "2019-2020"
 
 LDAP_SERVER = 'ldap.epfl.ch'
 LDAP_BASEDN = 'o=epfl,c=ch'

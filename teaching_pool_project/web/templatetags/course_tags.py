@@ -44,14 +44,14 @@ def format_forms(course):
 
 
 @register.simple_tag
-def get_badge(course, user, courses_applied_to):
+def get_badge(course, user, courses_applied_to, year):
     return_value = ''
 
     # check if the current user is actually teaching this course
     if user in course.teachers.all():
 
         # builds up a pill to give him a link to his courses
-        pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">You</a>'.format(reverse('web:courses_list_year_teacher', args=[settings.APP_CURRENT_YEAR]))
+        pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">You</a>'.format(reverse('web:courses_list_year_teacher', args=[year]))
         return_value += pill
 
         # Check if there are pending requests for TAs
