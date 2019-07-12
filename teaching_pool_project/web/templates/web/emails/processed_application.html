@@ -3,6 +3,9 @@
 <head></head>
 
 <body>
+    {% if ENVIRONMENT_TYPE == "test" %}
+    <p><strong>This message was sent from a test system. Please do not consider it's content as <i>real or for production use</i>.</strong></p>
+    {% endif %}
     <p>Dear {{ application.applicant.first_name }},</p>
     <p></p>
     <p>Your application for the Teaching Assistant position for the {{ application.course.subject }} ({{ application.course.code }}) has been {% if application.status == "Hired" %}accepted{% endif %}{% if application.status == "Rejected" %}rejected{% endif %}.</p>

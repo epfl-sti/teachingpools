@@ -1,3 +1,8 @@
+{% if ENVIRONMENT_TYPE == "test" %}
+************************************************************************************************************
+This message was sent from a test system. Please do not consider it's content as real or for production use.
+************************************************************************************************************
+{% endif %}
 Dear {{ request.requester.first_name }},
 
 You have requested to get {{ request.requestedNumberOfTAs }} teaching assistants for your '{{ request.course.subject }}' course.

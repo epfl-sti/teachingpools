@@ -2,6 +2,9 @@
     <head>
     </head>
     <body>
+        {% if ENVIRONMENT_TYPE == "test" %}
+        <p><strong>This message was sent from a test system. Please do not consider it's content as <i>real or for production use</i>.</strong></p>
+        {% endif %}
         <p>Dear teacher of the {{ course.subject }} ({{ course.code }}) course,</p>
         <p></p>
         <p>A new application as Teaching Assistant has sent by {{ application.applicant.first_name }} {{ application.applicant.last_name }}.</p>

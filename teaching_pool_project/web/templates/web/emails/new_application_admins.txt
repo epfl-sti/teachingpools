@@ -1,3 +1,8 @@
+{% if ENVIRONMENT_TYPE == "test" %}
+************************************************************************************************************
+This message was sent from a test system. Please do not consider it's content as real or for production use.
+************************************************************************************************************
+{% endif %}
 Dear teacher of the {{ course.subject }} ({{ course.code }}) course,
 
 A new application as Teaching Assistant has sent by {{ application.applicant.first_name }} {{ application.applicant.last_name }}.

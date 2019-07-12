@@ -1,3 +1,8 @@
+{% if ENVIRONMENT_TYPE == "test" %}
+************************************************************************************************************
+This message was sent from a test system. Please do not consider it's content as real or for production use.
+************************************************************************************************************
+{% endif %}
 Dear {{ application.applicant.first_name }},
 
 Your application for the Teaching Assistant position for the {{ application.course.subject }} ({{ application.course.code }}) has been {% if application.status == "Hired" %}accepted{% endif %}{% if application.status == "Rejected" %}rejected{% endif %}.

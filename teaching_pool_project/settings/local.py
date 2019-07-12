@@ -29,7 +29,7 @@ INSTALLED_APPS += [
 EMAIL_HOST = "localhost"
 EMAIL_PORT = "1025"
 EMAIL_FROM = "noreply@epfl.ch"
-EMAIL_SUBJECT_PREFIX = "EPFL Teaching Pools - "
+EMAIL_SUBJECT_PREFIX = "EPFL Teaching Pools - TEST - "
 EMAIL_ADMINS_EMAIL = os.environ.get(
     'DJANGO_EMAIL_ADMINS_EMAIL', 'not@available.yet').split(',')
 

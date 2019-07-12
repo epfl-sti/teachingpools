@@ -29,6 +29,8 @@ def notify_people(data={}, template='', subject='', sender='', recipients=list()
     logger.debug("sender: %s", sender)
     logger.debug("recipients: %s", recipients)
 
+    data['ENVIRONMENT_TYPE'] = settings.ENVIRONMENT_TYPE
+
     mail_subject = settings.EMAIL_SUBJECT_PREFIX + subject
     plaintext = get_template('web/emails/{}.txt'.format(template))
     htmly = get_template('web/emails/{}.html'.format(template))

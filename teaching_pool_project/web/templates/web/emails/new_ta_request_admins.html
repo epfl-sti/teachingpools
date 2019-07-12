@@ -1,6 +1,9 @@
 <html>
 <head></head>
 <body>
+{% if ENVIRONMENT_TYPE == "test" %}
+<p><strong>This message was sent from a test system. Please do not consider it's content as <i>real or for production use</i>.</strong></p>
+{% endif %}
 <p>Dear teaching pool administrator,</p>
 
 <p>{{ request.requester.first_name }} {{ request.requester.last_name }} has requested {{ request.requestedNumberOfTAs }} teaching assistant(s) for the '{{ request.course.subject }}' course.</p>
