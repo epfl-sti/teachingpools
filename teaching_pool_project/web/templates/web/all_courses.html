@@ -18,19 +18,27 @@
     <div class="col">
       <div class="card-columns list">
         {% for course in courses %}
-        <div class="card">
-          <div class="card-header">
-            <span class="subject">{{ course.subject }}</span> <span class="code">({{ course.code }}</span>){% get_badge course request.user courses_applied_to CURRENT_YEAR %}
-          </div>
-          <div class="card-body">
-            <p>Term: {{ course.term }}</p>
-            <p>Teacher(s): <span class="teachers">{{ course|format_teachers }}</span></p>
-            <p>Form(s): {{ course|format_forms }}</p>
-            <p>Language(s): {{ course|format_languages }}</p>
-            {# This is not nice but prevents from making hundred of DB queries #}
-            {% if user_is_phd and course.pk not in courses_applied_to %}{% get_apply_button course request.user %}{% endif %}
-          </div>
-        </div>
+          {% if course.approvedNumberOfTAs > course.applications_accepted or not user_is_phd %}
+            <div class="card">
+              <div class="card-header">
+                <span class="subject">{{ course.subject }}</span> <span class="code">({{ course.code }}</span>){% get_badge course request.user courses_applied_to CURRENT_YEAR %}
+              </div>
+              <div class="card-body">
+                <p>Term: {{ course.term }}</p>
+                <p>Teacher(s): <span class="teachers">{{ course|format_teachers }}</span></p>
+                <p>Form(s): {{ course|format_forms }}</p>
+                <p>Language(s): {{ course|format_languages }}</p>
+                {# This is not nice but prevents from making hundred of DB queries #}
+                {% if APPLICATIONS_ARE_OPEN %}
+                  {% if user_is_phd and course.pk not in courses_applied_to %}
+                    {% get_apply_button course request.user %}
+                  {% endif %}
+                {% else %}
+                  <span data-toggle="tooltip" data-placement="top" title="Applications are not opened at the moment" class="btn btn-outline-secondary">Apply</span>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
         {% endfor %}
       </div>
     </div>
@@ -51,5 +59,10 @@ var options = {
   ]
 };
 var coursesList = new List('cards-list', options);
+</script>
+<script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
 </script>
 {%endblock scripts%}

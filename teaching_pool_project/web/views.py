@@ -213,6 +213,10 @@ def requests_for_tas_teacher_status(request, status):
 @impersonable
 @group_required('teachers')
 def request_for_TA(request, course_id):
+    if not config.get_config('requests_for_TAs_are_open'):
+        messages.error(request, "The requests for Teaching Assistants are not open at the moment.")
+        return render(request, 'web/blank.html')
+
     course = get_object_or_404(Course, pk=course_id)
 
     try:
@@ -330,6 +334,10 @@ def view_request_for_TA(request, request_id):
 @impersonable
 @group_required('phds')
 def apply(request, course_id):
+    if not config.get_config('applications_are_open'):
+        messages.error(request, "The applications for Teaching Assistants positions are not open at the moment.")
+        return render(request, 'web/blank.html')
+
     course = get_object_or_404(Course, pk=course_id)
 
     try:
