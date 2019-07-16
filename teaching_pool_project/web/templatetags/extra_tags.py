@@ -35,7 +35,7 @@ def get_class_from_status(status):
         return "badge-pill badge-success"
     elif status == "pending":
         return "badge-pill badge-info"
-    elif status == "rejected":
+    elif status == "declined":
         return "badge-pill badge-danger"
     else:
         return ""

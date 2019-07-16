@@ -48,6 +48,7 @@ class RequestForTAView(forms.Form):
         disabled=True, label='Requested number of TAs', required=False)
     reason_for_request = forms.CharField(
         disabled=True, widget=forms.Textarea, required=False)
+    status = forms.CharField(disabled=True, required=False)
     reason_for_decision = forms.CharField(
         widget=forms.Textarea, required=False, disabled=True)
 

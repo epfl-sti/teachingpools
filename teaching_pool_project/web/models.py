@@ -161,7 +161,7 @@ class NumberOfTAUpdateRequest(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Approved', 'Approved'),
-        ('Rejected', 'Rejected'),
+        ('Declined', 'Declined'),
         ('Withdrawn', 'Withdrawn')
     ]
     status = models.CharField(max_length=255, default='Pending')
@@ -185,8 +185,8 @@ class NumberOfTAUpdateRequest(models.Model):
             return "updated"
         elif self.status.lower() == "approved":
             return "approved"
-        elif self.status.lower() == "rejected":
-            return "rejected"
+        elif self.status.lower() == "declined":
+            return "declined"
         else:
             return None
 
@@ -211,7 +211,7 @@ class NumberOfTAUpdateRequest(models.Model):
             elif action == "approved":
                 self.course.approvedNumberOfTAs = self.requestedNumberOfTAs
                 self.course.requestedNumberOfTAs = None
-            elif action == "rejected":
+            elif action == "declined":
                 # we need to find the latest approved number of TAs
                 latest_approved_number_of_TAs = NumberOfTAUpdateRequest.objects.filter(
                     course=self.course, status="Approved").order_by('-closedAt').first()
@@ -262,7 +262,7 @@ class NumberOfTAUpdateRequest(models.Model):
                 sender=settings.EMAIL_FROM,
                 recipients=recipients)
 
-        elif action == "approved" or action == "rejected":
+        elif action == "approved" or action == "declined":
             recipients = [teaching.person.email for teaching in Teaching.objects.filter(
                 course=self.course)]
             mail.notify_people(

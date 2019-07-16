@@ -269,8 +269,8 @@ def validate_request_for_TA(request, request_id):
         if form.is_valid():
             if 'Approve' in request.POST:
                 status = "Approved"
-            elif 'Reject' in request.POST:
-                status = "Rejected"
+            elif 'Decline' in request.POST:
+                status = "Declined"
 
             request_obj = NumberOfTAUpdateRequest.objects.get(
                 pk=form.cleaned_data['request_id'])
@@ -318,6 +318,7 @@ def view_request_for_TA(request, request_id):
         ta_request.course.subject, ta_request.course.code)
     form.fields['requestedNumberOfTAs'].initial = ta_request.requestedNumberOfTAs
     form.fields['reason_for_request'].initial = ta_request.requestReason
+    form.fields['status'].initial = ta_request.status
     form.fields['reason_for_decision'].initial = ta_request.decisionReason
 
     course = ta_request.course
