@@ -20,32 +20,32 @@
     </tr>
   </thead>
   <tbody>
-    {% for teaching in teachings %}
+    {% for course in courses %}
       <tr>
-        <td>{{ teaching.course.code }}</td>
-        <td>{{ teaching.course.term }}</td>
-        <td>{{ teaching.course.subject }}</td>
+        <td>{{ course.code }}</td>
+        <td>{{ course.term }}</td>
+        <td>{{ course.subject }}</td>
         <td>
           <ul>
-            {% for teacher in teaching.course.teachers.all %}
+            {% for teacher in course.teachers.all %}
             <li>{{ teacher.last_name }}, {{ teacher.first_name }}</li>
             {% endfor %}
           </ul>
         </td>
         <td>
           <ul>
-            {% if teaching.course.has_course %}<li>Course</li>{% endif %}
-            {% if teaching.course.has_exercises %}<li>Exercises</li>{% endif %}
-            {% if teaching.course.has_project %}<li>Project</li>{% endif %}
-            {% if teaching.course.has_practical_work %}<li>Practical work</li>{% endif %}
+            {% if course.has_course %}<li>Course</li>{% endif %}
+            {% if course.has_exercises %}<li>Exercises</li>{% endif %}
+            {% if course.has_project %}<li>Project</li>{% endif %}
+            {% if course.has_practical_work %}<li>Practical work</li>{% endif %}
           </ul>
         </td>
-        <td>{% if teaching.course.taughtInFrench %}F{% endif %}{% if teaching.course.taughtInEnglish %}E{% endif %}{% if teaching.course.taughtInGerman %}G{% endif %} </td>
-        <td>{{ teaching.course.numberOfStudents|default_if_none:"&nbsp;" }}</td>
-        <td>{{ teaching.course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
-        <td>{{ teaching.course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
-        <td>{{ teaching.course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
-        <td><a class="btn btn-outline-primary" href="{% url "web:request_for_TA" course_id=teaching.course.id %}">Request TAs</a></td>
+        <td>{% if course.taughtInFrench %}F{% endif %}{% if course.taughtInEnglish %}E{% endif %}{% if course.taughtInGerman %}G{% endif %} </td>
+        <td>{{ course.numberOfStudents|default_if_none:"&nbsp;" }}</td>
+        <td>{{ course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td>{{ course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td>{{ course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td><a class="btn btn-outline-primary" href="{% url "web:request_for_TA" course_id=course.id %}">Request TAs</a></td>
       </tr>
     {% endfor %}
   </tbody>

@@ -105,8 +105,11 @@ def index(request):
 
 @impersonable
 def courses_full_list(request, year):
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
     all_courses = Course.objects.filter(
-        year=year).prefetch_related('teachers').all()
+        year=year, term=term).prefetch_related('teachers').all()
     user_is_phd = request.user.groups.filter(name="phds").exists()
     if user_is_phd:
         courses_applied_to = [application.course.pk for application in Applications.objects.filter(
@@ -115,7 +118,7 @@ def courses_full_list(request, year):
         courses_applied_to = []
 
     context = {
-        'year': config.get_config('current_year'),
+        'year': year,
         'courses': all_courses,
         'user_is_phd': user_is_phd,
         'courses_applied_to': courses_applied_to,
@@ -127,10 +130,13 @@ def courses_full_list(request, year):
 @impersonable
 @group_required('teachers')
 def courses_list_year_teacher(request, year):
-    teachings = Teaching.objects.filter(
-        person=request.user).prefetch_related('course').all()
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
+    courses = Course.objects.filter(year=year, term=term, teachers=request.user).prefetch_related('teachers').all()
+
     context = {
-        'teachings': teachings
+        'courses': courses,
     }
     return render(request, 'web/prof_courses.html', context)
 
@@ -219,6 +225,12 @@ def request_for_TA(request, course_id):
         return render(request, 'web/blank.html')
 
     course = get_object_or_404(Course, pk=course_id)
+
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+    if course.year != year or course.term != term:
+        messages.error(request, "The requests for Teaching Assistants are not open for this year / term")
+        return render(request, 'web/blank.html')
 
     try:
         ta_request = NumberOfTAUpdateRequest.objects.get(
@@ -309,7 +321,7 @@ def validate_request_for_TA(request, request_id):
 @impersonable
 @group_required('teachers')
 def view_request_for_TA(request, request_id):
-    ta_request = NumberOfTAUpdateRequest.objects.get(pk=request_id)
+    ta_request = get_object_or_404(NumberOfTAUpdateRequest, pk=request_id)
     form = RequestForTAView()
     form.fields['request_id'].initial = ta_request.pk
     form.fields['opened_at'].initial = ta_request.openedAt
@@ -341,6 +353,12 @@ def apply(request, course_id):
         return render(request, 'web/blank.html')
 
     course = get_object_or_404(Course, pk=course_id)
+
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+    if course.year != year or course.term != term:
+        messages.error(request, "The applications for Teaching Assistants positions are not open for this year / term")
+        return render(request, 'web/blank.html')
 
     try:
         application = Applications.objects.get(
