@@ -391,8 +391,8 @@ class Config(models.Model):
     current_year = models.CharField(
         max_length=9, validators=[validate_year_config])
     TERM_CHOICES = [
-        ('WINTER', 'Hiver'),
-        ('SUMMER', 'Eté')
+        ('HIVER', 'HIVER'),
+        ('ETE', 'ETE')
     ]
     current_term = models.CharField(max_length=6, choices=TERM_CHOICES)
     requests_for_TAs_are_open = models.BooleanField(default=True)

@@ -9,6 +9,7 @@ numpy
 pandas
 xlrd
 django-extensions
+xlwt
 
 # staging environment
 python-memcached

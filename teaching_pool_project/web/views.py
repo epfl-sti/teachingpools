@@ -19,6 +19,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.views import generic
+import xlwt
 
 from epfl.sti.helpers import ldap as epfl_ldap
 from web.helpers import config
@@ -473,3 +474,95 @@ def edit_config(request):
     }
 
     return render(request, 'web/config_form.html', context)
+
+
+@login_required
+@impersonable
+@is_staff()
+def courses_report(request):
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
+    courses = Course.objects.filter(year=year, term=term).prefetch_related('teachers').all()
+
+    context = {
+        'courses': courses
+    }
+
+    return render(request, 'web/reports/courses_list.html', context)
+
+
+@login_required
+@impersonable
+@is_staff()
+def download_course_report(request):
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
+    courses = Course.objects.filter(year=year, term=term).prefetch_related('teachers').all()
+
+    # content-type of response
+    response = HttpResponse(content_type='application/ms-excel')
+
+    #decide file name
+    response['Content-Disposition'] = 'attachment; filename="{year}_{term}.xls"'.format(year=year, term=term)
+
+    #creating workbook
+    wb = xlwt.Workbook(encoding='utf-8')
+
+    #adding sheet
+    ws = wb.add_sheet("sheet1")
+
+    # Sheet header, first row
+    row_num = 0
+
+    font_style = xlwt.XFStyle()
+    # headers are bold
+    font_style.font.bold = True
+
+    #column header names, you can use your own headers here
+    columns = ['Year', 'Term', 'Code', 'Subject', 'Teachers', 'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)', '# TAs (requested)', '# TAs (approved)' ]
+
+    #write column headers in sheet
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+
+    # Sheet body, remaining rows
+    font_style = xlwt.XFStyle()
+
+
+    for course in courses:
+        row_num = row_num + 1
+        ws.write(row_num, 0, course.year, font_style)
+        ws.write(row_num, 1, course.term, font_style)
+        ws.write(row_num, 2, course.code, font_style)
+        ws.write(row_num, 3, course.subject, font_style)
+        teacher_value = ''
+        for teacher in course.teachers.all():
+            teacher_value += "{last}, {first}\n".format(first=teacher.first_name, last=teacher.last_name)
+        ws.write(row_num, 4, teacher_value, font_style)
+        forms_value = ''
+        if course.has_course:
+            forms_value += "course\n"
+        if course.has_exercises:
+            forms_value += "exercises\n"
+        if course.has_project:
+            forms_value += "project\n"
+        if course.has_practical_work:
+            forms_value += "practical work\n"
+        ws.write(row_num, 5, forms_value, font_style)
+        languages_value=''
+        if course.taughtInFrench:
+            languages_value += "French\n"
+        if course.taughtInEnglish:
+            languages_value = 'English\n'
+        if course.taughtInGerman:
+            languages_value += "German\n"
+        ws.write(row_num, 6, languages_value, font_style)
+        ws.write(row_num, 7, course.numberOfStudents, font_style)
+        ws.write(row_num, 8, course.calculatedNumberOfTAs)
+        ws.write(row_num, 9, course.requestedNumberOfTAs)
+        ws.write(row_num, 10, course.approvedNumberOfTAs)
+
+    wb.save(response)
+    return response
