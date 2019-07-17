@@ -33,6 +33,7 @@ class Person(AbstractUser):
         null=True, blank=True, default=None)
     topics = models.ManyToManyField(
         "web.Topic", through="Interests", blank=True)
+    section = models.ForeignKey('Section', default=None, blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return "{last}, {first} ({id})".format(last=self.last_name, first=self.first_name, id=self.id)
@@ -107,6 +108,13 @@ class Topic(models.Model):
     name = models.CharField(max_length=255)
     interestedPersons = models.ManyToManyField(
         "web.Person", through="Interests")
+
+    def __str__(self):
+        return self.name
+
+
+class Section(models.Model):
+    name = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
