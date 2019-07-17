@@ -87,7 +87,6 @@ def impersonable(function):
     return wrap
 
 
-@login_required
 @impersonable
 def index(request):
     year = config.get_config('current_year')
@@ -126,7 +125,6 @@ def courses_full_list(request, year):
     return render(request, 'web/all_courses.html', context)
 
 
-@login_required
 @impersonable
 @group_required('teachers')
 def courses_list_year_teacher(request, year):
@@ -141,7 +139,6 @@ def courses_list_year_teacher(request, year):
     return render(request, 'web/prof_courses.html', context)
 
 
-@login_required
 @impersonable
 @group_required('teachers')
 def get_applications_for_my_courses(request):
@@ -156,7 +153,6 @@ def get_applications_for_my_courses(request):
     return render(request, 'web/applications_to_my_courses.html', context)
 
 
-@login_required
 @impersonable
 @group_required('teachers')
 def review_application(request, application_id):
@@ -192,7 +188,6 @@ def review_application(request, application_id):
     return render(request, 'web/application_review_form.html', context)
 
 
-@login_required
 @impersonable
 @group_required('teachers')
 def requests_for_tas_teacher(request):
@@ -204,7 +199,6 @@ def requests_for_tas_teacher(request):
     return render(request, 'web/prof_ta_requests.html', context)
 
 
-@login_required
 @impersonable
 @group_required('teachers')
 def requests_for_tas_teacher_status(request, status):
@@ -216,7 +210,6 @@ def requests_for_tas_teacher_status(request, status):
     return render(request, 'web/prof_ta_requests.html', context)
 
 
-@login_required
 @impersonable
 @group_required('teachers')
 def request_for_TA(request, course_id):
@@ -262,7 +255,6 @@ def request_for_TA(request, course_id):
     return render(request, 'web/request_for_ta_form.html', context)
 
 
-@login_required
 @impersonable
 @is_staff()
 def get_TAs_requests_to_validate(request):
@@ -273,7 +265,6 @@ def get_TAs_requests_to_validate(request):
     return render(request, 'web/requests_for_tas.html', context)
 
 
-@login_required
 @impersonable
 @is_staff()
 def validate_request_for_TA(request, request_id):
@@ -317,7 +308,6 @@ def validate_request_for_TA(request, request_id):
         return render(request, 'web/request_for_ta_review_form.html', context)
 
 
-@login_required
 @impersonable
 @group_required('teachers')
 def view_request_for_TA(request, request_id):
@@ -344,7 +334,6 @@ def view_request_for_TA(request, request_id):
     return render(request, 'web/request_for_ta_view_form.html', context)
 
 
-@login_required
 @impersonable
 @group_required('phds')
 def apply(request, course_id):
@@ -386,7 +375,6 @@ def apply(request, course_id):
     return render(request, 'web/application_form.html', context)
 
 
-@login_required
 @impersonable
 @group_required('phds')
 def update_my_profile(request):
@@ -459,7 +447,6 @@ def update_my_profile(request):
     return render(request, 'web/profile.html', context)
 
 
-@login_required
 @impersonable
 @group_required('phds')
 def my_applications(request):
@@ -471,7 +458,6 @@ def my_applications(request):
     return render(request, 'web/applications.html', context)
 
 
-@login_required
 @impersonable
 @is_staff()
 def edit_config(request):
@@ -494,7 +480,6 @@ def edit_config(request):
     return render(request, 'web/config_form.html', context)
 
 
-@login_required
 @impersonable
 @is_staff()
 def courses_report(request):
@@ -510,7 +495,6 @@ def courses_report(request):
     return render(request, 'web/reports/courses_list.html', context)
 
 
-@login_required
 @impersonable
 @is_staff()
 def download_course_report(request):

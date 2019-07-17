@@ -57,12 +57,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_tequila.middleware.TequilaMiddleware',
+    'epfl.sti.middlewares.authentication.LoginRequiredMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (
     'django_tequila.django_backend.TequilaBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
+
+# django_tequila related configuration
 TEQUILA_SERVICE_NAME = "STI teaching pools"
 TEQUILA_CLEAN_URL = True
 LOGIN_URL = "/login"
@@ -70,6 +73,13 @@ LOGIN_REDIRECT_URL = "/"
 LOGOUT_URL = "/"
 LOGIN_REDIRECT_IF_NOT_ALLOWED = "/not_allowed"
 LOGIN_REDIRECT_TEXT_IF_NOT_ALLOWED = "Not allowed"
+
+# LoginRequiredMiddleware related configuration
+LOGIN_EXEMPT_URLS = (
+    r'^login/$',
+    r'^logout/$',
+)
+
 ROOT_URLCONF = 'teaching_pool_project.urls'
 
 TEMPLATES = [
