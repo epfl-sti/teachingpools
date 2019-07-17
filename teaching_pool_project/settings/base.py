@@ -58,6 +58,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_tequila.middleware.TequilaMiddleware',
     'epfl.sti.middlewares.authentication.LoginRequiredMiddleware',
+    'epfl.sti.middlewares.authentication.ImpersonationMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (

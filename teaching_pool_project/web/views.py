@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import logging
 from functools import wraps
 
+import xlwt
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
@@ -19,7 +20,6 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.views import generic
-import xlwt
 
 from epfl.sti.helpers import ldap as epfl_ldap
 from web.helpers import config
@@ -63,31 +63,6 @@ def group_required(*group_names):
     return user_passes_test(in_groups)
 
 
-def impersonable(function):
-    @wraps(function)
-    def wrap(request, *args, **kwargs):
-        if settings.DEBUG:
-            username_to_impersonate = request.GET.get('impersonate', None)
-            if username_to_impersonate:
-                logger.info("impersonating %s", username_to_impersonate)
-
-                try:
-                    user_to_impersonate = User.objects.get(
-                        username=username_to_impersonate)
-                    if user_to_impersonate and user_to_impersonate != request.user:
-                        login(request, user_to_impersonate,
-                              backend='django.contrib.auth.backends.ModelBackend')
-                        messages.info(request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;Current user switched to {} {}".format(
-                            user_to_impersonate.first_name, user_to_impersonate.last_name)))
-                except Exception as ex:
-                    messages.error(request, mark_safe(
-                        "<i class='fas fa-exclamation-circle'></i>&nbsp;Unable to switch user. Please check the username you want to use."))
-
-        return function(request, *args, **kwargs)
-    return wrap
-
-
-@impersonable
 def index(request):
     year = config.get_config('current_year')
 
@@ -102,7 +77,6 @@ def index(request):
     return render(request, 'web/index.html')
 
 
-@impersonable
 def courses_full_list(request, year):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
@@ -125,13 +99,13 @@ def courses_full_list(request, year):
     return render(request, 'web/all_courses.html', context)
 
 
-@impersonable
 @group_required('teachers')
 def courses_list_year_teacher(request, year):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
 
-    courses = Course.objects.filter(year=year, term=term, teachers=request.user).prefetch_related('teachers').all()
+    courses = Course.objects.filter(
+        year=year, term=term, teachers=request.user).prefetch_related('teachers').all()
 
     context = {
         'courses': courses,
@@ -139,7 +113,6 @@ def courses_list_year_teacher(request, year):
     return render(request, 'web/prof_courses.html', context)
 
 
-@impersonable
 @group_required('teachers')
 def get_applications_for_my_courses(request):
     teachings = Teaching.objects.filter(
@@ -153,7 +126,6 @@ def get_applications_for_my_courses(request):
     return render(request, 'web/applications_to_my_courses.html', context)
 
 
-@impersonable
 @group_required('teachers')
 def review_application(request, application_id):
     application = get_object_or_404(Applications, pk=application_id)
@@ -188,7 +160,6 @@ def review_application(request, application_id):
     return render(request, 'web/application_review_form.html', context)
 
 
-@impersonable
 @group_required('teachers')
 def requests_for_tas_teacher(request):
     requests = NumberOfTAUpdateRequest.objects.filter(
@@ -199,7 +170,6 @@ def requests_for_tas_teacher(request):
     return render(request, 'web/prof_ta_requests.html', context)
 
 
-@impersonable
 @group_required('teachers')
 def requests_for_tas_teacher_status(request, status):
     requests = NumberOfTAUpdateRequest.objects.filter(
@@ -210,11 +180,11 @@ def requests_for_tas_teacher_status(request, status):
     return render(request, 'web/prof_ta_requests.html', context)
 
 
-@impersonable
 @group_required('teachers')
 def request_for_TA(request, course_id):
     if not config.get_config('requests_for_TAs_are_open'):
-        messages.error(request, "The requests for Teaching Assistants are not open at the moment.")
+        messages.error(
+            request, "The requests for Teaching Assistants are not open at the moment.")
         return render(request, 'web/blank.html')
 
     course = get_object_or_404(Course, pk=course_id)
@@ -222,7 +192,8 @@ def request_for_TA(request, course_id):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
     if course.year != year or course.term != term:
-        messages.error(request, "The requests for Teaching Assistants are not open for this year / term")
+        messages.error(
+            request, "The requests for Teaching Assistants are not open for this year / term")
         return render(request, 'web/blank.html')
 
     try:
@@ -255,7 +226,6 @@ def request_for_TA(request, course_id):
     return render(request, 'web/request_for_ta_form.html', context)
 
 
-@impersonable
 @is_staff()
 def get_TAs_requests_to_validate(request):
     requests = NumberOfTAUpdateRequest.objects.filter(status='Pending').all()
@@ -265,7 +235,6 @@ def get_TAs_requests_to_validate(request):
     return render(request, 'web/requests_for_tas.html', context)
 
 
-@impersonable
 @is_staff()
 def validate_request_for_TA(request, request_id):
     if request.method == 'POST':
@@ -308,7 +277,6 @@ def validate_request_for_TA(request, request_id):
         return render(request, 'web/request_for_ta_review_form.html', context)
 
 
-@impersonable
 @group_required('teachers')
 def view_request_for_TA(request, request_id):
     ta_request = get_object_or_404(NumberOfTAUpdateRequest, pk=request_id)
@@ -334,11 +302,11 @@ def view_request_for_TA(request, request_id):
     return render(request, 'web/request_for_ta_view_form.html', context)
 
 
-@impersonable
 @group_required('phds')
 def apply(request, course_id):
     if not config.get_config('applications_are_open'):
-        messages.error(request, "The applications for Teaching Assistants positions are not open at the moment.")
+        messages.error(
+            request, "The applications for Teaching Assistants positions are not open at the moment.")
         return render(request, 'web/blank.html')
 
     course = get_object_or_404(Course, pk=course_id)
@@ -346,7 +314,8 @@ def apply(request, course_id):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
     if course.year != year or course.term != term:
-        messages.error(request, "The applications for Teaching Assistants positions are not open for this year / term")
+        messages.error(
+            request, "The applications for Teaching Assistants positions are not open for this year / term")
         return render(request, 'web/blank.html')
 
     try:
@@ -375,7 +344,6 @@ def apply(request, course_id):
     return render(request, 'web/application_form.html', context)
 
 
-@impersonable
 @group_required('phds')
 def update_my_profile(request):
     year = config.get_config('current_year')
@@ -447,7 +415,6 @@ def update_my_profile(request):
     return render(request, 'web/profile.html', context)
 
 
-@impersonable
 @group_required('phds')
 def my_applications(request):
     applications = Applications.objects.filter(
@@ -458,7 +425,6 @@ def my_applications(request):
     return render(request, 'web/applications.html', context)
 
 
-@impersonable
 @is_staff()
 def edit_config(request):
     config = Config.objects.first()
@@ -480,13 +446,13 @@ def edit_config(request):
     return render(request, 'web/config_form.html', context)
 
 
-@impersonable
 @is_staff()
 def courses_report(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
 
-    courses = Course.objects.filter(year=year, term=term).prefetch_related('teachers').all()
+    courses = Course.objects.filter(
+        year=year, term=term).prefetch_related('teachers').all()
 
     context = {
         'courses': courses
@@ -495,24 +461,25 @@ def courses_report(request):
     return render(request, 'web/reports/courses_list.html', context)
 
 
-@impersonable
 @is_staff()
 def download_course_report(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
 
-    courses = Course.objects.filter(year=year, term=term).prefetch_related('teachers').all()
+    courses = Course.objects.filter(
+        year=year, term=term).prefetch_related('teachers').all()
 
     # content-type of response
     response = HttpResponse(content_type='application/ms-excel')
 
-    #decide file name
-    response['Content-Disposition'] = 'attachment; filename="{year}_{term}.xls"'.format(year=year, term=term)
+    # decide file name
+    response['Content-Disposition'] = 'attachment; filename="{year}_{term}.xls"'.format(
+        year=year, term=term)
 
-    #creating workbook
+    # creating workbook
     wb = xlwt.Workbook(encoding='utf-8')
 
-    #adding sheet
+    # adding sheet
     ws = wb.add_sheet("sheet1")
 
     # Sheet header, first row
@@ -522,16 +489,16 @@ def download_course_report(request):
     # headers are bold
     font_style.font.bold = True
 
-    #column header names, you can use your own headers here
-    columns = ['Year', 'Term', 'Code', 'Subject', 'Teachers', 'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)', '# TAs (requested)', '# TAs (approved)' ]
+    # column header names, you can use your own headers here
+    columns = ['Year', 'Term', 'Code', 'Subject', 'Teachers',
+               'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)', '# TAs (requested)', '# TAs (approved)']
 
-    #write column headers in sheet
+    # write column headers in sheet
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], font_style)
 
     # Sheet body, remaining rows
     font_style = xlwt.XFStyle()
-
 
     for course in courses:
         row_num = row_num + 1
@@ -541,7 +508,8 @@ def download_course_report(request):
         ws.write(row_num, 3, course.subject, font_style)
         teacher_value = ''
         for teacher in course.teachers.all():
-            teacher_value += "{last}, {first}\n".format(first=teacher.first_name, last=teacher.last_name)
+            teacher_value += "{last}, {first}\n".format(
+                first=teacher.first_name, last=teacher.last_name)
         ws.write(row_num, 4, teacher_value, font_style)
         forms_value = ''
         if course.has_course:
@@ -553,7 +521,7 @@ def download_course_report(request):
         if course.has_practical_work:
             forms_value += "practical work\n"
         ws.write(row_num, 5, forms_value, font_style)
-        languages_value=''
+        languages_value = ''
         if course.taughtInFrench:
             languages_value += "French\n"
         if course.taughtInEnglish:
