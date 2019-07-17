@@ -50,6 +50,19 @@ def is_staff():
     return user_passes_test(has_staff_profile)
 
 
+def is_staff_or_teacher():
+    def has_staff_or_teacher_profile(u):
+        if u.is_superuser:
+            return True
+        elif u.is_staff:
+            return True
+        elif u.groups.filter(name='teachers').exists():
+            return True
+        else:
+            raise PermissionDenied
+    return user_passes_test(has_staff_or_teacher_profile)
+
+
 def group_required(*group_names):
     """Requires user membership in at least one of the groups passed in."""
 
