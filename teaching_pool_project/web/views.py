@@ -242,8 +242,10 @@ def request_for_TA(request, course_id):
 @is_staff()
 def get_TAs_requests_to_validate(request):
     requests = NumberOfTAUpdateRequest.objects.filter(status='Pending').all()
+    sections = Section.objects.all()
     context = {
-        'requests': requests
+        'requests': requests,
+        'sections': sections,
     }
     return render(request, 'web/requests_for_tas.html', context)
 

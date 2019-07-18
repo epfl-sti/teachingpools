@@ -2,31 +2,54 @@
 {% load bootstrap4 %}
 
 {% block maincontent %}
-<h4>Pending requests for teaching assistants</h3>
 {% if requests|length > 0 %}
-  <table class="table">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title"><i class="fas fa-filter"></i> Filters</h5>
+      <p class="card-text">
+        <div class="form-group">
+          <label for="section_filter">Section</label>
+          <select class="form-control" name="section_filter" id="section_filter">
+            <option selected="selected" value="">Select One</option>
+            {% for section in sections %}
+            <option value="{{ section.name }}">{{ section.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Pending requests for teaching assistants</h4>
+
+  <table class="table" id="requests-list">
     <thead>
       <tr>
         <th class="align-top">Opened</th>
         <th class="align-top">Requester</th>
+        <th class="align-top">Section</th>
         <th class="align-top">Course</th>
         <th class="align-top text-right">Requested # of TAs</th>
         <th></th>
       </tr>
     </thead>
-    <tbody>
+    <tbody class="list">
       {% for request in requests %}
         <tr>
-          <td class="align-top">{{ request.openedAt|date:'d.m.Y' }}</td>
-          <td class="align-top">{{ request.requester.last_name }}, {{ request.requester.first_name }}</td>
-          <td class="align-top">{{ request.course.subject }} ({{ request.course.code }})</td>
-          <td class="align-top text-right">{{ request.requestedNumberOfTAs }}</td>
+          <td class="align-middle">{{ request.openedAt|date:'d.m.Y' }}</td>
+          <td class="align-middle">{{ request.requester.last_name }}, {{ request.requester.first_name }}</td>
+          <td class="align-middle section">{{ request.requester.section|default_if_none:"&nbsp;" }}</td>
+          <td class="align-middle">{{ request.course.subject }} ({{ request.course.code }})</td>
+          <td class="align-middle text-right">{{ request.requestedNumberOfTAs }}</td>
           <td><a class="btn btn-outline-primary" href="{% url "web:validate_request_for_TA" request_id=request.pk %}">View</a></td>
         </tr>
       {% endfor %}
     </tbody>
 
   </table>
+    </div>
+  </div>
 {% else %}
 <div class="alert alert-info" role="alert">
   <strong>There are no pending requests at the moment.</strong>
@@ -34,3 +57,22 @@
 {% endif %}
 
 {% endblock maincontent %}
+{% block scripts %}
+<script>
+  var options = {
+    valueNames: ["section"]
+    };
+  var coursesList = new List('requests-list', options);
+
+  $('#section_filter').change(function () {
+      var selection = this.value;
+      if (selection) {
+          coursesList.filter(function(item) {
+              return (item.values().section == selection);
+          });
+      } else {
+          coursesList.filter();
+      }
+  });
+</script>
+{% endblock scripts %}
