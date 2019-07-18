@@ -207,4 +207,5 @@ def run():
             person.section = sections_dict[value]
             person.save()
         except ObjectDoesNotExist:
+            print("{} -> user not found".format(key))
             logger.error("{} -> user not found".format(key))
