@@ -3,28 +3,34 @@
 
 {% block maincontent %}
 <h4>Pending requests for teaching assistants</h3>
-<table class="table">
-  <thead>
-    <tr>
-      <th>Opened</th>
-      <th>Requester</th>
-      <th>Course</th>
-      <th>Requested # of TAs</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for request in requests %}
+{% if requests|length > 0 %}
+  <table class="table">
+    <thead>
       <tr>
-        <td>{{ request.openedAt|date:'d.m.Y' }}</td>
-        <td>{{ request.requester.last_name }}, {{ request.requester.first_name }}</td>
-        <td>{{ request.course.subject }} ({{ request.course.code }})</td>
-        <td>{{ request.requestedNumberOfTAs }}</td>
-        <td><a class="btn btn-outline-primary" href="{% url "web:validate_request_for_TA" request_id=request.pk %}">View</a></td>
+        <th class="align-top">Opened</th>
+        <th class="align-top">Requester</th>
+        <th class="align-top">Course</th>
+        <th class="align-top text-right">Requested # of TAs</th>
+        <th></th>
       </tr>
-    {% endfor %}
-  </tbody>
+    </thead>
+    <tbody>
+      {% for request in requests %}
+        <tr>
+          <td class="align-top">{{ request.openedAt|date:'d.m.Y' }}</td>
+          <td class="align-top">{{ request.requester.last_name }}, {{ request.requester.first_name }}</td>
+          <td class="align-top">{{ request.course.subject }} ({{ request.course.code }})</td>
+          <td class="align-top text-right">{{ request.requestedNumberOfTAs }}</td>
+          <td><a class="btn btn-outline-primary" href="{% url "web:validate_request_for_TA" request_id=request.pk %}">View</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
 
-</table>
+  </table>
+{% else %}
+<div class="alert alert-info" role="alert">
+  <strong>There are no pending requests at the moment.</strong>
+</div>
+{% endif %}
 
 {% endblock maincontent %}
