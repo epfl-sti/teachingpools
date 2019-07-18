@@ -1,10 +1,23 @@
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
+from ldap3 import ALL, Connection, Server
 
 from web.models import Person, Section
 
 logger = logging.getLogger(__name__)
+
+
+def get_sciper(email):
+    ldap_server = Server('ldap.epfl.ch', use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search('o=epfl,c=ch', '(&(mail={})(uniqueIdentifier=*))'.format(email),
+                attributes=['uniqueIdentifier'], size_limit=1)
+
+    assert len(conn.entries) == 1
+
+    for entry in conn.entries:
+        return str(entry['uniqueIdentifier'])
 
 
 def run():
@@ -203,9 +216,10 @@ def run():
 
     for key, value in prof_sections.items():
         try:
-            person = Person.objects.get(email__iexact=key)
+            sciper = get_sciper(key)
+            person = Person.objects.get(sciper=sciper)
             person.section = sections_dict[value]
             person.save()
         except ObjectDoesNotExist:
-            print("{} -> user not found".format(key))
-            logger.error("{} -> user not found".format(key))
+            print("{} -> {} -> user not found".format(key, sciper))
+            logger.error("{} -> {} -> user not found".format(key, sciper))
