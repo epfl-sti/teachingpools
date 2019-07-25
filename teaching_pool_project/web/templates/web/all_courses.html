@@ -6,7 +6,7 @@
 <div id="cards-list">
   <div class="row">
     <div class="col">
-      <input type="text" class="form-control search" placeholder="Search by course code, subject or teacher">
+      <input type="text" class="form-control search" placeholder="Search by course code, subject, teacher or language">
     </div>
   </div>
   <div class="row">
@@ -27,7 +27,7 @@
                 <p>Term: {{ course.term }}</p>
                 <p>Teacher(s): <span class="teachers">{{ course|format_teachers }}</span></p>
                 <p>Form(s): {{ course|format_forms }}</p>
-                <p>Language(s): {{ course|format_languages }}</p>
+                <p>Language(s): <span class="languages">{{ course|format_languages }}</span></p>
                 {# This is not nice but prevents from making hundred of DB queries #}
                 {% if APPLICATIONS_ARE_OPEN %}
                   {% if user_is_phd and course.pk not in courses_applied_to %}
@@ -55,7 +55,8 @@ var options = {
   valueNames: [
       "code",
       "subject",
-      "teachers"
+      "teachers",
+      "languages"
   ]
 };
 var coursesList = new List('cards-list', options);
