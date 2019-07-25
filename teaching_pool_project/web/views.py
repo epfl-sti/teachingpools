@@ -103,6 +103,7 @@ def courses_full_list(request, year):
     else:
         courses_applied_to = []
 
+    messages.info(request, mark_safe("<i class='fas fa-sticky-note'></i>&nbsp;Study plans: <a href='https://edu.epfl.ch/studyplan/en/bachelor' target=^_blank'>bachelor</a>, <a href='https://edu.epfl.ch/studyplan/en/master' target='_blank'>master</a>"))
     context = {
         'year': year,
         'courses': all_courses,
