@@ -10,6 +10,10 @@
     <p></p>
     <p>Your application for the Teaching Assistant position for the {{ application.course.subject }} ({{ application.course.code }}) has been {% if application.status == "Hired" %}accepted{% endif %}{% if application.status == "Rejected" %}rejected{% endif %}.</p>
     <p></p>
+    {% if application.decisionReason %}
+    <p>The reason for this decision is: {{ application.decisionReason }}</p>
+    <p></p>
+    {% endif %}
     <p>Best Regards,</p>
     <p></p>
     <p>The teaching pool system.</p>

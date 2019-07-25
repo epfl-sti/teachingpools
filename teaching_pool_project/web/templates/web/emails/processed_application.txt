@@ -7,6 +7,11 @@ Dear {{ application.applicant.first_name }},
 
 Your application for the Teaching Assistant position for the {{ application.course.subject }} ({{ application.course.code }}) has been {% if application.status == "Hired" %}accepted{% endif %}{% if application.status == "Rejected" %}rejected{% endif %}.
 
+{% if application.decisionReason %}
+The reason for this decision is: {{ application.decisionReason }}
+
+{% endif %}
+
 Best Regards,
 
 The teaching pool system.
