@@ -17,6 +17,16 @@ def format_teachers(course):
     return ", ".join(teachers)
 
 
+@register.filter(name="format_sections")
+def format_sections(course, args):
+    sections = list()
+    for teacher in course.teachers.all():
+        if teacher.section_id:
+            sections.append(args[teacher.section_id])
+    sections = list(set(sections))
+    return " / ".join(sections)
+
+
 @register.filter(name="format_languages")
 def format_languages(course):
     languages = list()
@@ -51,19 +61,23 @@ def get_badge(course, user, courses_applied_to, year):
     if user in course.teachers.all():
 
         # builds up a pill to give him a link to his courses
-        pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">You</a>'.format(reverse('web:courses_list_year_teacher', args=[year]))
+        pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">You</a>'.format(
+            reverse('web:courses_list_year_teacher', args=[year]))
         return_value += pill
 
         # Check if there are pending requests for TAs
-        has_pending_requests = NumberOfTAUpdateRequest.objects.filter(requester=user, course=course, status="Pending").exists()
+        has_pending_requests = NumberOfTAUpdateRequest.objects.filter(
+            requester=user, course=course, status="Pending").exists()
         if has_pending_requests:
 
             # Build a link to the pending TA requests
-            pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">Pending requests</a>'.format(reverse('web:requests_for_tas_teacher_status', args=['Pending']))
+            pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">Pending requests</a>'.format(
+                reverse('web:requests_for_tas_teacher_status', args=['Pending']))
             return_value += pill
 
     if course.pk in courses_applied_to:
-        pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">applied</a>'.format(reverse('web:requests_for_tas_teacher_status', args=['Pending']))
+        pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">applied</a>'.format(
+            reverse('web:requests_for_tas_teacher_status', args=['Pending']))
         return_value += pill
 
     return mark_safe(return_value)
@@ -72,6 +86,7 @@ def get_badge(course, user, courses_applied_to, year):
 @register.simple_tag
 def get_apply_button(course, user):
     return_value = ''
-    return_value = '<a href="{}" class="btn btn-primary">Apply</a>'.format(reverse('web:apply', args=[course.pk]))
+    return_value = '<a href="{}" class="btn btn-primary">Apply</a>'.format(
+        reverse('web:apply', args=[course.pk]))
 
     return mark_safe(return_value)

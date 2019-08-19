@@ -10,6 +10,7 @@ pandas
 xlrd
 django-extensions
 xlwt
+django-mathfilters
 
 # staging environment
 python-memcached

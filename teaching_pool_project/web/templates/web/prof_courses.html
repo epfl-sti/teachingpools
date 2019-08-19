@@ -1,21 +1,24 @@
 {% extends "web/base.html" %}
 {% load bootstrap4 %}
+{% load mathfilters %}
 
 {% block maincontent %}
 
 <table class="table">
   <thead>
     <tr>
-      <th>Code</th>
-      <th>Term</th>
-      <th>Subject</th>
-      <th>Teachers</th>
-      <th>Types</th>
-      <th>Lang.</th>
-      <th># of students (prev. year)</th>
-      <th># of TAs (theory)</th>
-      <th># of TAs (requested)</th>
-      <th># of TAs (approved)</th>
+      <th class="align-top">Code</th>
+      <th class="align-top">Term</th>
+      <th class="align-top">Subject</th>
+      <th class="align-top">Teachers</th>
+      <th class="align-top">Types</th>
+      <th class="align-top">Lang.</th>
+      <th class="align-top text-right">students (prev. year)</th>
+      <th class="align-top text-right">TAs (theory)</th>
+      <th class="align-top text-right">TAs (requested)</th>
+      <th class="align-top text-right">TAs (approved)</th>
+      <th class="align-top text-right">TAs (hired)</th>
+      <th class="align-top text-right">TAS (to be filled)</th>
       <th></th>
     </tr>
   </thead>
@@ -41,10 +44,12 @@
           </ul>
         </td>
         <td>{% if course.taughtInFrench %}F{% endif %}{% if course.taughtInEnglish %}E{% endif %}{% if course.taughtInGerman %}G{% endif %} </td>
-        <td>{{ course.numberOfStudents|default_if_none:"&nbsp;" }}</td>
-        <td>{{ course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
-        <td>{{ course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
-        <td>{{ course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td class="text-right">{{ course.numberOfStudents|default_if_none:"&nbsp;" }}</td>
+        <td class="text-right">{{ course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td class="text-right">{{ course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td class="text-right">{{ course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td class="text-right">{{ course.applications_accepted|default_if_none:"&nbsp;" }}</td>
+        <td class="text-right">{{ course.approvedNumberOfTAs|sub:course.applications_accepted|default_if_none:"&nbsp;" }}</td>
         <td><a class="btn btn-outline-primary" href="{% url "web:request_for_TA" course_id=course.id %}">Request TAs</a></td>
       </tr>
     {% endfor %}

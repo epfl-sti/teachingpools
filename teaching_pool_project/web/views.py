@@ -469,8 +469,13 @@ def courses_report(request):
 
     courses = Course.objects.filter(
         year=year, term=term).prefetch_related('teachers').all()
+    sections_dict = dict()
+    sections_obj = Section.objects.values('id', 'name').all()
+    for section in sections_obj:
+        sections_dict[section['id']] = section['name']
 
     context = {
+        'sections': sections_dict,
         'courses': courses
     }
 
@@ -484,6 +489,12 @@ def download_course_report(request):
 
     courses = Course.objects.filter(
         year=year, term=term).prefetch_related('teachers').all()
+
+    # Get base data about sections in order NOT TO re-query the DB for each teacher of each courses
+    sections_obj = Section.objects.values('id', 'name').all()
+    sections_dict = dict()
+    for section in sections_obj:
+        sections_dict[section['id']]=section['name']
 
     # content-type of response
     response = HttpResponse(content_type='application/ms-excel')
@@ -506,8 +517,8 @@ def download_course_report(request):
     font_style.font.bold = True
 
     # column header names, you can use your own headers here
-    columns = ['Year', 'Term', 'Code', 'Subject', 'Teachers',
-               'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)', '# TAs (requested)', '# TAs (approved)']
+    columns = ['Year', 'Term', 'Code', 'Subject', 'Teachers', 'Section(s)',
+               'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)', '# TAs (requested)', '# TAs (approved)', '# TAs (hired)', '# TAs (to be filled)']
 
     # write column headers in sheet
     for col_num in range(len(columns)):
@@ -527,6 +538,15 @@ def download_course_report(request):
             teacher_value += "{last}, {first}\n".format(
                 first=teacher.first_name, last=teacher.last_name)
         ws.write(row_num, 4, teacher_value, font_style)
+
+        for teacher in course.teachers.all():
+            section_result_list = list()
+            if teacher.section_id:
+                section_result_list.append(sections_dict[teacher.section_id])
+        section_result_list = list(set(section_result_list))
+        section_result = " / ".join(section_result_list)
+        ws.write(row_num, 5, section_result, font_style)
+
         forms_value = ''
         if course.has_course:
             forms_value += "course\n"
@@ -536,7 +556,7 @@ def download_course_report(request):
             forms_value += "project\n"
         if course.has_practical_work:
             forms_value += "practical work\n"
-        ws.write(row_num, 5, forms_value, font_style)
+        ws.write(row_num, 6, forms_value, font_style)
         languages_value = ''
         if course.taughtInFrench:
             languages_value += "French\n"
@@ -544,11 +564,14 @@ def download_course_report(request):
             languages_value = 'English\n'
         if course.taughtInGerman:
             languages_value += "German\n"
-        ws.write(row_num, 6, languages_value, font_style)
-        ws.write(row_num, 7, course.numberOfStudents, font_style)
-        ws.write(row_num, 8, course.calculatedNumberOfTAs)
-        ws.write(row_num, 9, course.requestedNumberOfTAs)
-        ws.write(row_num, 10, course.approvedNumberOfTAs)
+        ws.write(row_num, 7, languages_value, font_style)
+        ws.write(row_num, 8, course.numberOfStudents, font_style)
+        ws.write(row_num, 9, course.calculatedNumberOfTAs)
+        ws.write(row_num, 10, course.requestedNumberOfTAs)
+        ws.write(row_num, 11, course.approvedNumberOfTAs)
+        ws.write(row_num, 12, course.applications_accepted)
+        if course.approvedNumberOfTAs and course.applications_accepted:
+            ws.write(row_num, 13, course.approvedNumberOfTAs - course.applications_accepted)
 
     wb.save(response)
     return response

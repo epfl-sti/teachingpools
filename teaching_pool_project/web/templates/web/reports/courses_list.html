@@ -1,6 +1,7 @@
 {% extends "web/base.html" %}
 {% load bootstrap4 %}
 {% load course_tags %}
+{% load mathfilters %}
 
 {% block maincontent %}
 <div class="card">
@@ -17,12 +18,15 @@
             <th class="align-top">Code</th>
             <th class="align-top">Subject</th>
             <th class="align-top">Teachers</th>
+            <th class="align-top">Section(s)</th>
             <th class="align-top">Form(s)</th>
             <th class="align-top">Language(s)</th>
             <th class="text-right align-top"># Students (prev. year)</th>
             <th class="text-right align-top"># TAs (theory)</th>
             <th class="text-right align-top"># TAs (req)</th>
             <th class="text-right align-top"># TAs (approved)</th>
+            <th class="text-right align-top"># TAs (hired)</th>
+            <th class="text-right align-top"># TAs (to be filled)</th>
         </tr>
         </thead>
         <tbody>
@@ -31,12 +35,15 @@
                 <td scope="row">{{ course.code }}</td>
                 <td>{{ course.subject }}</td>
                 <td>{{ course|format_teachers }}</td>
+                <td>{{ course|format_sections:sections|default_if_none:"&nbsp;" }}</td>
                 <td>{{ course|format_forms }}</td>
                 <td>{{ course|format_languages }}</td>
                 <td class="text-right">{{ course.numberOfStudents|default_if_none:"&nbsp;" }}</td>
                 <td class="text-right">{{ course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
                 <td class="text-right">{{ course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
                 <td class="text-right">{{ course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+                <td class="text-right">{{ course.applications_accepted|default_if_none:"&nbsp;" }}</td>
+                <td class="text-right">{{ course.approvedNumberOfTAs|sub:course.applications_accepted|default_if_none:"&nbsp;" }}</td>
 </tr>
             {% endfor %}
         </tbody>
