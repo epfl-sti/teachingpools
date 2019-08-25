@@ -1,0 +1,107 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load course_tags %}
+{% load mathfilters %}
+{% block headers %}
+{% comment %} <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css"> {% endcomment %}
+<link rel="stylesheet" type="text/css" href='https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css'>
+{% endblock headers %}
+{% block maincontent %}
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Base information</h4>
+        <p class="card-text">Year: {{ CURRENT_YEAR }}</p>
+        <p class="card-text">Term: {{ CURRENT_TERM }}</p>
+        <a class="btn btn-primary btn-block" href="{% url "web:download_phds_report" %}" role="button"><i class="fa fa-file-excel-o"></i>&nbsp;Download Excel file</a>
+    </div>
+</div>
+<table class="table table-striped table-inverse table-responsive" id="phds">
+    <thead class="thead-inverse">
+        <tr>
+            <th class="align-top" rowspan="2">sciper</th>
+            <th class="align-top" colspan="2">Name</th>
+            <th class="align-top text-center" rowspan="2">Availability</th>
+            <th class="align-top text-center" colspan="4">Applications</th>
+        </tr>
+        <tr>
+            <th>last</th>
+            <th>first</th>
+            <th class="text-right">pending</th>
+            <th class="text-right">accepted</th>
+            <th class="text-right">declined</th>
+            <th class="text-right">withdrawn</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for phd in phds %}
+            <tr>
+                <td scope="row">{{ phd.sciper }}</td>
+                <td>{{ phd.last_name }}</td>
+                <td>{{ phd.first_name }}</td>
+                <td>{{ phd.availability }}</td>
+                <td class="text-right">{{ phd.applications_pending }}</td>
+                <td class="text-right">{{ phd.applications_accepted }}</td>
+                <td class="text-right">{{ phd.applications_declined }}</td>
+                <td class="text-right">{{ phd.applications_withdrawn }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot class="thead-inverse">
+        <tr>
+            <th>Sciper</th>
+            <th class="text-right align-top">First Name</th>
+            <th>Last Name</th>
+            <th>Availability</th>
+            <th>Pending applications</th>
+            <th>Acepted applications </th>
+            <th>Declined applications</th>
+            <th>Withdrawn applications</th>
+        </tr>
+        </tfoot>
+</table>
+{% endblock maincontent %}
+{% block scripts%}
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+<script type="text/javascript">
+{% comment %} $(document).ready( function () {
+    console.log('executing datatable');
+    $('#phds').DataTable();
+} ); {% endcomment %}
+$(document).ready(function() {
+    // Setup - add a text input to each footer cell
+    $('#phds tfoot th').each( function () {
+        var title = $(this).text();
+        $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+    } );
+
+    // DataTable
+    var table = $('#phds').DataTable(
+        {
+            'order':[[1, 'asc']],
+            'columnDefs': [
+                {    "targets": [0],
+                    "visible": false
+                }
+            ],
+            // 'stateSave': true,
+            "scrollX": true,
+            // "scrollY": 200,
+        }
+    );
+
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+
+        $( 'input', this.footer() ).on( 'keyup change clear', function () {
+            if ( that.search() !== this.value ) {
+                that
+                    .search( this.value )
+                    .draw();
+            }
+        } );
+    } );
+} );
+</script>
+{%endblock scripts%}

@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
@@ -494,7 +494,7 @@ def download_course_report(request):
     sections_obj = Section.objects.values('id', 'name').all()
     sections_dict = dict()
     for section in sections_obj:
-        sections_dict[section['id']]=section['name']
+        sections_dict[section['id']] = section['name']
 
     # content-type of response
     response = HttpResponse(content_type='application/ms-excel')
@@ -571,7 +571,217 @@ def download_course_report(request):
         ws.write(row_num, 11, course.approvedNumberOfTAs)
         ws.write(row_num, 12, course.applications_accepted)
         if course.approvedNumberOfTAs and course.applications_accepted:
-            ws.write(row_num, 13, course.approvedNumberOfTAs - course.applications_accepted)
+            ws.write(row_num, 13, course.approvedNumberOfTAs -
+                     course.applications_accepted)
 
+    wb.save(response)
+    return response
+
+
+@is_staff()
+def phds_report(request):
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
+    phds_info = dict()
+    phds_ids = list()
+
+    # Get base information about the phd
+    phds = Group.objects.get(name="phds").user_set.all()
+    for phd in phds:
+        phd_to_add = dict()
+        phd_to_add['id'] = phd.id
+        phd_to_add['sciper'] = phd.sciper
+        phd_to_add['first_name'] = phd.first_name
+        phd_to_add['last_name'] = phd.last_name
+        phds_info[phd.id] = phd_to_add
+        phds_ids.append(phd.id)
+
+    # Get the profile information about the phds
+    availabilities = Availability.objects.filter(
+        year=year, person_id__in=phds_ids).all()
+    for availability in availabilities:
+        phds_info[availability.person_id]['availability'] = availability.availability
+
+    # Add the missing information about the availabilities
+    for phd in phds_info:
+        if 'availability' not in phds_info[phd]:
+            phds_info[phd]['availability'] = ''
+
+    # Get the courses ids in order to find the applications for them
+    courses_ids_queryset = Course.objects.filter(
+        year=year, term=term).values('id').all()
+    courses_ids_list = list()
+    [courses_ids_list.append(item['id']) for item in courses_ids_queryset]
+
+    # Retrieve all the applications for the PhD students for the current courses
+    applications = Applications.objects.filter(
+        course_id__in=courses_ids_list, applicant_id__in=phds_ids).all()
+
+    # Flag the PhDs with the correct information
+    for application in applications:
+        if application.status == 'Pending':
+            if 'applications_pending' in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]['applications_pending'] += 1
+            else:
+                phds_info[application.applicant_id]['applications_pending'] = 1
+        elif application.status == 'Hired':
+            if 'applications_accepted' in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]['applications_accepted'] += 1
+            else:
+                phds_info[application.applicant_id]['applications_accepted'] = 1
+        elif application.status == 'Rejected':
+            if 'applications_declined' in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]['applications_declined'] += 1
+            else:
+                phds_info[application.applicant_id]['applications_declined'] = 1
+        elif application.status == 'Withdrawn':
+            if 'applications_withdrawn' in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]['applications_withdrawn'] += 1
+            else:
+                phds_info[application.applicant_id]['applications_withdrawn'] = 1
+
+    # Add the missing information about the applications
+    for phd in phds_info:
+        if 'applications_pending' not in phds_info[phd]:
+            phds_info[phd]['applications_pending'] = ''
+        if 'applications_accepted' not in phds_info[phd]:
+            phds_info[phd]['applications_accepted'] = ''
+        if 'applications_declined' not in phds_info[phd]:
+            phds_info[phd]['applications_declined'] = ''
+        if 'applications_withdrawn' not in phds_info[phd]:
+            phds_info[phd]['applications_withdrawn'] = ''
+
+    context = {
+        'phds': phds_info.values
+    }
+
+    return render(request, 'web/reports/phds_list.html', context)
+
+@is_staff()
+def download_phds_report(request):
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
+    phds_info = dict()
+    phds_ids = list()
+
+    # Get base information about the phd
+    phds = Group.objects.get(name="phds").user_set.all()
+    for phd in phds:
+        phd_to_add = dict()
+        phd_to_add['id'] = phd.id
+        phd_to_add['sciper'] = phd.sciper
+        phd_to_add['first_name'] = phd.first_name
+        phd_to_add['last_name'] = phd.last_name
+        phd_to_add['email'] = phd.email
+        phds_info[phd.id] = phd_to_add
+        phds_ids.append(phd.id)
+
+    # Get the profile information about the phds
+    availabilities = Availability.objects.filter(
+        year=year, person_id__in=phds_ids).all()
+    for availability in availabilities:
+        phds_info[availability.person_id]['availability'] = availability.availability
+
+    # Add the missing information about the availabilities
+    for phd in phds_info:
+        if 'availability' not in phds_info[phd]:
+            phds_info[phd]['availability'] = ''
+
+    # Get the courses ids in order to find the applications for them
+    courses_ids_queryset = Course.objects.filter(
+        year=year, term=term).values('id').all()
+    courses_ids_list = list()
+    [courses_ids_list.append(item['id']) for item in courses_ids_queryset]
+
+    # Retrieve all the applications for the PhD students for the current courses
+    applications = Applications.objects.filter(
+        course_id__in=courses_ids_list, applicant_id__in=phds_ids).all()
+
+    # Flag the PhDs with the correct information
+    for application in applications:
+        if application.status == 'Pending':
+            if 'applications_pending' in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]['applications_pending'] += 1
+            else:
+                phds_info[application.applicant_id]['applications_pending'] = 1
+        elif application.status == 'Hired':
+            if 'applications_accepted' in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]['applications_accepted'] += 1
+            else:
+                phds_info[application.applicant_id]['applications_accepted'] = 1
+        elif application.status == 'Rejected':
+            if 'applications_declined' in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]['applications_declined'] += 1
+            else:
+                phds_info[application.applicant_id]['applications_declined'] = 1
+        elif application.status == 'Withdrawn':
+            if 'applications_withdrawn' in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]['applications_withdrawn'] += 1
+            else:
+                phds_info[application.applicant_id]['applications_withdrawn'] = 1
+
+    # Add the missing information about the applications
+    for phd in phds_info:
+        if 'applications_pending' not in phds_info[phd]:
+            phds_info[phd]['applications_pending'] = ''
+        if 'applications_accepted' not in phds_info[phd]:
+            phds_info[phd]['applications_accepted'] = ''
+        if 'applications_declined' not in phds_info[phd]:
+            phds_info[phd]['applications_declined'] = ''
+        if 'applications_withdrawn' not in phds_info[phd]:
+            phds_info[phd]['applications_withdrawn'] = ''
+
+    # Time to build the excel file
+    # content-type of response
+    response = HttpResponse(content_type='application/ms-excel')
+
+    # decide file name
+    response['Content-Disposition'] = 'attachment; filename="phds_report_{year}_{term}.xls"'.format(
+        year=year, term=term)
+
+    # creating workbook
+    wb = xlwt.Workbook(encoding='utf-8')
+
+    # adding sheet
+    ws = wb.add_sheet("sheet1")
+
+    # Sheet header, first row
+    row_num = 0
+
+    font_style = xlwt.XFStyle()
+    # headers are bold
+    font_style.font.bold = True
+
+    # column header names, you can use your own headers here
+    columns = [ 'sciper',
+                'first name',
+                'last name',
+                'email',
+                'availability',
+                'pending applications',
+                'accepted applications',
+                'declined applications',
+                'withdrawn applications']
+
+    # write column headers in sheet
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+
+    # Sheet body, remaining rows
+    font_style = xlwt.XFStyle()
+
+    for key, phd in phds_info.items():
+        row_num = row_num + 1
+        ws.write(row_num, 0, phd['sciper'], font_style)
+        ws.write(row_num, 1, phd['first_name'], font_style)
+        ws.write(row_num, 2, phd['last_name'], font_style)
+        ws.write(row_num, 3, phd['email'], font_style)
+        ws.write(row_num, 4, phd['availability'], font_style)
+        ws.write(row_num, 5, phd['applications_pending'], font_style)
+        ws.write(row_num, 6, phd['applications_accepted'], font_style)
+        ws.write(row_num, 7, phd['applications_declined'], font_style)
+        ws.write(row_num, 8, phd['applications_withdrawn'], font_style)
     wb.save(response)
     return response
