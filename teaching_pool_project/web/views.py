@@ -570,9 +570,18 @@ def download_course_report(request):
         ws.write(row_num, 10, course.requestedNumberOfTAs)
         ws.write(row_num, 11, course.approvedNumberOfTAs)
         ws.write(row_num, 12, course.applications_accepted)
-        if course.approvedNumberOfTAs and course.applications_accepted:
-            ws.write(row_num, 13, course.approvedNumberOfTAs -
-                     course.applications_accepted)
+        ws.write(row_num, 13, xlwt.Formula(
+            "L{}-M{}".format(row_num+1, row_num+1)))
+
+    # Create the totals of the columns
+    row_num+=1
+    ws.write(row_num, 7, "Total")
+    ws.write(row_num, 8, xlwt.Formula("SUM(I2:I{})".format(row_num)))
+    ws.write(row_num, 9, xlwt.Formula("SUM(J2:J{})".format(row_num)))
+    ws.write(row_num, 10, xlwt.Formula("SUM(K2:K{})".format(row_num)))
+    ws.write(row_num, 11, xlwt.Formula("SUM(L2:L{})".format(row_num)))
+    ws.write(row_num, 12, xlwt.Formula("SUM(M2:M{})".format(row_num)))
+    ws.write(row_num, 13, xlwt.Formula("SUM(N2:N{})".format(row_num)))
 
     wb.save(response)
     return response
@@ -657,6 +666,7 @@ def phds_report(request):
     }
 
     return render(request, 'web/reports/phds_list.html', context)
+
 
 @is_staff()
 def download_phds_report(request):
@@ -755,15 +765,15 @@ def download_phds_report(request):
     font_style.font.bold = True
 
     # column header names, you can use your own headers here
-    columns = [ 'sciper',
-                'first name',
-                'last name',
-                'email',
-                'availability',
-                'pending applications',
-                'accepted applications',
-                'declined applications',
-                'withdrawn applications']
+    columns = ['sciper',
+               'first name',
+               'last name',
+               'email',
+               'availability',
+               'pending applications',
+               'accepted applications',
+               'declined applications',
+               'withdrawn applications']
 
     # write column headers in sheet
     for col_num in range(len(columns)):
