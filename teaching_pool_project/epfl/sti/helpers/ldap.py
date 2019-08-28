@@ -115,3 +115,26 @@ def is_phd(settings, sciper=''):
     conn = Connection(ldap_server, auto_bind=True)
     conn.search(settings.LDAP_PHD_BASEDN, filter, attributes=[])
     return len(conn.entries) > 0
+
+
+def get_user_by_username_or_sciper(settings, input):
+    filter = "(|"
+    filter += "(uniqueIdentifier={})".format(input)
+    filter += "(uid={})".format(input)
+    filter += ")"
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search(settings.LDAP_BASEDN, filter, size_limit=1, attributes=['sn', 'givenName', 'uid', 'uniqueIdentifier', 'mail'])
+    if len(conn.entries) == 0:
+        return "No entry found"
+    elif len(conn.entries) == 1:
+        entry = conn.entries[0]
+        return_value = dict()
+        return_value['sciper'] = str(entry['uniqueIdentifier'])
+        return_value['username'] = min(entry['uid'])
+        return_value['first_name'] = min(entry['givenName'])
+        return_value['last_name'] = min(entry['sn'])
+        return_value['mail'] = min(entry['mail'])
+        return return_value
+    else:
+        return "Too many entries returned"

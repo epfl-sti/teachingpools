@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.db.models.functions import Lower
 from django.forms import HiddenInput, ModelForm
@@ -137,3 +139,24 @@ class ConfigForm(ModelForm):
     class Meta:
         model = Config
         fields = '__all__'
+
+
+class PeopleManagementForm(forms.Form):
+    add_person = forms.CharField(max_length=255)
+
+    class Meta:
+        labels={
+            'add_person': 'SCIPER or username',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(PeopleManagementForm, self).__init__(*args, **kwargs)
+
+        self.fields['add_person'].label = "SCIPER or username"
+        self.fields['add_person'].help_text = "You can search the person by sciper or username"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        pattern = r"^\d+$|^[a-zA-Z]+$"
+        if not re.match(pattern, cleaned_data['add_person']):
+            self.add_error('add_person', 'The value should be either a sciper or a username')

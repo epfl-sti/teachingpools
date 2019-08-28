@@ -1,0 +1,13 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load course_tags %}
+
+{% block maincontent %}
+<form action="{% url "web:add_phd" %}" method="post" class="form">
+    {% csrf_token %}
+    {% bootstrap_form form=form %}
+    {% buttons %}
+    {% bootstrap_button "Add" button_type="submit" button_class="btn-success btn-block" %}
+    {% endbuttons %}
+</form>
+{% endblock maincontent %}

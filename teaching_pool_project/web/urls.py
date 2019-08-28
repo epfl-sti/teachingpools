@@ -22,6 +22,7 @@ urlpatterns = [
     path('applications/', views.get_applications_for_my_courses, name='applications_for_my_courses'),
     re_path('applications/review/(?P<application_id>\d*)', views.review_application, name='review_application'),
     path('config/', views.edit_config, name="edit_config"),
+    path('config/add_phd', views.add_phd, name="add_phd"),
     path('reports/phds', views.phds_report, name="phds_report"),
     path('reports/phds/download', views.download_phds_report, name="download_phds_report"),
 ]

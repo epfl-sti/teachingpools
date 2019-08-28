@@ -795,3 +795,45 @@ def download_phds_report(request):
         ws.write(row_num, 8, phd['applications_withdrawn'], font_style)
     wb.save(response)
     return response
+
+
+@is_staff()
+def add_phd(request):
+    add_phd_form = PeopleManagementForm(request.POST or None)
+
+    if request.method == "POST":
+        if add_phd_form.is_valid():
+            # try to find the person in LDAP
+            person = epfl_ldap.get_user_by_username_or_sciper(settings, add_phd_form.cleaned_data['add_person'])
+
+            if type(person) == type(dict()):
+                # Check if the person is already in the database
+                try:
+                    db_user = Person.objects.get(sciper= person['sciper'])
+                    messages.warning(request, "The user already existed in the database")
+                except ObjectDoesNotExist:
+                    db_user = Person()
+                    db_user.sciper = person['sciper']
+                    db_user.username = person['username']
+                    db_user.email = person['mail']
+                    db_user.first_name = person['first_name']
+                    db_user.last_name = person['last_name']
+                    db_user.save()
+
+                # Time to deal with the group memberships
+                phds = Group.objects.get(name="phds")
+                if db_user in phds.user_set.all():
+                    messages.warning(request, "The user was already part of the PhDs group")
+                else:
+                    phds.user_set.add(db_user)
+                    db_user.save()
+                    phds.save()
+                    messages.success(request, "The PhD has been successfully added")
+            else:
+                messages.error(request, "Unable to find the person in the directory ({})".format(person))
+
+
+    context = {
+        'form': add_phd_form,
+    }
+    return render(request, 'web/add_phd_form.html', context)

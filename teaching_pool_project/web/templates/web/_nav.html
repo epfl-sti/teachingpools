@@ -76,6 +76,7 @@
 
             <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
               <a class="dropdown-item" href="{% url "web:edit_config" %}">Configuration</a>
+              <a class="dropdown-item" href="{% url "web:add_phd" %}">Add PhD</a>
             </div>
       {% else %}
         {{ request.user|get_badge }}
