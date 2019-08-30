@@ -124,7 +124,8 @@ def get_user_by_username_or_sciper(settings, input):
     filter += ")"
     ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
     conn = Connection(ldap_server, auto_bind=True)
-    conn.search(settings.LDAP_BASEDN, filter, size_limit=1, attributes=['sn', 'givenName', 'uid', 'uniqueIdentifier', 'mail'])
+    conn.search(settings.LDAP_BASEDN, filter, size_limit=1, attributes=[
+                'sn', 'givenName', 'uid', 'uniqueIdentifier', 'mail'])
     if len(conn.entries) == 0:
         return "No entry found"
     elif len(conn.entries) == 1:
@@ -138,3 +139,32 @@ def get_user_by_username_or_sciper(settings, input):
         return return_value
     else:
         return "Too many entries returned"
+
+
+def get_users_by_partial_username_or_partial_sciper(settings, input):
+    filter = "(&"
+    filter += "(objectClass=EPFLorganizationalPerson)"
+    filter += "(|"
+    filter += "(uniqueIdentifier={})".format(input)
+    filter += "(sn=*{}*)".format(input)
+    filter += "(givenName=*{}*)".format(input)
+    filter += ")" # of or condition
+    filter += ")" # of and condition
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search(settings.LDAP_BASEDN, filter, attributes=[
+                'sn', 'givenName', 'uniqueIdentifier'])
+    return_value = list()
+    for entry in conn.entries:
+        if entry['givenName']:
+            first_name = min(entry['givenName'])
+        else:
+            first_name = ''
+        last_name = min(entry['sn'])
+        sciper = str(entry['uniqueIdentifier'])
+        displayed_value = "{}, {} ({})".format(last_name, first_name, sciper)
+        return_value.append(displayed_value)
+
+    # deduplicate the entries
+    return_value = list(dict.fromkeys(return_value))
+    return return_value

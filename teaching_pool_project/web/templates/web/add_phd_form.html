@@ -2,6 +2,10 @@
 {% load bootstrap4 %}
 {% load course_tags %}
 
+{% block headers %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css" type="text/css" media="all">
+{% endblock headers%}
+
 {% block maincontent %}
 <form action="{% url "web:add_phd" %}" method="post" class="form">
     {% csrf_token %}
@@ -11,3 +15,24 @@
     {% endbuttons %}
 </form>
 {% endblock maincontent %}
+
+
+{% block scripts %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    $("#id_add_person").autocomplete({
+        source: "{% url "web:autocomplete_phds" %}",
+        minLength: 2,
+        open: function(){
+            setTimeout(function () {
+                $('.ui-autocomplete').css('z-index', 99);
+            }, 0);
+        },
+        select: function(event, ui){
+            console.log(ui.item.value);
+        }
+        });
+});
+</script>
+{% endblock scripts %}

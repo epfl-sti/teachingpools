@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
 import logging
+import re
 from functools import wraps
 
 import xlwt
@@ -9,7 +11,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
@@ -574,7 +576,7 @@ def download_course_report(request):
             "L{}-M{}".format(row_num+1, row_num+1)))
 
     # Create the totals of the columns
-    row_num+=1
+    row_num += 1
     ws.write(row_num, 7, "Total")
     ws.write(row_num, 8, xlwt.Formula("SUM(I2:I{})".format(row_num)))
     ws.write(row_num, 9, xlwt.Formula("SUM(J2:J{})".format(row_num)))
@@ -803,37 +805,62 @@ def add_phd(request):
 
     if request.method == "POST":
         if add_phd_form.is_valid():
-            # try to find the person in LDAP
-            person = epfl_ldap.get_user_by_username_or_sciper(settings, add_phd_form.cleaned_data['add_person'])
-
-            if type(person) == type(dict()):
-                # Check if the person is already in the database
-                try:
-                    db_user = Person.objects.get(sciper= person['sciper'])
-                    messages.warning(request, "The user already existed in the database")
-                except ObjectDoesNotExist:
-                    db_user = Person()
-                    db_user.sciper = person['sciper']
-                    db_user.username = person['username']
-                    db_user.email = person['mail']
-                    db_user.first_name = person['first_name']
-                    db_user.last_name = person['last_name']
-                    db_user.save()
-
-                # Time to deal with the group memberships
-                phds = Group.objects.get(name="phds")
-                if db_user in phds.user_set.all():
-                    messages.warning(request, "The user was already part of the PhDs group")
-                else:
-                    phds.user_set.add(db_user)
-                    db_user.save()
-                    phds.save()
-                    messages.success(request, "The PhD has been successfully added")
+            # extract the sciper from the passed value
+            pattern = r'.*,\s.*\((\d*)\)'
+            if not re.match(pattern, add_phd_form.cleaned_data['add_person']):
+                messages.error(
+                    request, "Unable to find the sciper in the passed value")
             else:
-                messages.error(request, "Unable to find the person in the directory ({})".format(person))
+                sciper = re.match(
+                    pattern, add_phd_form.cleaned_data['add_person'])[1]
+                # try to find the person in LDAP
+                person = epfl_ldap.get_user_by_username_or_sciper(
+                    settings, sciper)
 
+                if type(person) == type(dict()):
+                    # Check if the person is already in the database
+                    try:
+                        db_user = Person.objects.get(sciper=person['sciper'])
+                        messages.warning(
+                            request, "The user already existed in the database")
+                    except ObjectDoesNotExist:
+                        db_user = Person()
+                        db_user.sciper = person['sciper']
+                        db_user.username = person['username']
+                        db_user.email = person['mail']
+                        db_user.first_name = person['first_name']
+                        db_user.last_name = person['last_name']
+                        db_user.save()
+
+                    # Time to deal with the group memberships
+                    phds = Group.objects.get(name="phds")
+                    if db_user in phds.user_set.all():
+                        messages.warning(
+                            request, "The user was already part of the PhDs group")
+                    else:
+                        phds.user_set.add(db_user)
+                        db_user.save()
+                        phds.save()
+                        messages.success(
+                            request, "The PhD has been successfully added")
+                else:
+                    messages.error(
+                        request, "Unable to find the person in the directory ({})".format(person))
 
     context = {
         'form': add_phd_form,
     }
     return render(request, 'web/add_phd_form.html', context)
+
+
+def autocomplete_phds(request):
+    if request.is_ajax():
+        q = request.GET.get('term', '').capitalize()
+        results = epfl_ldap.get_users_by_partial_username_or_partial_sciper(
+            settings, q)
+        data = json.dumps(results)
+    else:
+        data = 'fail'
+
+    mimetype = 'application/json'
+    return HttpResponse(data, mimetype)

@@ -152,11 +152,11 @@ class PeopleManagementForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(PeopleManagementForm, self).__init__(*args, **kwargs)
 
-        self.fields['add_person'].label = "SCIPER or username"
-        self.fields['add_person'].help_text = "You can search the person by sciper or username"
+        self.fields['add_person'].label = "Name or sciper"
+        self.fields['add_person'].help_text = "You can search the person by sciper or by name"
 
     def clean(self):
         cleaned_data = super().clean()
-        pattern = r"^\d+$|^[a-zA-Z]+$"
+        pattern = r'.*,\s.*\((\d*)\)'
         if not re.match(pattern, cleaned_data['add_person']):
-            self.add_error('add_person', 'The value should be either a sciper or a username')
+            self.add_error('add_person', 'The value passed is not correct. It should be <last name>, <first name> (<sciper>)')
