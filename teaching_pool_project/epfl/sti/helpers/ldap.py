@@ -132,7 +132,10 @@ def get_user_by_username_or_sciper(settings, input):
         entry = conn.entries[0]
         return_value = dict()
         return_value['sciper'] = str(entry['uniqueIdentifier'])
-        return_value['username'] = min(entry['uid'])
+        if '@' in min(entry['uid']):
+            return_value['username'] = min(entry['uid']).split('@')[0]
+        else:
+            return_value['username'] = min(entry['uid'])
         return_value['first_name'] = min(entry['givenName'])
         return_value['last_name'] = min(entry['sn'])
         return_value['mail'] = min(entry['mail'])
