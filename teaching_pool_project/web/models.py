@@ -33,7 +33,8 @@ class Person(AbstractUser):
         null=True, blank=True, default=None)
     topics = models.ManyToManyField(
         "web.Topic", through="Interests", blank=True)
-    section = models.ForeignKey('Section', default=None, blank=True, null=True, on_delete=models.CASCADE)
+    section = models.ForeignKey(
+        'Section', default=None, blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return "{last}, {first} ({id})".format(last=self.last_name, first=self.first_name, id=self.id)
@@ -66,6 +67,7 @@ class Course(models.Model):
     applications_received = models.IntegerField(default=0)
     applications_accepted = models.IntegerField(default=0)
     applications_rejected = models.IntegerField(default=0)
+    applications_withdrawn = models.IntegerField(default=0)
 
     def __str__(self):
         return "{year} - {term} - {code}".format(year=self.year, term=self.term, code=self.code)
@@ -256,9 +258,9 @@ class NumberOfTAUpdateRequest(models.Model):
                 mail.notify_people(
                     data=data,
                     template="new_ta_request_requester",
-                    subject = 'Your request for TA has been recorded',
-                    sender = settings.EMAIL_FROM,
-                    recipients = requesters
+                    subject='Your request for TA has been recorded',
+                    sender=settings.EMAIL_FROM,
+                    recipients=requesters
                 )
         elif action == "updated":
             recipients = [teaching.person.email for teaching in Teaching.objects.filter(
@@ -387,6 +389,44 @@ class Applications(models.Model):
                     self.course.applications_accepted = self.course.applications_accepted + 1
                     self.course.save()
 
+            if self.status == "Withdrawn":
+                # Notify people of this change
+                data = {
+                    'course': self.course,
+                    'application': self,
+                    'base_url': settings.APP_BASE_URL,
+                }
+                requesters = list()
+                requesters.append(self.applicant.email)
+                destinations = [
+                    item.email for item in self.course.teachers.all()]
+
+                mail.notify_admins_and_requester(
+                    data=data,
+                    template_base='withdrawn_application',
+                    admins_subject='An application for your course for your course has been withdrawn',
+                    requesters_subject='Your application has been withdrawn',
+                    admins=destinations,
+                    requesters=requesters)
+
+                # Update the course counters
+                if original_status == "Pending":
+                    self.course.applications_received -= 1
+                    self.course.applications_withdrawn += 1
+                    self.course.save()
+                elif original_status == "Hired":
+                    self.course.applications_accepted -= 1
+                    self.course.applications_withdrawn += 1
+                    self.course.save()
+                elif original_status == "Rejected":
+                    self.course.applications_rejected -= 1
+                    self.course.applications_withdrawn += 1
+                    self.course.save()
+                elif original_status == "Withdrawn":
+                    # There is actually nothing to do and this case should not happen.
+                    # This code is here for the sole purpose of covering all cases.
+                    pass
+
     class Meta:
         indexes = [
             models.Index(fields=['applicant']),
@@ -405,7 +445,8 @@ class Config(models.Model):
     current_term = models.CharField(max_length=6, choices=TERM_CHOICES)
     requests_for_TAs_are_open = models.BooleanField(default=True)
     applications_are_open = models.BooleanField(default=True)
-    send_notification_to_admins_upon_ta_request = models.BooleanField(default=True)
+    send_notification_to_admins_upon_ta_request = models.BooleanField(
+        default=True)
 
     def __str__(self):
         return '{} - {}'.format(self.current_year, self.current_term)

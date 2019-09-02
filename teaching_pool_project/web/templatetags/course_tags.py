@@ -76,8 +76,13 @@ def get_badge(course, user, courses_applied_to, year):
             return_value += pill
 
     if course.pk in courses_applied_to:
-        pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">applied</a>'.format(
-            reverse('web:requests_for_tas_teacher_status', args=['Pending']))
+        # Get the latest status of the application for this course
+        latest_status = Applications.objects.filter(applicant=user, course=course).order_by('-openedAt').first().status
+        if latest_status == "Rejected":
+            latest_status = "Declined"
+
+        pill = '&nbsp;<a  href="{}" class="badge badge-pill badge-info">application {}</a>'.format(
+            reverse('web:my_applications'), latest_status)
         return_value += pill
 
     return mark_safe(return_value)

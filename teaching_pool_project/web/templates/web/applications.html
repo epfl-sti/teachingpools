@@ -16,13 +16,36 @@
         {% if application.decisionReason %}
         <p>Reason: {{ application.decisionReason }}</p>
         {% endif %}
+        {% if application.status != 'Rejected' and application.status != 'Withdrawn' %}
+        <a class="btn btn-danger" href="#" data-href="{% url 'web:withdraw_application' application.pk %}" data-toggle="modal" data-target="#confirm-delete">Withdraw</a>
+        {% endif %}
         </div>
     </div>
     {% endfor %}
     </div>
 </div>
 </div>
-
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Withdraw application
+            </div>
+            <div class="modal-body">
+                Are you sure you want to withdraw your application to this course?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">No (go back)</button>
+                <a class="btn btn-danger btn-ok">Yes (withdraw)</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock maincontent %}
 {% block scripts%}
+<script>
+$('#confirm-delete').on('show.bs.modal', function(e) {
+    $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+})
+</script>
 {%endblock scripts%}

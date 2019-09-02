@@ -363,6 +363,22 @@ def apply(request, course_id):
 
 
 @group_required('phds')
+def withdraw_application(request, application_id):
+    application = get_object_or_404(Applications, pk=application_id)
+
+    if application.applicant != request.user:
+        raise PermissionDenied
+
+    application.status = "Withdrawn"
+    application.closedBy = request.user
+    application.closedAt = now()
+    application.decisionReason = "Application withdrawn by the PhD"
+    application.save()
+
+    return HttpResponseRedirect(reverse('web:my_applications'))
+
+
+@group_required('phds')
 def update_my_profile(request):
     year = config.get_config('current_year')
 

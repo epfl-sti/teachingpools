@@ -19,6 +19,7 @@ urlpatterns = [
     path('profile/', views.update_my_profile, name="update_my_profile"),
     re_path('apply/(?P<course_id>\d*)', views.apply, name="apply"),
     path('applications/my/', views.my_applications, name='my_applications'),
+    re_path('applications/my/withdraw/(?P<application_id>\d*)', views.withdraw_application, name='withdraw_application'),
     path('applications/', views.get_applications_for_my_courses, name='applications_for_my_courses'),
     re_path('applications/review/(?P<application_id>\d*)', views.review_application, name='review_application'),
     path('config/', views.edit_config, name="edit_config"),

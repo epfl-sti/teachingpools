@@ -1,0 +1,11 @@
+{% if ENVIRONMENT_TYPE == "test" %}
+************************************************************************************************************
+This message was sent from a test system. Please do not consider it's content as real or for production use.
+************************************************************************************************************
+{% endif %}
+Dear teacher of the {{ course.subject }} ({{ course.code }}) course,
+
+{{ application.applicant.first_name }} {{ application.applicant.last_name }} has withdrawn his (her) application as Teaching Assistant.
+
+
+The teaching pool system.

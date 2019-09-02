@@ -1,0 +1,18 @@
+<html>
+
+<head></head>
+
+<body>
+    {% if ENVIRONMENT_TYPE == "test" %}
+    <p><strong>This message was sent from a test system. Please do not consider it's content as <i>real or for production use</i>.</strong></p>
+    {% endif %}
+    <p>Dear {{ application.applicant.first_name }},</p>
+    <p></p>
+    <p>Your application as Teaching Assistant for the {{ course.subject }} ({{ course.code }}) course has been withdrawn.</p>
+    <p></p>
+    <p>Best Regards,</p>
+    <p></p>
+    <p>The teaching pool system.</p>
+</body>
+
+</html>
