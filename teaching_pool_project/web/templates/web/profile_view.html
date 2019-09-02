@@ -1,0 +1,16 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+
+{% block maincontent %}
+    <div class="card">
+        <div class="card-header">
+            <h6>Profile of {{ person.first_name }} {{ person.last_name }}<h6>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Availability: {{ availability }}</li>
+            <li class="list-group-item">Languages: {{ languages }}</li>
+            <li class="list-group-item">Interests: {{ topics }}</li>
+            <li class="list-group-item">More information on <a class="card-link" href="https://people.epfl.ch/{{ person.sciper }}" target="_blank">EPFL's search site</a></li>
+        </ul>
+    </div>
+{% endblock maincontent %}

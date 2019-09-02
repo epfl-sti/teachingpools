@@ -449,6 +449,47 @@ def update_my_profile(request):
     return render(request, 'web/profile.html', context)
 
 
+def view_profile(request, person_id):
+    person = get_object_or_404(Person, pk=person_id)
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+    try:
+        availability = Availability.objects.get(person_id=person_id, year=year).availability
+    except ObjectDoesNotExist:
+        availability = "N/A"
+
+    try:
+        topics = Interests.objects.filter(person=person).prefetch_related('topic').all()
+        topics = [interest.topic.name for interest in topics]
+        if len(topics)==0:
+            topics = "N/A"
+        else:
+            topics = ", ".join(topics)
+    except ObjectDoesNotExist:
+        topics = "N/A"
+
+    languages = list()
+    if person.canTeachInFrench:
+        languages.append("French")
+    if person.canTeachInEnglish:
+        languages.append("English")
+    if person.canTeachInGerman:
+        languages.append("German")
+    if len(languages) > 0:
+        languages = ", ".join(languages)
+    else:
+        languages = "N/A"
+
+
+    context = {
+        'person': person,
+        'availability': availability,
+        'topics': topics,
+        'languages': languages,
+    }
+    return render(request, 'web/profile_view.html', context)
+
+
 @group_required('phds')
 def my_applications(request):
     applications = Applications.objects.filter(

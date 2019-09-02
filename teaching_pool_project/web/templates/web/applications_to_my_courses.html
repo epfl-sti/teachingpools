@@ -17,7 +17,7 @@
             {% for application in course.list %}
             <p>
                 <i class="fas fa-user-graduate"></i>&nbsp;
-                {{ application.applicant.first_name }} {{ application.applicant.last_name }}
+                <a href="{% url 'web:view_profile' application.applicant.id %}">{{ application.applicant.first_name }} {{ application.applicant.last_name }}</a>
                 {% get_badge application %}
                 {% if application.status == "Pending" %}
                 <a class="btn btn-primary btn-sm" href="{% url 'web:review_application' application_id=application.id %}">Review</a>
