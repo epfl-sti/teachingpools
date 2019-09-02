@@ -1,6 +1,7 @@
 from django import template
 from django.conf import settings
 from django.utils.html import mark_safe
+from django.utils.text import slugify
 from django.urls import reverse
 
 from web.models import *
@@ -77,7 +78,8 @@ def get_badge(course, user, courses_applied_to, year):
 
     if course.pk in courses_applied_to:
         # Get the latest status of the application for this course
-        latest_status = Applications.objects.filter(applicant=user, course=course).order_by('-openedAt').first().status
+        latest_status = Applications.objects.filter(
+            applicant=user, course=course).order_by('-openedAt').first().status
         if latest_status == "Rejected":
             latest_status = "Declined"
 
@@ -95,3 +97,16 @@ def get_apply_button(course, user):
         reverse('web:apply', args=[course.pk]))
 
     return mark_safe(return_value)
+
+
+@register.simple_tag
+def get_slug(course, base_url):
+    return_value = base_url
+    if course.taughtInEnglish:
+        return_value += "en/"
+    else:
+        return_value += "fr/"
+    return_value += slugify(course.subject)
+    return_value += "-"
+    return_value += course.code
+    return return_value

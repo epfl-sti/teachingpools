@@ -21,7 +21,7 @@
           {% if course.approvedNumberOfTAs > course.applications_accepted or not user_is_phd %}
             <div class="card">
               <div class="card-header">
-                <span class="subject">{{ course.subject }}</span> <span class="code">({{ course.code }}</span>){% get_badge course request.user courses_applied_to CURRENT_YEAR %}
+                <a class="subject" href="{% get_slug course "https://edu.epfl.ch/coursebook/" %}" target="_blank">{{ course.subject }}</a> <span class="code">({{ course.code }}</span>){% get_badge course request.user courses_applied_to CURRENT_YEAR %}
               </div>
               <div class="card-body">
                 <p>Term: {{ course.term }}</p>
