@@ -32,7 +32,7 @@
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="{% url "web:phds_report" %}">Applications status</a>
-          <a class="dropdown-item" href="{% url "web:phds_with_multiple_hirings_report" %}">Multiple acceptance</a>
+          {% comment %} <a class="dropdown-item" href="{% url "web:phds_with_multiple_hirings_report" %}">Multiple acceptance</a> {% endcomment %}
       </li>
       {% endif %}
 
