@@ -578,7 +578,9 @@ def download_course_report(request):
 
     # column header names, you can use your own headers here
     columns = ['Year', 'Term', 'Code', 'Subject', 'Teachers', 'Section(s)',
-               'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)', '# TAs (requested)', '# TAs (approved)', '# TAs (pending)', '# TAs (hired)', '# TAs (to be filled)']
+               'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)',
+               '# TAs (requested)', '# TAs (approved)', '# Applications (received)', '# Applications (accepted)',
+               '# Applications (declined)', '# Applications (withdrawn)', '# Applications (pending)', '# TAs (to be filled)']
 
     # write column headers in sheet
     for col_num in range(len(columns)):
@@ -631,8 +633,10 @@ def download_course_report(request):
         ws.write(row_num, 11, course.approvedNumberOfTAs)
         ws.write(row_num, 12, course.applications_received)
         ws.write(row_num, 13, course.applications_accepted)
-        ws.write(row_num, 14, xlwt.Formula(
-            "L{}-M{}".format(row_num+1, row_num+1)))
+        ws.write(row_num, 14, course.applications_rejected)
+        ws.write(row_num, 15, course.applications_withdrawn)
+        ws.write(row_num, 16, xlwt.Formula("M{}-N{}-O{}-P{}".format(row_num+1, row_num+1, row_num+1, row_num+1)))
+        ws.write(row_num, 17, xlwt.Formula("L{}-N{}".format(row_num+1, row_num+1)))
 
     # Create the totals of the columns
     row_num += 1
@@ -644,6 +648,9 @@ def download_course_report(request):
     ws.write(row_num, 12, xlwt.Formula("SUM(M2:M{})".format(row_num)))
     ws.write(row_num, 13, xlwt.Formula("SUM(N2:N{})".format(row_num)))
     ws.write(row_num, 14, xlwt.Formula("SUM(O2:O{})".format(row_num)))
+    ws.write(row_num, 15, xlwt.Formula("SUM(P2:P{})".format(row_num)))
+    ws.write(row_num, 16, xlwt.Formula("SUM(Q2:Q{})".format(row_num)))
+    ws.write(row_num, 17, xlwt.Formula("SUM(R2:R{})".format(row_num)))
 
     wb.save(response)
     return response
