@@ -27,5 +27,6 @@ urlpatterns = [
     path('config/add_phd', views.add_phd, name="add_phd"),
     path('reports/phds', views.phds_report, name="phds_report"),
     path('reports/phds/download', views.download_phds_report, name="download_phds_report"),
+    path('reports/phds/multiple_hirings', views.phds_with_multiple_hirings_report, name='phds_with_multiple_hirings_report'),
     path('api/search/phds', views.autocomplete_phds, name="autocomplete_phds"),
 ]

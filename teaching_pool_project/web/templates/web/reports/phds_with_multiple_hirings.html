@@ -1,0 +1,36 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load applications_tags %}
+
+{% block maincontent %}
+<div class="row">
+<div class="col">
+
+    {% regroup hirings|dictsort:"closedAt" by applicant as applicants_by_course %}
+    {% for applicant in applicants_by_course %}
+        {% if applicant.list|length > 1 %}
+            <h2>List of PhDs being accepted in multiple courses</h2>
+            <div class="card-columns">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa fa-graduation-cap" aria-hidden="true"></i>&nbsp;{{ applicant.grouper.last_name }}, {{ applicant.grouper.first_name }}
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for application in applicant.list %}
+                    <li class="list-group-item">{{ application.course.subject }} ({{ application.course.code }})<p><small>application accepted on {{ application.closedAt|date:'d b Y' }}</small></p></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            <div class="alert alert-success" role="alert">
+                There is no PhD currently accepted in multiple courses.
+            </div>
+        {% endif %}
+    {% endfor %}
+    </div>
+</div>
+</div>
+
+{% endblock maincontent %}
+{% block scripts%}
+{%endblock scripts%}

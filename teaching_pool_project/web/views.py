@@ -454,14 +454,16 @@ def view_profile(request, person_id):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
     try:
-        availability = Availability.objects.get(person_id=person_id, year=year).availability
+        availability = Availability.objects.get(
+            person_id=person_id, year=year).availability
     except ObjectDoesNotExist:
         availability = "N/A"
 
     try:
-        topics = Interests.objects.filter(person=person).prefetch_related('topic').all()
+        topics = Interests.objects.filter(
+            person=person).prefetch_related('topic').all()
         topics = [interest.topic.name for interest in topics]
-        if len(topics)==0:
+        if len(topics) == 0:
             topics = "N/A"
         else:
             topics = ", ".join(topics)
@@ -479,7 +481,6 @@ def view_profile(request, person_id):
         languages = ", ".join(languages)
     else:
         languages = "N/A"
-
 
     context = {
         'person': person,
@@ -924,3 +925,21 @@ def autocomplete_phds(request):
 
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
+
+
+@is_staff()
+def phds_with_multiple_hirings_report(request):
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
+    all_courses = Course.objects.filter(year=year, term=term).all()
+    courses_ids = [course.id for course in all_courses]
+
+    all_applications = Applications.objects.filter(
+        course_id__in=courses_ids, status="Hired").prefetch_related('applicant').all()
+
+    context = {
+        'hirings': all_applications,
+    }
+
+    return render(request, 'web/reports/phds_with_multiple_hirings.html', context)
