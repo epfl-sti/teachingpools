@@ -577,7 +577,7 @@ def download_course_report(request):
 
     # column header names, you can use your own headers here
     columns = ['Year', 'Term', 'Code', 'Subject', 'Teachers', 'Section(s)',
-               'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)', '# TAs (requested)', '# TAs (approved)', '# TAs (hired)', '# TAs (to be filled)']
+               'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)', '# TAs (requested)', '# TAs (approved)', '# TAs (pending)', '# TAs (hired)', '# TAs (to be filled)']
 
     # write column headers in sheet
     for col_num in range(len(columns)):
@@ -628,8 +628,9 @@ def download_course_report(request):
         ws.write(row_num, 9, course.calculatedNumberOfTAs)
         ws.write(row_num, 10, course.requestedNumberOfTAs)
         ws.write(row_num, 11, course.approvedNumberOfTAs)
-        ws.write(row_num, 12, course.applications_accepted)
-        ws.write(row_num, 13, xlwt.Formula(
+        ws.write(row_num, 12, course.applications_received)
+        ws.write(row_num, 13, course.applications_accepted)
+        ws.write(row_num, 14, xlwt.Formula(
             "L{}-M{}".format(row_num+1, row_num+1)))
 
     # Create the totals of the columns
@@ -641,6 +642,7 @@ def download_course_report(request):
     ws.write(row_num, 11, xlwt.Formula("SUM(L2:L{})".format(row_num)))
     ws.write(row_num, 12, xlwt.Formula("SUM(M2:M{})".format(row_num)))
     ws.write(row_num, 13, xlwt.Formula("SUM(N2:N{})".format(row_num)))
+    ws.write(row_num, 14, xlwt.Formula("SUM(O2:O{})".format(row_num)))
 
     wb.save(response)
     return response
@@ -910,6 +912,7 @@ def add_phd(request):
     return render(request, 'web/add_phd_form.html', context)
 
 
+@is_staff()
 def autocomplete_phds(request):
     if request.is_ajax():
         q = request.GET.get('term', '').capitalize()

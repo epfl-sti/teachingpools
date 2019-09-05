@@ -25,6 +25,7 @@
             <th class="text-right align-top"># TAs (theory)</th>
             <th class="text-right align-top"># TAs (req)</th>
             <th class="text-right align-top"># TAs (approved)</th>
+            <th class="text-right align-top"># TAs (pending applications)</th>
             <th class="text-right align-top"># TAs (hired)</th>
             <th class="text-right align-top"># TAs (to be filled)</th>
         </tr>
@@ -42,6 +43,7 @@
                 <td class="text-right">{{ course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
                 <td class="text-right">{{ course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
                 <td class="text-right">{{ course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+                <td class="text-right">{{ course.applications_received|default_if_none:"&nbsp;" }}</td>
                 <td class="text-right">{{ course.applications_accepted|default_if_none:"&nbsp;" }}</td>
                 <td class="text-right">{{ course.approvedNumberOfTAs|sub:course.applications_accepted|default_if_none:"&nbsp;" }}</td>
 </tr>
