@@ -301,6 +301,11 @@ class Applications(models.Model):
     closedBy = models.ForeignKey(
         Person, on_delete=models.CASCADE, default=None, null=True, blank=True)
     decisionReason = models.TextField(null=True, blank=True, default=None)
+    SOURCE_CHOICES = [
+        ('web', 'web'),
+        ('system', 'system')
+    ]
+    source = models.CharField(max_length=255, default='web')
 
     def __str__(self):
         return "{} -> {} -> {}".format(self.applicant, self.course, self.status)
@@ -325,6 +330,82 @@ class Applications(models.Model):
         if self.status != original_status:
             if original_status == None:
                 if self.status == "Pending":
+
+                    # we only want to notify people when the application has been recorded through the web interface
+                    if self.source == 'web':
+                        # Notify people of this change
+                        data = {
+                            'course': self.course,
+                            'application': self,
+                            'base_url': settings.APP_BASE_URL,
+                        }
+                        requesters = list()
+                        requesters.append(self.applicant.email)
+                        destinations = [
+                            item.email for item in self.course.teachers.all()]
+
+                        mail.notify_admins_and_requester(
+                            data=data,
+                            template_base='new_application',
+                            admins_subject='A new teaching assistant application has been recorded for your course',
+                            requesters_subject='Your application has been recorded',
+                            admins=destinations,
+                            requesters=requesters)
+
+                    # Update the counters of the course
+                    self.course.applications_received = self.course.applications_received + 1
+                    self.course.save()
+
+            if original_status == "Pending":
+                if self.status == "Rejected":
+
+                    # we only want to notify people when the application has been recorded through the web interface
+                    if self.source == 'web':
+                        data = {
+                            'application': self,
+                        }
+                        requesters = list()
+                        requesters.append(self.applicant.email)
+
+                        mail.notify_people(
+                            data=data,
+                            template='processed_application',
+                            subject='Your application has been {}'.format(
+                                self.status.lower()),
+                            sender=settings.EMAIL_FROM,
+                            recipients=requesters)
+
+                    # Update the course counters
+                    self.course.applications_rejected = self.course.applications_rejected + 1
+                    self.course.save()
+
+                # Pending -> Hired
+                elif self.status == "Hired":
+
+                    # we only want to notify people when the application has been recorded through the web interface
+                    if self.source == 'web':
+                        # Notify people
+                        data = {
+                            'application': self,
+                        }
+                        requesters = list()
+                        requesters.append(self.applicant.email)
+
+                        mail.notify_people(
+                            data=data,
+                            template='processed_application',
+                            subject='Your application has been processed',
+                            sender=settings.EMAIL_FROM,
+                            recipients=requesters)
+
+                    # Update the course counters
+                    self.course.applications_accepted = self.course.applications_accepted + 1
+                    self.course.save()
+
+            if self.status == "Withdrawn":
+
+                # we only want to notify people when the application has been recorded through the web interface
+                if self.source == 'web':
                     # Notify people of this change
                     data = {
                         'course': self.course,
@@ -338,76 +419,11 @@ class Applications(models.Model):
 
                     mail.notify_admins_and_requester(
                         data=data,
-                        template_base='new_application',
-                        admins_subject='A new teaching assistant application has been recorded for your course',
-                        requesters_subject='Your application has been recorded',
+                        template_base='withdrawn_application',
+                        admins_subject='An application for your course for your course has been withdrawn',
+                        requesters_subject='Your application has been withdrawn',
                         admins=destinations,
                         requesters=requesters)
-
-                    # Update the counters of the course
-                    self.course.applications_received = self.course.applications_received + 1
-                    self.course.save()
-
-            if original_status == "Pending":
-                if self.status == "Rejected":
-                    data = {
-                        'application': self,
-                    }
-                    requesters = list()
-                    requesters.append(self.applicant.email)
-
-                    mail.notify_people(
-                        data=data,
-                        template='processed_application',
-                        subject='Your application has been {}'.format(
-                            self.status.lower()),
-                        sender=settings.EMAIL_FROM,
-                        recipients=requesters)
-
-                    # Update the course counters
-                    self.course.applications_rejected = self.course.applications_rejected + 1
-                    self.course.save()
-
-                # Pending -> Hired
-                elif self.status == "Hired":
-
-                    # Notify people
-                    data = {
-                        'application': self,
-                    }
-                    requesters = list()
-                    requesters.append(self.applicant.email)
-
-                    mail.notify_people(
-                        data=data,
-                        template='processed_application',
-                        subject='Your application has been processed',
-                        sender=settings.EMAIL_FROM,
-                        recipients=requesters)
-
-                    # Update the course counters
-                    self.course.applications_accepted = self.course.applications_accepted + 1
-                    self.course.save()
-
-            if self.status == "Withdrawn":
-                # Notify people of this change
-                data = {
-                    'course': self.course,
-                    'application': self,
-                    'base_url': settings.APP_BASE_URL,
-                }
-                requesters = list()
-                requesters.append(self.applicant.email)
-                destinations = [
-                    item.email for item in self.course.teachers.all()]
-
-                mail.notify_admins_and_requester(
-                    data=data,
-                    template_base='withdrawn_application',
-                    admins_subject='An application for your course for your course has been withdrawn',
-                    requesters_subject='Your application has been withdrawn',
-                    admins=destinations,
-                    requesters=requesters)
 
                 # Update the course counters
                 if original_status == "Pending":
