@@ -160,3 +160,31 @@ class PeopleManagementForm(forms.Form):
         pattern = r'.*,\s.*\((\d*)\)'
         if not re.match(pattern, cleaned_data['add_person']):
             self.add_error('add_person', 'The value passed is not correct. It should be <last name>, <first name> (<sciper>)')
+
+
+class AssignmentManagementForm(forms.Form):
+    person = forms.CharField(max_length=255)
+    course = forms.CharField(max_length=255)
+
+    class Meta:
+        labels={
+            'person': 'SCIPER or username',
+            'course': 'course code or subject'
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(AssignmentManagementForm, self).__init__(*args, **kwargs)
+
+        self.fields['person'].label = "Name or sciper"
+        self.fields['person'].help_text = "You can search the person by sciper or by name"
+        self.fields['course'].label = "Code or subject"
+        self.fields['course'].help_text = "You can search the course by code or subject"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        person_pattern = r'.*,\s.*\((\d*)\)'
+        if not re.match(person_pattern, cleaned_data['person']):
+            self.add_error('person', 'The value passed is not correct. It should be <last name>, <first name> (<sciper>)')
+        course_pattern = r'^.*\s\(.*\)$'
+        if not re.match(course_pattern, cleaned_data['course']):
+            self.add_error('course', 'The value passed is not correct. It should be <subject>(<code>)')

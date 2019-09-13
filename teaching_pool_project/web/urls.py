@@ -29,4 +29,7 @@ urlpatterns = [
     path('reports/phds/download', views.download_phds_report, name="download_phds_report"),
     path('reports/phds/multiple_hirings', views.phds_with_multiple_hirings_report, name='phds_with_multiple_hirings_report'),
     path('api/search/phds', views.autocomplete_phds, name="autocomplete_phds"),
+    path('api/search/phds_in_app', views.autocomplete_phds_from_person, name="autocomplete_phds_from_person"),
+    path('api/search/courses', views.autocomplete_courses, name="autocomplete_courses"),
+    path('assignments/add', views.add_assignment, name="add_assignment"),
 ]

@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import Context
@@ -936,6 +936,90 @@ def autocomplete_phds(request):
 
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
+
+
+@is_staff()
+def autocomplete_phds_from_person(request):
+    if request.is_ajax():
+        q = request.GET.get('term', '')
+        if re.match(r'^\d*$', q):
+            persons = Group.objects.get(name="phds").user_set.filter(sciper=q).all()
+        else:
+            persons = Group.objects.get(name="phds").user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q)).all()
+        return_value = list()
+        [return_value.append("{}, {} ({})".format(person.last_name, person.first_name, person.sciper)) for person in persons]
+        return_value = json.dumps(return_value)
+    else:
+        return_value = 'fail'
+
+    mimetype = 'application/json'
+    return HttpResponse(return_value, mimetype)
+
+
+@is_staff()
+def autocomplete_courses(request):
+    if request.is_ajax():
+        year = config.get_config('current_year')
+        term = config.get_config('current_term')
+        q = request.GET.get('term', '')
+        courses = Course.objects.filter(Q(code__icontains=q) | Q(subject__icontains=q), year=year, term=term).all()
+        return_value = list()
+        [return_value.append("{} ({})".format(course.subject, course.code)) for course in courses]
+        return_value = json.dumps(return_value)
+    else:
+        return_value = 'fail'
+
+    mimetype = 'application/json'
+    return HttpResponse(return_value, mimetype)
+
+
+@is_staff()
+def add_assignment(request):
+    add_assignment_form = AssignmentManagementForm(request.POST or None)
+
+    if request.method == "POST":
+        if add_assignment_form.is_valid():
+
+            # time to extract the information from the form
+            sciper_pattern = r'^.*\s\((\d*)\)$'
+            sciper = re.match(sciper_pattern, add_assignment_form.cleaned_data['person']).group(1)
+            try:
+                applicant = Person.objects.get(sciper=sciper)
+            except ObjectDoesNotExist:
+                applicant = None
+                messages.error(request, "The user was not found in the database")
+
+            course_pattern = r'^(.*)\s\((.*)\)$'
+            subject = re.match(course_pattern, add_assignment_form.cleaned_data['course']).group(1)
+            code = re.match(course_pattern, add_assignment_form.cleaned_data['course']).group(2)
+            year = config.get_config('current_year')
+            term = config.get_config('current_term')
+            try:
+                course = Course.objects.get(subject=subject, code=code, year=year, term=term)
+            except ObjectDoesNotExist:
+                course = None
+                messages.error(request, "The course was not found in the database")
+
+            if applicant and course:
+                try:
+                    application = Applications.objects.get(course=course, applicant=applicant)
+                except ObjectDoesNotExist:
+                    application = Applications()
+
+                application.course = course
+                application.applicant = applicant
+                application.status = "Hired"
+                application.closedAt = now()
+                application.closedBy = request.user
+                application.source = "system"
+                application.decisionReason = "TA duty assigned by section"
+                application.save()
+                messages.success(request, "Teaching duty successfully saved.")
+
+    context = {
+        'form': add_assignment_form
+    }
+    return render(request, 'web/add_phd_assignment_form.html', context)
 
 
 @is_staff()
