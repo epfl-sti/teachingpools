@@ -445,8 +445,8 @@ class Config(models.Model):
     current_term = models.CharField(max_length=6, choices=TERM_CHOICES)
     requests_for_TAs_are_open = models.BooleanField(default=True)
     applications_are_open = models.BooleanField(default=True)
-    send_notification_to_admins_upon_ta_request = models.BooleanField(
-        default=True)
+    send_notification_to_admins_upon_ta_request = models.BooleanField(default=True)
+    phds_can_withdraw_applications = models.BooleanField(default=True)
 
     def __str__(self):
         return '{} - {}'.format(self.current_year, self.current_term)

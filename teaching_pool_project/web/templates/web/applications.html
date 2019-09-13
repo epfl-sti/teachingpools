@@ -17,7 +17,11 @@
         <p>Reason: {{ application.decisionReason }}</p>
         {% endif %}
         {% if application.status != 'Rejected' and application.status != 'Withdrawn' %}
-        <a class="btn btn-danger" href="#" data-href="{% url 'web:withdraw_application' application.pk %}" data-toggle="modal" data-target="#confirm-delete">Withdraw</a>
+            {% if PHD_CAN_WITHDRAW_APPLICATION %}
+                <a class="btn btn-danger" href="#" data-href="{% url 'web:withdraw_application' application.pk %}" data-toggle="modal" data-target="#confirm-delete">Withdraw</a>
+            {% else %}
+                <span data-toggle="tooltip" data-placement="top" title="Applications cannot be withdrawn at the moment." class="btn btn-outline-secondary">Withdraw</span>
+            {% endif %}
         {% endif %}
         </div>
     </div>
@@ -46,6 +50,11 @@
 <script>
 $('#confirm-delete').on('show.bs.modal', function(e) {
     $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+})
+</script>
+<script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
 })
 </script>
 {%endblock scripts%}

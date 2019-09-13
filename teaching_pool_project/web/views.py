@@ -364,6 +364,10 @@ def apply(request, course_id):
 
 @group_required('phds')
 def withdraw_application(request, application_id):
+    if config.get_config('phds_can_withdraw_applications') == False:
+        messages.error(request, "Applications cannot be withdrawn at the moment")
+        raise PermissionDenied
+
     application = get_object_or_404(Applications, pk=application_id)
 
     if application.applicant != request.user:
