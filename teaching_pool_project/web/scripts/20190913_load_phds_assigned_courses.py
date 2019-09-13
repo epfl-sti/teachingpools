@@ -19,7 +19,7 @@ def process_row(row):
 		print ("course not found", code, subject)
 
 	try:
-		applicant = Person.objects.get(sciper__iexact=sciper)
+		applicant = Person.objects.get(sciper=sciper)
 	except ObjectDoesNotExist:
 		print("User does not exist", sciper)
 
