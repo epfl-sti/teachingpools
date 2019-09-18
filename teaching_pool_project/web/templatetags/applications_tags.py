@@ -2,6 +2,8 @@ from django import template
 from django.urls import reverse
 from django.utils.html import mark_safe
 
+from web.models import Person, Course, Applications
+
 register = template.Library()
 
 
@@ -19,3 +21,14 @@ def get_badge(application):
         return_value = '&nbsp;<span class="badge badge-pill badge-secondary">withdrawn</span>'
 
     return mark_safe(return_value)
+
+
+@register.simple_tag
+def get_application_section(application):
+    return_value = ''
+    teachers = application.course.person_set.all()
+    for teacher in teachers:
+        if teacher.section:
+            return_value=teacher.section.name
+            break
+    return return_value
