@@ -36,7 +36,7 @@
                 <td>{% get_application_section application %}</td>
                 <td>{{ application.course.subject }} ({{ application.course.code }})</td>
                 <td>{{ application.status }}</td>
-                <td><i class="fa fa-trash"></i></td>
+                <td><a class="fa fa-trash" href="{% url "web:delete_application" application.id %}"></a></td>
             </tr>
             {% endfor %}
         </tbody>

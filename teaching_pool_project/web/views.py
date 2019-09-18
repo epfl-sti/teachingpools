@@ -885,6 +885,14 @@ def applications_list(request):
 
 
 @is_staff()
+def delete_application(request, application_id):
+    application = get_object_or_404(Applications,id=application_id)
+    application.delete()
+    messages.success(request, "The application was successfully deleted")
+    return HttpResponseRedirect(reverse('web:applications_list'))
+
+
+@is_staff()
 def add_phd(request):
     add_phd_form = PeopleManagementForm(request.POST or None)
 
