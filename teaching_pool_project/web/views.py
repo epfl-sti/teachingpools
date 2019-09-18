@@ -871,6 +871,20 @@ def download_phds_report(request):
 
 
 @is_staff()
+def applications_list(request):
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
+    courses = Course.objects.filter(year=year, term=term).all()
+    applications = Applications.objects.filter(course__in=courses).prefetch_related('course', 'applicant').all()
+
+    context = {
+        'applications': applications,
+    }
+    return render(request, 'web/reports/applications_list.html', context)
+
+
+@is_staff()
 def add_phd(request):
     add_phd_form = PeopleManagementForm(request.POST or None)
 
