@@ -29,6 +29,19 @@ def get_application_section(application):
     teachers = application.course.person_set.all()
     for teacher in teachers:
         if teacher.section:
-            return_value=teacher.section.name
+            return_value = teacher.section.name
             break
     return return_value
+
+
+@register.simple_tag
+def get_application_course_teachers(application):
+    # return_value = '<ul>'
+    return_value = ''
+    teachers = application.course.person_set.all()
+    for teacher in teachers:
+        # return_value += "<li>{}, {}</li>".format(teacher.last_name, teacher.first_name)
+        return_value += "{}, {}<br/>".format(teacher.last_name, teacher.first_name)
+    # return_value += "</ul>"
+    return_value += ""
+    return mark_safe(return_value)
