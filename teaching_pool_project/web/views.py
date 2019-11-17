@@ -870,6 +870,46 @@ def download_phds_report(request):
     return response
 
 
+def phds_profiles(request):
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
+    students_infos = dict()
+    students_ids = list()
+
+    # get the base info about the students
+    students = Group.objects.get(name="phds").user_set.all()
+    for student in students:
+        student_to_add = dict()
+        student_to_add['id'] = student.id
+        student_to_add['sciper'] = student.sciper
+        student_to_add['first_name'] = student.first_name
+        student_to_add['last_name'] = student.last_name
+        student_to_add['english'] = student.canTeachInEnglish
+        student_to_add['french'] = student.canTeachInFrench
+        student_to_add['german'] = student.canTeachInGerman
+        students_infos[student.id] = student_to_add
+        students_ids.append(student.id)
+
+    # Get the profile information about the phds
+    availabilities = Availability.objects.filter(year=year, person_id__in=students_ids).all()
+    for availability in availabilities:
+        students_infos[availability.person_id]['availability'] = availability.availability
+        students_infos[availability.person_id]['availability_reason'] = availability.reason
+
+    # Add the missing information about the availabilities
+    for student in students_infos:
+        if 'availability' not in students_infos[student]:
+            students_infos[student]['availability'] = ''
+            students_infos[student]['availability_reason'] = ''
+
+    # time to render the template
+    context = {
+        'students': students_infos.values
+    }
+    return render(request, 'web/reports/students_profiles.html', context=context)
+
+
 @is_staff()
 def applications_list(request):
     year = config.get_config('current_year')
@@ -886,7 +926,7 @@ def applications_list(request):
 
 @is_staff()
 def delete_application(request, application_id):
-    application = get_object_or_404(Applications,id=application_id)
+    application = get_object_or_404(Applications, id=application_id)
     application.delete()
     messages.success(request, "The application was successfully deleted")
     return HttpResponseRedirect(reverse('web:applications_list'))
@@ -958,6 +998,33 @@ def autocomplete_phds(request):
 
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
+
+
+@is_staff()
+def get_course_applications_details(request):
+    if request.is_ajax():
+        year = request.POST['year']
+        term = request.POST['term']
+        courseCode = request.POST['courseCode']
+        applicationType = request.POST['type']
+
+        course = Course.objects.get(year=year, term=term, code=courseCode)
+        if applicationType == "received":
+            applications = Applications.objects.filter(course=course).all()
+        else:
+            applications = Applications.objects.filter(course=course, status=applicationType).all()
+
+        return_value = ""
+        for application in applications:
+            person = application.applicant
+            return_value += "{}, {}<a target='_blank' href='{}'><i style='margin-left: 5px;' class='fas fa-external-link-alt'></i></a><br/>".format(person.last_name, person.first_name, reverse('web:view_profile', args=(person.id,)))
+        mimetype = "text/html"
+        return HttpResponse(return_value, mimetype)
+
+    else:
+        data: 'fail'
+        mimetype = 'application/json'
+        return HttpResponse(data, mimetype)
 
 
 @is_staff()

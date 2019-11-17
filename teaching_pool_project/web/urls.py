@@ -17,6 +17,7 @@ urlpatterns = [
     path('requests/TAs/reports/full_list/', views.courses_report, name="courses_report"),
     path('requests/TAs/reports/full_list/download/', views.download_course_report, name="download_course_report"),
     path('profile/', views.update_my_profile, name="update_my_profile"),
+    path('profiles/', views.phds_profiles, name='phds_profiles'),
     re_path(r'profile/(?P<person_id>\d*)$', views.view_profile, name="view_profile"),
     re_path('apply/(?P<course_id>\d*)', views.apply, name="apply"),
     path('applications/my/', views.my_applications, name='my_applications'),
@@ -33,5 +34,6 @@ urlpatterns = [
     path('api/search/phds', views.autocomplete_phds, name="autocomplete_phds"),
     path('api/search/phds_in_app', views.autocomplete_phds_from_person, name="autocomplete_phds_from_person"),
     path('api/search/courses', views.autocomplete_courses, name="autocomplete_courses"),
+    path('api/applications/get_details', views.get_course_applications_details, name="api_get_course_applications_details"),
     path('assignments/add', views.add_assignment, name="add_assignment"),
 ]

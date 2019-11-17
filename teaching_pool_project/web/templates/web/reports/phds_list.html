@@ -15,17 +15,15 @@
         <a class="btn btn-primary btn-block" href="{% url "web:download_phds_report" %}" role="button"><i class="fa fa-file-excel-o"></i>&nbsp;Download Excel file</a>
     </div>
 </div>
-<table class="table table-striped table-inverse table-responsive" id="phds">
+<table class="table table-sm table-striped table-inverse table-responsive" id="phds">
     <thead class="thead-inverse">
         <tr>
-            <th class="align-top" rowspan="2">sciper</th>
-            <th class="align-top" colspan="2">Name</th>
-            <th class="align-top text-center" rowspan="2">Availability</th>
+            <th class="align-top text-left" rowspan="2">Name</th>
+            <th class="align-top text-center" rowspan="2"><i class="far fa-id-card"></i></th>
+            <th class="align-top text-left" rowspan="2">Availability</th>
             <th class="align-top text-center" colspan="4">Applications</th>
         </tr>
         <tr>
-            <th>last</th>
-            <th>first</th>
             <th class="text-right">pending</th>
             <th class="text-right">accepted</th>
             <th class="text-right">declined</th>
@@ -35,10 +33,9 @@
         <tbody>
             {% for phd in phds %}
             <tr>
-                <td scope="row">{{ phd.sciper }}</td>
-                <td>{{ phd.last_name }}</td>
-                <td>{{ phd.first_name }}</td>
-                <td>{{ phd.availability }}</td>
+                <td class="text-left">{{ phd.last_name }}, {{ phd.first_name }}</td>
+                <td class="text-center"><a href='{% url "web:view_profile" phd.id%}' target="_blank"><i class="fas fa-external-link-alt"></i></a></td>
+                <td class="text-left">{{ phd.availability }}</td>
                 <td class="text-right">{{ phd.applications_pending }}</td>
                 <td class="text-right">{{ phd.applications_accepted }}</td>
                 <td class="text-right">{{ phd.applications_declined }}</td>
@@ -48,14 +45,13 @@
         </tbody>
         <tfoot class="thead-inverse">
         <tr>
-            <th>Sciper</th>
-            <th class="text-right align-top">First Name</th>
-            <th>Last Name</th>
-            <th>Availability</th>
-            <th>Pending applications</th>
-            <th>Acepted applications </th>
-            <th>Declined applications</th>
-            <th>Withdrawn applications</th>
+            <th>Name</th>
+            <th></th>
+            <th>Avail.</th>
+            <th>Pending appl.</th>
+            <th>Acepted appl.</th>
+            <th>Declined appl.</th>
+            <th>Withdrawn appl.</th>
         </tr>
         </tfoot>
 </table>
@@ -64,29 +60,26 @@
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
 <script type="text/javascript">
-{% comment %} $(document).ready( function () {
-    console.log('executing datatable');
-    $('#phds').DataTable();
-} ); {% endcomment %}
 $(document).ready(function() {
     // Setup - add a text input to each footer cell
     $('#phds tfoot th').each( function () {
         var title = $(this).text();
-        $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+        if (title != ''){
+            $(this).html( '<input type="text" placeholder="Search '+title.toLowerCase()+'" />' );
+        }
     } );
 
     // DataTable
     var table = $('#phds').DataTable(
         {
-            'order':[[1, 'asc']],
+            'order':[[0, 'asc']],
             'columnDefs': [
-                {    "targets": [0],
-                    "visible": false
-                }
+                {
+                    'targets': 1,
+                    'orderable': false
+                },
             ],
-            // 'stateSave': true,
             "scrollX": true,
-            // "scrollY": 200,
         }
     );
 

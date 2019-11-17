@@ -31,6 +31,7 @@
           PhDs
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="{% url "web:phds_profiles" %}">All profiles</a>
           <a class="dropdown-item" href="{% url "web:applications_list" %}">All applications</a>
           <a class="dropdown-item" href="{% url "web:phds_report" %}">Applications status per PhD</a>
           {% comment %} <a class="dropdown-item" href="{% url "web:phds_with_multiple_hirings_report" %}">Multiple acceptance</a> {% endcomment %}
