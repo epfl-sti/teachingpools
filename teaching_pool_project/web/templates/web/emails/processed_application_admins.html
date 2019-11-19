@@ -1,0 +1,20 @@
+<html>
+    <head>
+    </head>
+    <body>
+        {% if ENVIRONMENT_TYPE == "test" %}
+        <p><strong>This message was sent from a test system. Please do not consider it's content as <i>real or for production use</i>.</strong></p>
+        {% endif %}
+        <p>Dear teacher of the {{ course.subject }} ({{ course.code }}) course,</p>
+        <p></p>
+        <p>The application as {{ application.role }} from {{ application.applicant.first_name }} {{ application.applicant.last_name }} has been processed.</p>
+        <p></p>
+        <p>It's current status is: {% if application.status == "Rejected" %}Declined{% else %}{{ application.status }}{% endif %}</p>
+        <p></p>
+        <p>Please also note that {{ application.applicant.first_name }} {{ application.applicant.last_name }} has been notified of this change.</p>
+        <p></p>
+        <p>Best Regards,</p>
+        <p></p>
+        <p>The teaching pool system.</p>
+    </body>
+</html>

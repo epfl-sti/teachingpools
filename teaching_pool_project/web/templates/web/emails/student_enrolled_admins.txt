@@ -3,14 +3,11 @@
 This message was sent from a test system. Please do not consider it's content as real or for production use.
 ************************************************************************************************************
 {% endif %}
-Dear {{ application.applicant.first_name }},
+Dear teacher of the {{ course.subject }} ({{ course.code }}) course,
 
-Your application for the Teaching Assistant position for the {{ application.course.subject }} ({{ application.course.code }}) has been {% if application.status == "Hired" %}accepted{% endif %}{% if application.status == "Rejected" %}rejected{% endif %}.
+{{ application.applicant.first_name }} {{ application.applicant.last_name }} has been enrolled as {{ application.role }}.
 
-{% if application.decisionReason %}
-The reason for this decision is: {{ application.decisionReason }}
-
-{% endif %}
+Please also note that {{ application.applicant.first_name }} {{ application.applicant.last_name }} has been notified of this enrollment.
 
 Best Regards,
 

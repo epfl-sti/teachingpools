@@ -306,6 +306,11 @@ class Applications(models.Model):
         ('system', 'system')
     ]
     source = models.CharField(max_length=255, default='web')
+    ROLE_CHOICES = [
+        ('TA', 'Teaching assistant'),
+        ('AE', 'Assistant étudiant'),
+    ]
+    role = models.CharField(max_length=255, default='TA')
 
     def __str__(self):
         return "{} -> {} -> {}".format(self.applicant, self.course, self.status)
@@ -328,8 +333,93 @@ class Applications(models.Model):
 
         # We only want to act on applications changing status
         if self.status != original_status:
-            if original_status == None:
-                if self.status == "Pending":
+
+            # From there, there are several use cases
+            # The use cases are based on 3 parameters:
+            #   * the origin of the operation ['web', 'system'] TODO: it should be a good idea to revisit this to something like ['system', 'web - normal workflow', 'web - teacher request', 'web - section request']
+            #   * the original state of the application [None, 'Pending', 'Hired', 'Rejected', 'Withdrawn']
+            #   * the new state of the application [None, 'Pending', 'Hired', 'Rejected', 'Withdrawn']
+            # This leads to 32 combinations that should be dealt with
+            # The good news is that the origin of the operation is here to prevent sending emails when we are using a backoffice method to update the application.
+            # Therefore all calls having a 'system' origin should not trigger a mail (which turns the number of combinations down to 16...).
+            # We will only consider changes having an origin set as 'web'
+            # The list of use cases are the following:
+            # None -> None:           Use case 01: the application is not actually changing therefore, there's no reason to act upon it
+            # None -> Pending:        Use case 02: 'regular workflow': the applicant should be notified his application is received and the teachers should be notified that they received a new application
+            # None -> Hired:          Use case 03: Typically what happens when the teacher or the section hires the student directly. This should trigger a notification that the student has been enrolled to both the student and the teachers
+            # None -> Rejected:       Use case 04: It should not happen. No need to act.
+            # None -> Withdrawn:      Use case 04: It should not happen. No need to act.
+
+            # Pending -> None:        Use case 04: It should not happen. No need to act.
+            # Pending -> Pending:     Use case 01: the application is not actually changing therefore, there's no reason to act upon it
+            # Pending -> Hired:       Use case 05: 'regular workflow'. This should trigger a notification to the student and the teachers
+            # Pending -> Rejected:    Use case 05: 'regular workflow'. This should trigger a notification to the student and the teachers
+            # Pending -> Withdrawn:   Use case 05: 'regular workflow'. This should trigger a notification to the student and the teachers
+
+            # Hired -> None:          Use case 04: It should not happen. No need to act.
+            # Hired -> Pending:       Use case 06: 'regular workflow'. This should trigger a notification to the student and the teachers
+            # Hired -> Hired:         Use case 01: the application is not actually changing therefore, there's no reason to act upon it
+            # Hired -> Rejected:      Use case 06: 'regular workflow'. This should trigger a notification to the student and the teachers
+            # Hired -> Withdrawn:     Use case 06: 'regular workflow'. This should trigger a notification to the student and the teachers
+
+            # Rejected -> None:       Use case 04: It should not happen. No need to act.
+            # Rejected -> Pending:    Use case 06: 'regular workflow'. This should trigger a notification to the student and the teachers
+            # Rejected -> Hired:      Use case 06: 'regular workflow'. This should trigger a notification to the student and the teachers
+            # Rejected -> Rejected:   Use case 01: the application is not actually changing therefore, there's no reason to act upon it
+            # Rejected -> Withdrawn:  Use case 04: It should not happen. No need to act.
+
+            # Withdrawn -> None:      Use case 04: It should not happen. No need to act.
+            # Withdrawn -> Pending:   Use case 04: It should not happen. No need to act.
+            # Withdrawn -> Hired:     Use case 04: It should not happen. No need to act.
+            # Withdrawn -> Rejected:  Use case 04: It should not happen. No need to act.
+            # Withdrawn -> Withdrawn: Use case 01: the application is not actually changing therefore, there's no reason to act upon it
+
+            # This leaves us with 6 possible use cases:
+            # Use case 01: the application is not actually changing therefore, there's no reason to act upon it
+            # Use case 02: 'regular workflow': the applicant should be notified his application is received and the teachers should be notified that they received a new application
+            # Use case 03: Typically what happens when the teacher or the section hires the student directly. This should trigger a notification that the student has been enrolled to both the student and the teachers
+            # Use case 04: It should not happen. No need to act.
+            # Use case 05: 'regular workflow'. This should trigger a notification to the student and the teachers
+            # Use case 06: 'regular workflow'. This should trigger a notification to the student and the teachers. However, this use case is different from Use case 05 because it is transition from a state that should be final (hired, rejected)
+
+
+            use_case = None
+            use_case = 1 if original_status == None and self.status == None else use_case
+            use_case = 2 if original_status == None and self.status == "Pending" else use_case
+            use_case = 3 if original_status == None and self.status == "Hired" else use_case
+            use_case = 4 if original_status == None and self.status == "Rejected" else use_case
+            use_case = 4 if original_status == None and self.status == "Withdrawn" else use_case
+
+            use_case = 4 if original_status == "Pending" and self.status == None else use_case
+            use_case = 1 if original_status == "Pending" and self.status == "Pending" else use_case
+            use_case = 5 if original_status == "Pending" and self.status == "Hired" else use_case
+            use_case = 5 if original_status == "Pending" and self.status == "Rejected" else use_case
+            use_case = 5 if original_status == "Pending" and self.status == "Withdrawn" else use_case
+
+            use_case = 4 if original_status == "Hired" and self.status == None else use_case
+            use_case = 6 if original_status == "Hired" and self.status == "Pending" else use_case
+            use_case = 1 if original_status == "Hired" and self.status == "Hired" else use_case
+            use_case = 6 if original_status == "Hired" and self.status == "Rejected" else use_case
+            use_case = 6 if original_status == "Hired" and self.status == "Withdrawn" else use_case
+
+            use_case = 4 if original_status == "Rejected" and self.status == None else use_case
+            use_case = 6 if original_status == "Rejected" and self.status == "Pending" else use_case
+            use_case = 6 if original_status == "Rejected" and self.status == "Hired" else use_case
+            use_case = 1 if original_status == "Rejected" and self.status == "Rejected" else use_case
+            use_case = 4 if original_status == "Rejected" and self.status == "Withdrawn" else use_case
+
+            use_case = 4 if original_status == "withdrawn" and self.status == None else use_case
+            use_case = 4 if original_status == "withdrawn" and self.status == "Pending" else use_case
+            use_case = 4 if original_status == "withdrawn" and self.status == "Hired" else use_case
+            use_case = 4 if original_status == "withdrawn" and self.status == "Rejected" else use_case
+            use_case = 1 if original_status == "withdrawn" and self.status == "Withdrawn" else use_case
+
+            if use_case == 1:
+                # the application is not actually changing therefore, there's no reason to act upon it
+                pass
+            elif use_case == 2:
+                # 'regular workflow': the applicant should be notified his application is received and the teachers should be notified that they received a new application
+                # None -> Pending
 
                     # we only want to notify people when the application has been recorded through the web interface
                     if self.source == 'web':
@@ -341,68 +431,19 @@ class Applications(models.Model):
                         }
                         requesters = list()
                         requesters.append(self.applicant.email)
-                        destinations = [
-                            item.email for item in self.course.teachers.all()]
+                        admins = [item.email for item in self.course.teachers.all()]
 
                         mail.notify_admins_and_requester(
                             data=data,
                             template_base='new_application',
-                            admins_subject='A new teaching assistant application has been recorded for your course',
+                            admins_subject='A new application as TA or AE has been recorded for your course',
                             requesters_subject='Your application has been recorded',
-                            admins=destinations,
+                            admins=admins,
                             requesters=requesters)
 
-                    # Update the counters of the course
-                    self.course.applications_received = self.course.applications_received + 1
-                    self.course.save()
-
-            if original_status == "Pending":
-                if self.status == "Rejected":
-
-                    # we only want to notify people when the application has been recorded through the web interface
-                    if self.source == 'web':
-                        data = {
-                            'application': self,
-                        }
-                        requesters = list()
-                        requesters.append(self.applicant.email)
-
-                        mail.notify_people(
-                            data=data,
-                            template='processed_application',
-                            subject='Your application has been {}'.format(
-                                self.status.lower()),
-                            sender=settings.EMAIL_FROM,
-                            recipients=requesters)
-
-                    # Update the course counters
-                    self.course.applications_rejected = self.course.applications_rejected + 1
-                    self.course.save()
-
-                # Pending -> Hired
-                elif self.status == "Hired":
-
-                    # we only want to notify people when the application has been recorded through the web interface
-                    if self.source == 'web':
-                        # Notify people
-                        data = {
-                            'application': self,
-                        }
-                        requesters = list()
-                        requesters.append(self.applicant.email)
-
-                        mail.notify_people(
-                            data=data,
-                            template='processed_application',
-                            subject='Your application has been processed',
-                            sender=settings.EMAIL_FROM,
-                            recipients=requesters)
-
-                    # Update the course counters
-                    self.course.applications_accepted = self.course.applications_accepted + 1
-                    self.course.save()
-
-            if self.status == "Withdrawn":
+            elif use_case == 3:
+                # Typically what happens when the teacher or the section hires the student directly. This should trigger a notification that the student has been enrolled to both the student and the teachers
+                # None -> Hired
 
                 # we only want to notify people when the application has been recorded through the web interface
                 if self.source == 'web':
@@ -410,38 +451,120 @@ class Applications(models.Model):
                     data = {
                         'course': self.course,
                         'application': self,
-                        'base_url': settings.APP_BASE_URL,
                     }
                     requesters = list()
                     requesters.append(self.applicant.email)
-                    destinations = [
-                        item.email for item in self.course.teachers.all()]
+                    admins = [item.email for item in self.course.teachers.all()]
 
                     mail.notify_admins_and_requester(
                         data=data,
-                        template_base='withdrawn_application',
-                        admins_subject='An application for your course for your course has been withdrawn',
-                        requesters_subject='Your application has been withdrawn',
-                        admins=destinations,
+                        template_base='student_enrolled',
+                        admins_subject='A student has been enrolled as {} for your course'.format(self.role),
+                        requesters_subject='You have been enrolled for a teaching duty',
+                        admins=admins,
                         requesters=requesters)
 
-                # Update the course counters
-                if original_status == "Pending":
-                    self.course.applications_received -= 1
-                    self.course.applications_withdrawn += 1
-                    self.course.save()
-                elif original_status == "Hired":
-                    self.course.applications_accepted -= 1
-                    self.course.applications_withdrawn += 1
-                    self.course.save()
-                elif original_status == "Rejected":
-                    self.course.applications_rejected -= 1
-                    self.course.applications_withdrawn += 1
-                    self.course.save()
-                elif original_status == "Withdrawn":
-                    # There is actually nothing to do and this case should not happen.
-                    # This code is here for the sole purpose of covering all cases.
-                    pass
+            elif use_case == 4:
+                # It should not happen. No need to act.
+                # None -> Rejected
+                # None -> Withdrawn
+                # Pending -> None
+                # Hired -> None
+                # Rejected -> None
+                # Rejected -> Withdrawn
+                # Withdrawn -> None
+                # Withdrawn -> Pending
+                # Withdrawn -> Hired
+                # Withdrawn -> Rejected
+                pass
+            elif use_case == 5:
+                # 'regular workflow'. This should trigger a notification to the student and the teachers
+                # Pending -> Hired
+                # Pending -> Rejected
+                # Pending -> Withdrawn
+
+                # we only want to notify people when the application has been recorded through the web interface
+                if self.source == 'web':
+                    # Notify people
+                    data = {
+                        'application': self,
+                    }
+                    requesters = list()
+                    requesters.append(self.applicant.email)
+                    admins = [item.email for item in self.course.teachers.all()]
+
+                    mail.notify_people(
+                        data=data,
+                        template='processed_application',
+                        admins_subject = 'An application as {} for your course has been updated'.format(self.role),
+                        requesters_subject='Your application has been processed',
+                        admins=admins,
+                        requesters=requesters)
+
+            elif use_case == 6:
+                # 'regular workflow': the applicant should be notified his application is received and the teachers should be notified that they received a new application
+                # Hired -> Pending
+                # Hired -> Rejected
+                # Hired -> Withdrawn
+                # Rejected -> Pending
+                # Rejected -> Hired
+
+                if self.source == 'web':
+                    # Notify people
+                    data = {
+                        'application': self,
+                    }
+                    requesters = list()
+                    requesters.append(self.applicant.email)
+                    admins = [item.email for item in self.course.teachers.all()]
+
+                    mail.notify_people(
+                        data=data,
+                        template='processed_application',
+                        admins_subject = 'An application as {} for your course has been updated'.format(self.role),
+                        requesters_subject='Your application has been processed',
+                        admins=admins,
+                        requesters=requesters)
+
+
+            # if original_status == None:
+            #     if self.status == "Pending":
+            #         # Update the counters of the course
+            #         self.course.applications_received = self.course.applications_received + 1
+            #         self.course.save()
+
+            # if original_status == "Pending":
+            #     if self.status == "Rejected":
+
+            #         # Update the course counters
+            #         self.course.applications_rejected = self.course.applications_rejected + 1
+            #         self.course.save()
+
+            #     # Pending -> Hired
+            #     elif self.status == "Hired":
+
+            #         # Update the course counters
+            #         self.course.applications_accepted = self.course.applications_accepted + 1
+            #         self.course.save()
+
+            # if self.status == "Withdrawn":
+            #     # Update the course counters
+            #     if original_status == "Pending":
+            #         self.course.applications_received -= 1
+            #         self.course.applications_withdrawn += 1
+            #         self.course.save()
+            #     elif original_status == "Hired":
+            #         self.course.applications_accepted -= 1
+            #         self.course.applications_withdrawn += 1
+            #         self.course.save()
+            #     elif original_status == "Rejected":
+            #         self.course.applications_rejected -= 1
+            #         self.course.applications_withdrawn += 1
+            #         self.course.save()
+            #     elif original_status == "Withdrawn":
+            #         # There is actually nothing to do and this case should not happen.
+            #         # This code is here for the sole purpose of covering all cases.
+            #         pass
 
     class Meta:
         indexes = [

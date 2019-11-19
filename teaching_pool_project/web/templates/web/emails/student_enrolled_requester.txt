@@ -3,12 +3,10 @@
 This message was sent from a test system. Please do not consider it's content as real or for production use.
 ************************************************************************************************************
 {% endif %}
-Dear teacher of the {{ course.subject }} ({{ course.code }}) course,
+Dear {{ application.applicant.first_name }},
 
-A new application as {{ application.role }} has sent by {{ application.applicant.first_name }} {{ application.applicant.last_name }}.
+You have been enrolled as {{ application.role }} for the {{ application.course.subject }} ({{ application.course.code }}) course.
 
-Could you please review it at {{ base_url }}{% url 'web:applications_for_my_courses' %} ?
-
-Thanks in advance,
+Best Regards,
 
 The teaching pool system.

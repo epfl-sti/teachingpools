@@ -5,7 +5,7 @@ This message was sent from a test system. Please do not consider it's content as
 {% endif %}
 Dear {{ application.applicant.first_name }},
 
-Your application as Teaching Assistant for the {{ course.subject }} ({{ course.code }}) course has been received.
+Your application as {{ application.role }} for the {{ course.subject }} ({{ course.code }}) course has been received.
 
 We will review it as soon as possible.
 

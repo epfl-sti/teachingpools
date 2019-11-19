@@ -25,17 +25,20 @@
           {% endif %}
       </li>
 
-      {% if request.user|is_staff %}
+      {% if request.user|is_staff_or_teacher %}
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          PhDs
+          Students
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+        <a class="dropdown-item" href="{% url "web:add_phd" %}">Add student</a>
+        <a class="dropdown-item" href="{% url "web:add_assignment" %}">Enroll student</a>
+        {% if request.user|is_staff %}
           <a class="dropdown-item" href="{% url "web:phds_profiles" %}">All profiles</a>
           <a class="dropdown-item" href="{% url "web:applications_list" %}">All applications</a>
           <a class="dropdown-item" href="{% url "web:phds_report" %}">Applications status per PhD</a>
-          {% comment %} <a class="dropdown-item" href="{% url "web:phds_with_multiple_hirings_report" %}">Multiple acceptance</a> {% endcomment %}
-          <a class="dropdown-item" href="{% url "web:add_assignment" %}">Assign PhD to course</a>
+        {% endif %}
+        {% comment %} <a class="dropdown-item" href="{% url "web:phds_with_multiple_hirings_report" %}">Multiple acceptance</a> {% endcomment %}
       </li>
       {% endif %}
 
@@ -80,7 +83,6 @@
 
             <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
               <a class="dropdown-item" href="{% url "web:edit_config" %}">Configuration</a>
-              <a class="dropdown-item" href="{% url "web:add_phd" %}">Add PhD</a>
             </div>
       {% else %}
         {{ request.user|get_badge }}

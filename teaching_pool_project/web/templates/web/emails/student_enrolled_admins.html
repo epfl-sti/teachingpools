@@ -7,7 +7,11 @@
         {% endif %}
         <p>Dear teacher of the {{ course.subject }} ({{ course.code }}) course,</p>
         <p></p>
-        <p>{{ application.applicant.first_name }} {{ application.applicant.last_name }} has withdrawn his (her) application as Teaching Assistant.</p>
+        <p>{{ application.applicant.first_name }} {{ application.applicant.last_name }} has been enrolled as {{ application.role }}.</p>
+        <p></p>
+        <p>Please also note that {{ application.applicant.first_name }} {{ application.applicant.last_name }} has been notified of this enrollment.</p>
+        <p></p>
+        <p>Best Regards,</p>
         <p></p>
         <p>The teaching pool system.</p>
     </body>

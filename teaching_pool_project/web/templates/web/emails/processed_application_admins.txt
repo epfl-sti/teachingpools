@@ -5,7 +5,12 @@ This message was sent from a test system. Please do not consider it's content as
 {% endif %}
 Dear teacher of the {{ course.subject }} ({{ course.code }}) course,
 
-{{ application.applicant.first_name }} {{ application.applicant.last_name }} has withdrawn his (her) application as Teaching Assistant.
+The application as {{ application.role }} from {{ application.applicant.first_name }} {{ application.applicant.last_name }} has been processed.
 
+It's current status is: {% if application.status == "Rejected" %}Declined{% else %}{{ application.status }}{% endif %}
+
+Please also note that {{ application.applicant.first_name }} {{ application.applicant.last_name }} has been notified of this change.
+
+Best Regards,
 
 The teaching pool system.

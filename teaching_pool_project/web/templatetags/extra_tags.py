@@ -18,6 +18,11 @@ def is_teacher(user):
     return user.groups.filter(name='teachers').exists()
 
 
+@register.filter(name="is_staff_or_teacher")
+def is_staff_or_teacher(user):
+    return (is_staff(user) or is_teacher(user))
+
+
 @register.filter(name="is_phd")
 def is_phd(user):
     return user.groups.filter(name='phds').exists()

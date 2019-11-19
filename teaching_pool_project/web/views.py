@@ -452,7 +452,7 @@ def update_my_profile(request):
     }
     return render(request, 'web/profile.html', context)
 
-
+# TODO: manage authorizations
 def view_profile(request, person_id):
     person = get_object_or_404(Person, pk=person_id)
     year = config.get_config('current_year')
@@ -869,7 +869,7 @@ def download_phds_report(request):
     wb.save(response)
     return response
 
-
+# TODO: manage authorizations
 def phds_profiles(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
@@ -932,7 +932,7 @@ def delete_application(request, application_id):
     return HttpResponseRedirect(reverse('web:applications_list'))
 
 
-@is_staff()
+@is_staff_or_teacher()
 def add_phd(request):
     add_phd_form = PeopleManagementForm(request.POST or None)
 
@@ -966,16 +966,31 @@ def add_phd(request):
                         db_user.save()
 
                     # Time to deal with the group memberships
-                    phds = Group.objects.get(name="phds")
-                    if db_user in phds.user_set.all():
+                    # first, we need to check if we are dealing with TAs or AEs
+                    role = add_phd_form.cleaned_data['role']
+                    if role == "TA":
+                        group_name = 'phds'
+                    elif role == "AE":
+                        group_name = "aes"
+
+                    # Check if the group already exists (create it if necessary)
+                    try:
+                        group = Group.objects.get(name=group_name)
+                    except ObjectDoesNotExist:
+                        group = Group()
+                        group.name = group_name
+                        group.save()
+
+                    # phds = Group.objects.get(name="phds")
+                    if db_user in group.user_set.all():
                         messages.warning(
-                            request, "The user was already part of the PhDs group")
+                            request, "The user was already part of the group")
                     else:
-                        phds.user_set.add(db_user)
+                        group.user_set.add(db_user)
                         db_user.save()
-                        phds.save()
+                        group.save()
                         messages.success(
-                            request, "The PhD has been successfully added")
+                            request, "The student has been successfully added")
                 else:
                     messages.error(
                         request, "Unable to find the person in the directory ({})".format(person))
@@ -1027,16 +1042,33 @@ def get_course_applications_details(request):
         return HttpResponse(data, mimetype)
 
 
-@is_staff()
+@is_staff_or_teacher()
 def autocomplete_phds_from_person(request):
     if request.is_ajax():
         q = request.GET.get('term', '')
         if re.match(r'^\d*$', q):
-            persons = Group.objects.get(name="phds").user_set.filter(sciper=q).all()
+            # get all the phds having that sciper
+            phds = Group.objects.get(name="phds").user_set.filter(sciper=q).all()
+
+            # get all the aes having that sciper
+            aes = Group.objects.get(name="aes").user_set.filter(sciper=q).all()
+
+            # merge the 2 querysets
+            persons = (phds|aes).distinct()
         else:
-            persons = Group.objects.get(name="phds").user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q)).all()
+            # get all the phds having a partial matching name
+            phds = Group.objects.get(name="phds").user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q)).all()
+
+            # get all the aes having a partial matching name
+            aes = Group.objects.get(name="aes").user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q)).all()
+
+            # merge the 2 querysets
+            persons = (phds|aes).distinct()
+
+        # Build the list to be displayed on the page
         return_value = list()
         [return_value.append("{}, {} ({})".format(person.last_name, person.first_name, person.sciper)) for person in persons]
+
         return_value = json.dumps(return_value)
     else:
         return_value = 'fail'
@@ -1045,13 +1077,31 @@ def autocomplete_phds_from_person(request):
     return HttpResponse(return_value, mimetype)
 
 
-@is_staff()
+@is_staff_or_teacher()
 def autocomplete_courses(request):
     if request.is_ajax():
         year = config.get_config('current_year')
         term = config.get_config('current_term')
         q = request.GET.get('term', '')
-        courses = Course.objects.filter(Q(code__icontains=q) | Q(subject__icontains=q), year=year, term=term).all()
+
+        # get the list of courses
+        # if the requester is staff, all the courses matching the query will get displayed
+        # if the requester is 'simply' a teacher, only the courses belonging to that person will get displayed
+        if request.user.is_staff:
+            courses = Course.objects.filter(Q(code__icontains=q) | Q(subject__icontains=q), year=year, term=term).all()
+        elif request.user.groups.filter(name='teachers').exists():
+            # get all the Teachings of that person
+            teachings = Teaching.objects.filter(person = request.user).select_related('course').all()
+
+            # extract the ids of the courses in order to use them downlstream
+            courses_ids = []
+            [courses_ids.append(teaching.course.id) for teaching in teachings]
+
+            # get all the courses of that person meeting the partial name or code
+            courses = Course.objects.filter(Q(code__icontains=q) | Q(subject__icontains=q), year=year, term=term, id__in=courses_ids).all()
+        else:
+            raise PermissionDenied()
+
         return_value = list()
         [return_value.append("{} ({})".format(course.subject, course.code)) for course in courses]
         return_value = json.dumps(return_value)
@@ -1062,7 +1112,7 @@ def autocomplete_courses(request):
     return HttpResponse(return_value, mimetype)
 
 
-@is_staff()
+@is_staff_or_teacher()
 def add_assignment(request):
     add_assignment_form = AssignmentManagementForm(request.POST or None)
 
@@ -1090,6 +1140,23 @@ def add_assignment(request):
                 messages.error(request, "The course was not found in the database")
 
             if applicant and course:
+                # first, we have to check if the user is allowed to save this application
+                # i.e. if the user is staff, any course can be selected
+                #      if the user is a teacher, then he can only select a course he is teaching
+                if request.user.is_staff:
+                    # no need to process further
+                    pass
+                elif request.user.groups.filter(name='teachers').exists():
+                    # get all the Teachings of that person
+                    teachings = Teaching.objects.filter(person = request.user).select_related('course').all()
+
+                    # extract the ids of the courses in order to use them downlstream
+                    courses_ids = []
+                    [courses_ids.append(teaching.course.id) for teaching in teachings]
+                    if course.id not in courses_ids:
+                        raise PermissionDenied()
+                else:
+                    raise PermissionDenied()
                 try:
                     application = Applications.objects.get(course=course, applicant=applicant)
                 except ObjectDoesNotExist:
@@ -1097,11 +1164,12 @@ def add_assignment(request):
 
                 application.course = course
                 application.applicant = applicant
+                application.role = add_assignment_form.cleaned_data['role']
                 application.status = "Hired"
                 application.closedAt = now()
                 application.closedBy = request.user
-                application.source = "system"
-                application.decisionReason = "TA duty assigned by section"
+                application.source = "web"
+                application.decisionReason = "TA duty assigned by section or teacher"
                 application.save()
                 messages.success(request, "Teaching duty successfully saved.")
 
