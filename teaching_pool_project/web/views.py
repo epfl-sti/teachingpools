@@ -242,6 +242,50 @@ def request_for_TA(request, course_id):
     return render(request, 'web/request_for_ta_form.html', context)
 
 
+@group_required('teachers')
+def accept_theoretical_number_of_tas(request, course_id):
+    # General authorization setting check if the requests for TAs are open
+    if not config.get_config('requests_for_TAs_are_open'):
+        messages.error(
+            request, "The requests for Teaching Assistants are not open at the moment.")
+        return render(request, 'web/blank.html')
+
+    # TODO: Add a check if the teacher accessing the request screen is actually teaching this course
+
+    # Check if the request is for a course for the current period
+    course = get_object_or_404(Course, pk=course_id)
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+    if course.year != year or course.term != term:
+        messages.error(
+            request, "The requests for Teaching Assistants are not open for this year / term")
+        return render(request, 'web/blank.html')
+
+    # Then we should check if there are already requests pending for this course
+    try:
+        # find a currently pending request for TAs
+        ta_request = NumberOfTAUpdateRequest.objects.get(status="Pending", course=course)
+    except ObjectDoesNotExist:
+        # if it does not exist, create a simple boilerplate
+        ta_request = NumberOfTAUpdateRequest()
+        ta_request.course = course
+        ta_request.requester = request.user
+        ta_request.openedAt = now()
+
+    # Since this request will supercede any pending one, update the details of the request.
+    ta_request.requestedNumberOfTAs = course.calculatedNumberOfTAs
+    ta_request.requestReason = "approved theoretical number of TAs"
+    ta_request.closedAt = now()
+    ta_request.decisionReason = "Auto accepted since it was a simple approval of the theoretical number of TAs"
+    ta_request.status = "Approved"
+    ta_request.save()
+    ta_request.update_related_course(action="approved")
+    ta_request.send_mail_on_TAs_requested(action="approved")
+
+    messages.success(request, "Your request for TAs has been successfully saved")
+    return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=[config.get_config('current_year')]))
+
+
 @is_staff()
 def get_TAs_requests_to_validate(request):
     requests = NumberOfTAUpdateRequest.objects.filter(status='Pending').all()

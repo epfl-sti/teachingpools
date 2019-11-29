@@ -50,6 +50,7 @@
         <td class="text-right">{{ course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
         <td class="text-right">{{ course.applications_accepted|default_if_none:"&nbsp;" }}</td>
         <td class="text-right">{{ course.approvedNumberOfTAs|sub:course.applications_accepted|default_if_none:"&nbsp;" }}</td>
+        <td><a class="btn btn-outline-primary" href="{% url "web:accept_theoretical_number_of_tas" course_id=course.id %}">Accept theoretical # of TAs</a></td>
         <td><a class="btn btn-outline-primary" href="{% url "web:request_for_TA" course_id=course.id %}">Request TAs</a></td>
       </tr>
     {% endfor %}

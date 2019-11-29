@@ -9,6 +9,7 @@ urlpatterns = [
     re_path(r'courses/(?P<year>\d{4}-\d{4})$', views.courses_full_list, name="courses_full_list"),
     re_path(r'courses/(?P<year>\d{4}-\d{4})/my', views.courses_list_year_teacher, name="courses_list_year_teacher"),
     re_path(r'TAs/request/(?P<course_id>\d*$)', views.request_for_TA, name="request_for_TA"),
+    re_path(r'TAs/accept/(?P<course_id>\d*$)', views.accept_theoretical_number_of_tas, name="accept_theoretical_number_of_tas"),
     path('requests/TAs/', views.get_TAs_requests_to_validate, name="get_TAs_requests_to_validate"),
     re_path(r'requests/TAs/review/(?P<request_id>\d*$)', views.validate_request_for_TA, name="validate_request_for_TA"),
     re_path(r'requests/TAs/view/(?P<request_id>\d*$)', views.view_request_for_TA, name="view_request_for_TA"),
