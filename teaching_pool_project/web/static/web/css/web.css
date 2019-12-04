@@ -5,3 +5,24 @@
 .card {
     margin-bottom: 10px;
 }
+
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.table {
+    font-size: small;
+    font-family: 'Roboto Condensed', sans-serif;
+}
+
+.table thead th {
+    font-weight: bold;
+}
+
+.table tbody tr td ul {
+    padding: 0;
+}
+
+.table tbody tr td {
+    font-weight: 100;
+}
