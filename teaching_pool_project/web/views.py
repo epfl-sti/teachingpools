@@ -80,12 +80,19 @@ def group_required(*group_names):
 
 def index(request):
     year = config.get_config('current_year')
+    term = config.get_config('current_term')
+    if term == "HIVER":
+        term="winter"
+    elif term == "ETE":
+        term="summer"
+    else:
+        pass
 
     if request.user.is_staff and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists():
         messages.info(
             request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;You have (a) pending <a href='{}'>TA request(s) to validate</a>".format(reverse('web:get_TAs_requests_to_validate'))))
 
-    if request.user.groups.filter(name='phds').exists() and not Availability.objects.filter(year=year, person=request.user).exists():
+    if request.user.groups.filter(name='phds').exists() and not Availability.objects.filter(year=year, term=term, person=request.user).exists():
         message = mark_safe(
             "<i class='fas fa-info-circle'></i>&nbsp;You should <a href='{}'>update your profile</a>.".format(reverse('web:update_my_profile')))
         messages.info(request, message)
@@ -721,6 +728,12 @@ def download_course_report(request):
 def phds_report(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
+    if term == "HIVER":
+        term="winter"
+    elif term == "ETE":
+        term="summer"
+    else:
+        pass
 
     phds_info = dict()
     phds_ids = list()
@@ -737,8 +750,7 @@ def phds_report(request):
         phds_ids.append(phd.id)
 
     # Get the profile information about the phds
-    availabilities = Availability.objects.filter(
-        year=year, person_id__in=phds_ids).all()
+    availabilities = Availability.objects.filter(year=year, term=term, person_id__in=phds_ids).all()
     for availability in availabilities:
         phds_info[availability.person_id]['availability'] = availability.availability
 
@@ -802,6 +814,12 @@ def phds_report(request):
 def download_phds_report(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
+    if term == "HIVER":
+        term="winter"
+    elif term == "ETE":
+        term="summer"
+    else:
+        pass
 
     phds_info = dict()
     phds_ids = list()
@@ -819,8 +837,7 @@ def download_phds_report(request):
         phds_ids.append(phd.id)
 
     # Get the profile information about the phds
-    availabilities = Availability.objects.filter(
-        year=year, person_id__in=phds_ids).all()
+    availabilities = Availability.objects.filter(year=year, term=term, person_id__in=phds_ids).all()
     for availability in availabilities:
         phds_info[availability.person_id]['availability'] = availability.availability
 
@@ -930,6 +947,12 @@ def download_phds_report(request):
 def phds_profiles(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
+    if term == "HIVER":
+        term="winter"
+    elif term == "ETE":
+        term="summer"
+    else:
+        pass
 
     students_infos = dict()
     students_ids = list()
@@ -949,7 +972,7 @@ def phds_profiles(request):
         students_ids.append(student.id)
 
     # Get the profile information about the phds
-    availabilities = Availability.objects.filter(year=year, person_id__in=students_ids).all()
+    availabilities = Availability.objects.filter(year=year, term=term, person_id__in=students_ids).all()
     for availability in availabilities:
         students_infos[availability.person_id]['availability'] = availability.availability
         students_infos[availability.person_id]['availability_reason'] = availability.reason
