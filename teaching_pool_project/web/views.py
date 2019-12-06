@@ -511,7 +511,7 @@ def update_my_profile(request):
     }
     return render(request, 'web/profile.html', context)
 
-# TODO: manage authorizations
+@is_staff_or_teacher()
 def view_profile(request, person_id):
     person = get_object_or_404(Person, pk=person_id)
     year = config.get_config('current_year')
@@ -943,7 +943,7 @@ def download_phds_report(request):
     wb.save(response)
     return response
 
-# TODO: manage authorizations
+@is_staff()
 def phds_profiles(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
