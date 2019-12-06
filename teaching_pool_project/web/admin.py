@@ -4,10 +4,11 @@ from __future__ import unicode_literals
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Applications, Config, Topic
+from .models import Applications, Config, Topic, Person
 
 admin.site.register(Topic)
 admin.site.register(Config)
+admin.site.register(Person)
 
 
 def custom_titled_filter(title):
