@@ -1009,20 +1009,13 @@ def add_phd(request):
                         db_user.last_name = person['last_name']
                         db_user.save()
 
-                    # Time to deal with the group memberships
-                    # first, we need to check if we are dealing with TAs or AEs
-                    role = add_phd_form.cleaned_data['role']
-                    if role == "TA":
-                        group_name = 'phds'
-                    elif role == "AE":
-                        group_name = "aes"
 
                     # Check if the group already exists (create it if necessary)
                     try:
-                        group = Group.objects.get(name=group_name)
+                        group = Group.objects.get(name='phds')
                     except ObjectDoesNotExist:
                         group = Group()
-                        group.name = group_name
+                        group.name = 'phds'
                         group.save()
 
                     # phds = Group.objects.get(name="phds")

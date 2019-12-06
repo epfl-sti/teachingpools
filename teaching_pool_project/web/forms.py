@@ -143,13 +143,10 @@ class ConfigForm(ModelForm):
 
 class PeopleManagementForm(forms.Form):
     add_person = forms.CharField(max_length=255)
-    ROLES_CHOICES = [("TA", "Teaching Assistant"),("AE", "Assistant étudiant")]
-    role = forms.ChoiceField(choices=ROLES_CHOICES)
 
     class Meta:
         labels={
             'add_person': 'SCIPER or username',
-            'role': 'Role'
         }
 
     def __init__(self, *args, **kwargs):
@@ -157,8 +154,6 @@ class PeopleManagementForm(forms.Form):
 
         self.fields['add_person'].label = "Name or sciper"
         self.fields['add_person'].help_text = "You can search the person by sciper or by name"
-        self.fields['role'].label = "Role"
-        self.fields['role'].help_text = "The student can either be hired as 'Teaching Assistant' or as 'Assistant étudiant'"
 
     def clean(self):
         cleaned_data = super().clean()
@@ -170,8 +165,6 @@ class PeopleManagementForm(forms.Form):
 class AssignmentManagementForm(forms.Form):
     person = forms.CharField(max_length=255)
     course = forms.CharField(max_length=255)
-    choices = [("TA", "Teaching assistant"), ("AE", 'Assistant étudiant')]
-    role = forms.ChoiceField(choices=choices)
 
     class Meta:
         labels={
@@ -187,8 +180,6 @@ class AssignmentManagementForm(forms.Form):
         self.fields['person'].help_text = "You can search the person by sciper or by name"
         self.fields['course'].label = "Code or subject"
         self.fields['course'].help_text = "You can search the course by code or subject"
-        self.fields['role'].label = 'Role'
-        self.fields['role'].help_text = "The student can either be hired as 'Teaching Assistant' or as 'Assistant étudiant'"
 
     def clean(self):
         cleaned_data = super().clean()
