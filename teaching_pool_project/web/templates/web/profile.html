@@ -6,7 +6,7 @@
     {% csrf_token %}
     <div class="card">
         <div class="card-header">
-            <h6>Availability for {{ year }}<h6>
+            <h6>Availability for {{ year }} - {{ term }}<h6>
         </div>
         <div class="card-body">
             {% bootstrap_form form=availability_form %}

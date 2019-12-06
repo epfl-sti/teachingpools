@@ -61,7 +61,8 @@ class AvailabilityForm(ModelForm):
         fields = '__all__'
         widgets = {
             'year': forms.HiddenInput(),
-            'person': forms.HiddenInput()
+            'person': forms.HiddenInput(),
+            'term': forms.HiddenInput()
         }
 
     def clean(self):

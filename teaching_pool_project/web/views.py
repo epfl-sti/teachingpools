@@ -429,10 +429,17 @@ def withdraw_application(request, application_id):
 @group_required('phds')
 def update_my_profile(request):
     year = config.get_config('current_year')
+    term = config.get_config('current_term')
+    if term == "HIVER":
+        term="winter"
+    elif term == "ETE":
+        term="summer"
+    else:
+        pass
 
     # Working with the availabilities
     availability, availability_created = Availability.objects.get_or_create(
-        person=request.user, year=year)
+        person=request.user, year=year, term=term)
     if availability_created:
         messages.warning(
             request, "Since you did not fill in your profile, your default availability has been set to 'Available'")
@@ -490,6 +497,7 @@ def update_my_profile(request):
 
     context = {
         'year': year,
+        'term': term,
         'availability_form': availability_form,
         'languages_form': languages_form,
         'topics_form': topics_form,
@@ -501,15 +509,20 @@ def view_profile(request, person_id):
     person = get_object_or_404(Person, pk=person_id)
     year = config.get_config('current_year')
     term = config.get_config('current_term')
+    if term == "HIVER":
+        term="winter"
+    elif term == "ETE":
+        term="summer"
+    else:
+        pass
+
     try:
-        availability = Availability.objects.get(
-            person_id=person_id, year=year).availability
+        availability = Availability.objects.get(person_id=person_id, year=year, term=term).availability
     except ObjectDoesNotExist:
         availability = "N/A"
 
     try:
-        topics = Interests.objects.filter(
-            person=person).prefetch_related('topic').all()
+        topics = Interests.objects.filter(person=person).prefetch_related('topic').all()
         topics = [interest.topic.name for interest in topics]
         if len(topics) == 0:
             topics = "N/A"

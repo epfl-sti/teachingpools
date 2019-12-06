@@ -139,6 +139,11 @@ class Interests(models.Model):
 
 class Availability(models.Model):
     year = models.CharField(max_length=9)
+    TERM_CHOICES = [
+        ('winter', 'winter'),
+        ('summer', 'summer')
+    ]
+    term = models.CharField(max_length=255, choices=TERM_CHOICES)
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     AVAILABILITIES_CHOICES = [
         ('Available', 'Available'),
