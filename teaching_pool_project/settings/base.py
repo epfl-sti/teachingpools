@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'mathfilters',
+    'crispy_forms',
 ]
 
 AUTH_USER_MODEL = 'web.Person'
@@ -171,3 +172,6 @@ APP_BASE_URL = os.environ.get('DJANGO_APP_BASE_URL', 'https://localhost')
 
 DEBUG = distutils.util.strtobool(os.environ.get('DJANGO_DEBUG')) or False
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+
+# Crispy forms stuff
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
