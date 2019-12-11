@@ -24,6 +24,7 @@ postgres = "*"
 psycopg2-binary = "*"
 gunicorn = "*"
 Django = "*"
+django-crispy-forms = "*"
 
 [requires]
 python_version = "3.7"
