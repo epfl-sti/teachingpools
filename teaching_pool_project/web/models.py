@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import logging
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -387,7 +388,6 @@ class Applications(models.Model):
             # Use case 05: 'regular workflow'. This should trigger a notification to the student and the teachers
             # Use case 06: 'regular workflow'. This should trigger a notification to the student and the teachers. However, this use case is different from Use case 05 because it is transition from a state that should be final (hired, rejected)
 
-
             use_case = None
             use_case = 1 if original_status == None and self.status == None else use_case
             use_case = 2 if original_status == None and self.status == "Pending" else use_case
@@ -427,24 +427,24 @@ class Applications(models.Model):
                 # None -> Pending
 
                     # we only want to notify people when the application has been recorded through the web interface
-                    if self.source == 'web':
-                        # Notify people of this change
-                        data = {
-                            'course': self.course,
-                            'application': self,
-                            'base_url': settings.APP_BASE_URL,
-                        }
-                        requesters = list()
-                        requesters.append(self.applicant.email)
-                        admins = [item.email for item in self.course.teachers.all()]
+                if self.source == 'web':
+                    # Notify people of this change
+                    data = {
+                        'course': self.course,
+                        'application': self,
+                        'base_url': settings.APP_BASE_URL,
+                    }
+                    requesters = list()
+                    requesters.append(self.applicant.email)
+                    admins = [item.email for item in self.course.teachers.all()]
 
-                        mail.notify_admins_and_requester(
-                            data=data,
-                            template_base='new_application',
-                            admins_subject='A new application as TA or AE has been recorded for your course',
-                            requesters_subject='Your application has been recorded',
-                            admins=admins,
-                            requesters=requesters)
+                    mail.notify_admins_and_requester(
+                        data=data,
+                        template_base='new_application',
+                        admins_subject='A new application as TA or AE has been recorded for your course',
+                        requesters_subject='Your application has been recorded',
+                        admins=admins,
+                        requesters=requesters)
 
             elif use_case == 3:
                 # Typically what happens when the teacher or the section hires the student directly. This should trigger a notification that the student has been enrolled to both the student and the teachers
@@ -501,7 +501,7 @@ class Applications(models.Model):
                     mail.notify_people(
                         data=data,
                         template='processed_application',
-                        admins_subject = 'An application as {} for your course has been updated'.format(self.role),
+                        admins_subject='An application as {} for your course has been updated'.format(self.role),
                         requesters_subject='Your application has been processed',
                         admins=admins,
                         requesters=requesters)
@@ -526,11 +526,10 @@ class Applications(models.Model):
                     mail.notify_people(
                         data=data,
                         template='processed_application',
-                        admins_subject = 'An application as {} for your course has been updated'.format(self.role),
+                        admins_subject='An application as {} for your course has been updated'.format(self.role),
                         requesters_subject='Your application has been processed',
                         admins=admins,
                         requesters=requesters)
-
 
             # if original_status == None:
             #     if self.status == "Pending":
@@ -600,3 +599,71 @@ class Config(models.Model):
             raise ValidationError(
                 "There can only be one instance of the configuration")
         return super(Config, self).save(*args, **kwargs)
+
+
+class TimeReport(models.Model):
+    created_at = models.DateTimeField(default=datetime.now)
+    created_by = models.ForeignKey(Person, on_delete=models.DO_NOTHING, related_name="created_activities")
+    year = models.CharField(max_length=9)  # TODO: implement validation upon save (the year should be under the form of 20xx-20yy)
+    TERM_CHOICES = [
+        ('winter', 'winter'),
+        ('summer', 'summer')
+    ]
+    term = models.CharField(max_length=255, choices=TERM_CHOICES)
+    ACTIVITY_TYPE_CHOICES = [
+        ('class teaching', 'Class teaching'),  # TODO: implement validation to force selection of a course
+        ('master thesis', 'Master thesis'),
+        ('semester project', 'Semester project'),
+        ('MAN', 'MAN'),
+        ('other job', 'Other job'),  # TODO: implement validation of required explanation
+        ('not available', 'Not available'),
+        ('nothing to report', 'Nothing to report')
+    ]
+    activity_type = models.CharField(max_length=255, choices=ACTIVITY_TYPE_CHOICES)
+    master_thesis_year = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Year of the thesis")
+    master_thesis_term = models.CharField(max_length=255, choices=TERM_CHOICES, default=None, blank=True, null=True, verbose_name="Term of the thesis")
+    master_thesis_title = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Title of the Master thesis")
+    master_thesis_student_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the student")
+    master_thesis_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the thesis", on_delete=models.DO_NOTHING, related_name="supervised_master_thesis")
+    master_thesis_supervision_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Number of hours of supervision")
+    master_thesis_comments = models.TextField(blank=True, null=True, verbose_name="Comments regarding the master thesis activity")
+    MASTER_THESIS_SECTION_CHOICES = [
+        ('SGM', 'SGM'),
+        ('SEL', 'SEL'),
+        ('SMT', 'SMT'),
+        ('SMX', 'SMX'),
+        ('other', 'other')
+    ]
+    master_thesis_section = models.CharField(max_length=255, choices=MASTER_THESIS_SECTION_CHOICES, default=None, blank=True, null=True, verbose_name="Teacher's section")  # TODO: implement validation when 'other' is selected, a value must be passed in the master_thesis_other_section field
+    master_thesis_other_section = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Other section (if the section is not found in the previous list)")
+
+    class_teaching_course = models.ForeignKey(Course, default=None, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Class teaching course")
+    class_teaching_preparation_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of preparation hours for class teaching for the semester")
+    class_teaching_teaching_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of teaching hours (courses and exercises over the semester)")
+    class_teaching_practical_work_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of practical work hours (over the semester)")
+    class_teaching_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the class teaching activity")
+
+    semester_project_year = models.CharField(max_length=9, default=None, blank=True, null=True, verbose_name="Academic year of the semester project")
+    semester_project_term = models.CharField(max_length=255, choices=TERM_CHOICES, default=None, blank=True, null=True, verbose_name="Term of the semester project")
+    semester_project_thesis_title = models.CharField(max_length=255, blank=True, null=True, verbose_name="Ttitle of the thesis")
+    semester_project_student_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the student")
+    semester_project_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the thesis", on_delete=models.DO_NOTHING, related_name="supervised_semester_projects")
+    semester_project_supervision_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of supervision hours (over the semester)")
+    semester_project_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the semester project activity")
+
+    other_job_year = models.CharField(max_length=9, default=None, blank=True, null=True, verbose_name="Academic year of the other job")
+    other_job_term = models.CharField(max_length=255, choices=TERM_CHOICES, default=None, blank=True, null=True, verbose_name="Term of the other job")
+    other_job_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the activity")
+    other_job_unit = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the unit asking for this other job")
+    other_job_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the other job", on_delete=models.DO_NOTHING, related_name="supervised_other_job")
+    other_job_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of hours spent on the other job (over the semester)")
+    other_job_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'other job' activity")
+
+    nothing_to_report_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'nothing to report' activity")
+
+    not_available_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'not available' activity")
+
+    MAN_year = models.CharField(max_length=9, default=None, blank=True, null=True, verbose_name="Academic year of the MAN")
+    MAN_term = models.CharField(max_length=255, choices=TERM_CHOICES, default=None, blank=True, null=True, verbose_name="Term of MAN")
+    MAN_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of hours spent on MAN (over the semester)")
+    MAN_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the MAN activity")
