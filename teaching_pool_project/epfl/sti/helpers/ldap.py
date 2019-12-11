@@ -109,6 +109,27 @@ def get_user_by_partial_first_name_and_partial_last_name(settings, partial_first
     return return_value
 
 
+def get_students_by_partial_first_name_or_partial_last_name(settings, partial_first_name='', partial_last_name=''):
+    filter = "(&(description;lang-en=Student)(|(sn=*{partial_last_name}*)(givenName=*{partial_first_name}*))(!(userClass=Doctorant)))".format(partial_first_name= partial_first_name, partial_last_name=partial_last_name)
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search(settings.LDAP_BASEDN, filter,attributes=['uniqueIdentifier', 'uid', 'givenName', 'sn', 'mail'])
+    return_value = list()
+    for entry in conn.entries:
+        current_entry = dict()
+        current_entry['sciper'] = str(entry['uniqueIdentifier'])
+        current_entry['username'] = min(entry['uid'], key=len)
+        if entry['mail']:
+            current_entry['mail'] = min(entry['mail'], key=len)
+        else:
+            current_entry['mail'] = None
+        current_entry['first_name'] = min(entry['givenName'], key=len)
+        current_entry['last_name'] = min(entry['sn'], key=len)
+        return_value.append(current_entry)
+
+    return return_value
+
+
 def is_phd(settings, sciper=''):
     filter = settings.LDAP_PHD_FILTER.format(sciper)
     ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
@@ -151,8 +172,8 @@ def get_users_by_partial_username_or_partial_sciper(settings, input):
     filter += "(uniqueIdentifier={})".format(input)
     filter += "(sn=*{}*)".format(input)
     filter += "(givenName=*{}*)".format(input)
-    filter += ")" # of or condition
-    filter += ")" # of and condition
+    filter += ")"  # of or condition
+    filter += ")"  # of and condition
     ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
     conn = Connection(ldap_server, auto_bind=True)
     conn.search(settings.LDAP_BASEDN, filter, attributes=[

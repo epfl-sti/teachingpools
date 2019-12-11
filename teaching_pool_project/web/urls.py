@@ -37,4 +37,8 @@ urlpatterns = [
     path('api/search/courses', views.autocomplete_courses, name="autocomplete_courses"),
     path('api/applications/get_details', views.get_course_applications_details, name="api_get_course_applications_details"),
     path('assignments/add', views.add_assignment, name="add_assignment"),
+    path('timereporting/add', timereporting_views.add_time_report, name="add_time_report"),
+    path('api/search/my_courses', timereporting_views.autocomplete_my_courses, name="autocomplete_my_courses"),
+    path('api/search/teachers', timereporting_views.autocomplete_all_teachers, name='autocomplete_all_teachers'),
+    path('api/search/students', timereporting_views.autocomplete_all_students, name="autocomplete_all_students"),
 ]
