@@ -50,6 +50,7 @@
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           {% if request.user|is_staff %}
           <a class="dropdown-item" href="{% url "web:get_TAs_requests_to_validate" %}">Teaching assistants (to be validated)</a>
+          <a class="dropdown-item" href="{% url "web:get_courses_without_numberOfTARequests" %}">Courses without TAs requests</a>
           {% endif %}
           {% if request.user|has_group:"teachers" %}
           <a class="dropdown-item" href="{% url "web:requests_for_tas_teacher" %}">My requests (all)</a>

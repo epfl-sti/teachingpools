@@ -1,0 +1,121 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% block headers %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/jszip-2.5.0/dt-1.10.18/b-1.5.6/b-html5-1.5.6/fh-3.1.4/sc-2.0.0/datatables.min.css"/>
+{% endblock headers %}
+{% block maincontent %}
+<div class="row">
+    <div class="col">
+        <h3>List of courses not having any request for TAs</h3>
+        <div class="card">
+            <div class="card-body">
+            <h4 class="card-title">Base information</h4>
+            <p class="card-text">Year: {{ CURRENT_YEAR }}</p>
+            <p class="card-text">Term: {{ CURRENT_TERM }}</p>
+            <div id="ButtonBar"></div>
+        </div>
+    </div>
+        <table class="table table-striped table-inverse table-responsive" id="courses">
+            <thead class="thead-inverse">
+                <tr>
+                    <th class="align-top">Code</th>
+                    <th class="align-top">Subject</th>
+                    <th class="align-top">Teachers</th>
+                    <th class="align-top">Teachers email addresses</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for course in courses %}
+                <tr>
+                    <td>{{ course.code }}</td>
+                    <td>{{ course.subject }}</td>
+                    <td>
+                    {% for teacher in course.teachers.all %}
+                        {{ teacher.last_name }}, {{ teacher.first_name }}{% if not forloop.last %}<br/>{% endif %}
+                    {% endfor %}
+                    </td>
+                    <td>
+                    {% for teacher in course.teachers.all %}
+                        <a href="mailto:{{ teacher.email }}">{{ teacher.email }}</a>{% if not forloop.last %}<br/>{% endif %}
+                    {% endfor %}
+                    </td>
+                </tr>
+            {% empty%}
+            <p><small>No course is currently missing TAs requests</small></p>
+            {% endfor %}
+            </tbody>
+            <tfoot class="thead-inverse">
+                <tr>
+                    <th class="align-top">Code</th>
+                    <th class="align-top">Subject</th>
+                    <th class="align-top">Teachers</th>
+                    <th class="align-top">Teachers email addresses</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+{% endblock maincontent %}
+{% block scripts%}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/jszip-2.5.0/dt-1.10.18/b-1.5.6/b-html5-1.5.6/fh-3.1.4/sc-2.0.0/datatables.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    // Setup - add a text input to each footer cell
+    $('#courses tfoot th').each( function () {
+        var title = $(this).text().toLowerCase();
+        if (title != ''){
+            $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+        }
+
+    } );
+
+    // DataTable
+    var table = $('#courses').DataTable(
+        {
+            'columnDefs': [
+                {'orderable': false, 'targets': [2,3]},
+            ],
+            'order':[[0, 'asc']],
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fa fa-file-excel-o"></i>&nbsp;Download excel file',
+                    className: 'btnDummy',
+                    exportOptions: {
+                        modifier: {
+                            order: 'current',
+                            search: 'applied',
+                            page: 'all'
+                            }
+                    },
+                    extension: '.xlsx',
+                    filename: 'courses_without_TA_requests_' + moment().format('YMMDD_HHmmss'),
+                    title: 'List of courses without requests for TAs',
+                    messageTop: 'courses as of ' + moment().format('DD.MM.Y') + ' at ' + moment().format('HH:mm:ss')
+                }
+            ]
+        }
+    );
+    table.buttons().container().insertAfter( '#ButtonBar' );
+
+    // stupid trick to make sure that the button will get displayed as a primary button
+    $(".btnDummy").removeClass( "btn-secondary" ).removeClass('btnDummy').addClass( "btn-primary");
+
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+
+        $( 'input', this.footer() ).on( 'keyup change clear', function () {
+            if ( that.search() !== this.value ) {
+                that
+                    .search( this.value )
+                    .draw();
+            }
+        } );
+    } );
+} );
+</script>
+{%endblock scripts%}

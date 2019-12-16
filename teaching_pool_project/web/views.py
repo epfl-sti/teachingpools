@@ -82,9 +82,9 @@ def index(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
     if term == "HIVER":
-        term="winter"
+        term = "winter"
     elif term == "ETE":
-        term="summer"
+        term = "summer"
     else:
         pass
 
@@ -438,9 +438,9 @@ def update_my_profile(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
     if term == "HIVER":
-        term="winter"
+        term = "winter"
     elif term == "ETE":
-        term="summer"
+        term = "summer"
     else:
         pass
 
@@ -511,15 +511,16 @@ def update_my_profile(request):
     }
     return render(request, 'web/profile.html', context)
 
+
 @is_staff_or_teacher()
 def view_profile(request, person_id):
     person = get_object_or_404(Person, pk=person_id)
     year = config.get_config('current_year')
     term = config.get_config('current_term')
     if term == "HIVER":
-        term="winter"
+        term = "winter"
     elif term == "ETE":
-        term="summer"
+        term = "summer"
     else:
         pass
 
@@ -729,9 +730,9 @@ def phds_report(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
     if term == "HIVER":
-        term="winter"
+        term = "winter"
     elif term == "ETE":
-        term="summer"
+        term = "summer"
     else:
         pass
 
@@ -815,9 +816,9 @@ def download_phds_report(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
     if term == "HIVER":
-        term="winter"
+        term = "winter"
     elif term == "ETE":
-        term="summer"
+        term = "summer"
     else:
         pass
 
@@ -943,14 +944,15 @@ def download_phds_report(request):
     wb.save(response)
     return response
 
+
 @is_staff()
 def phds_profiles(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
     if term == "HIVER":
-        term="winter"
+        term = "winter"
     elif term == "ETE":
-        term="summer"
+        term = "summer"
     else:
         pass
 
@@ -1045,7 +1047,6 @@ def add_phd(request):
                         db_user.last_name = person['last_name']
                         db_user.save()
 
-
                     # Check if the group already exists (create it if necessary)
                     try:
                         group = Group.objects.get(name='phds')
@@ -1127,7 +1128,7 @@ def autocomplete_phds_from_person(request):
             aes = Group.objects.get(name="aes").user_set.filter(sciper=q).all()
 
             # merge the 2 querysets
-            persons = (phds|aes).distinct()
+            persons = (phds | aes).distinct()
         else:
             # get all the phds having a partial matching name
             phds = Group.objects.get(name="phds").user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q)).all()
@@ -1136,7 +1137,7 @@ def autocomplete_phds_from_person(request):
             aes = Group.objects.get(name="aes").user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q)).all()
 
             # merge the 2 querysets
-            persons = (phds|aes).distinct()
+            persons = (phds | aes).distinct()
 
         # Build the list to be displayed on the page
         return_value = list()
@@ -1164,7 +1165,7 @@ def autocomplete_courses(request):
             courses = Course.objects.filter(Q(code__icontains=q) | Q(subject__icontains=q), year=year, term=term).all()
         elif request.user.groups.filter(name='teachers').exists():
             # get all the Teachings of that person
-            teachings = Teaching.objects.filter(person = request.user).select_related('course').all()
+            teachings = Teaching.objects.filter(person=request.user).select_related('course').all()
 
             # extract the ids of the courses in order to use them downlstream
             courses_ids = []
@@ -1221,7 +1222,7 @@ def add_assignment(request):
                     pass
                 elif request.user.groups.filter(name='teachers').exists():
                     # get all the Teachings of that person
-                    teachings = Teaching.objects.filter(person = request.user).select_related('course').all()
+                    teachings = Teaching.objects.filter(person=request.user).select_related('course').all()
 
                     # extract the ids of the courses in order to use them downlstream
                     courses_ids = []
@@ -1268,3 +1269,20 @@ def phds_with_multiple_hirings_report(request):
     }
 
     return render(request, 'web/reports/phds_with_multiple_hirings.html', context)
+
+
+@is_staff()
+def get_courses_without_numberOfTARequests(request):
+    year = config.get_config('current_year')
+    term = config.get_config('current_term')
+
+    this_term_courses = Course.objects.filter(year=year, term=term).all()
+    this_term_requests = NumberOfTAUpdateRequest.objects.filter(course__year=year, course__term=term).select_related('course').all()
+    courses_with_requests_ids = list()
+    [courses_with_requests_ids.append(TARequest.course.id) for TARequest in this_term_requests]
+    courses_without_requests = this_term_courses.exclude(id__in=courses_with_requests_ids).prefetch_related('teachers')
+    context = {
+        'courses': courses_without_requests
+    }
+
+    return render(request, 'web/reports/TARequests/courses_without_requests.html', context=context)

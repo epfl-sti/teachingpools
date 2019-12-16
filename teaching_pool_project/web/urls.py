@@ -17,6 +17,7 @@ urlpatterns = [
     re_path(r'requests/TAs/my/(?P<status>.*$)', views.requests_for_tas_teacher_status, name="requests_for_tas_teacher_status"),
     path('requests/TAs/reports/full_list/', views.courses_report, name="courses_report"),
     path('requests/TAs/reports/full_list/download/', views.download_course_report, name="download_course_report"),
+    path('requests/TAs/reports/courses_without_requests/', views.get_courses_without_numberOfTARequests, name="get_courses_without_numberOfTARequests"),
     path('profile/', views.update_my_profile, name="update_my_profile"),
     path('profiles/', views.phds_profiles, name='phds_profiles'),
     re_path(r'profile/(?P<person_id>\d*)$', views.view_profile, name="view_profile"),
