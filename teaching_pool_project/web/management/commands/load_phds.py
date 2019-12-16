@@ -26,13 +26,12 @@ class Command(BaseCommand):
         phd_group = Group.objects.get(name="phds")
 
         for phd in data_to_load:
-            person_obj, created = Person.objects.get_or_create(sciper = phd['sciper'])
             try:
+                person_obj = Person.objects.get(sciper=phd['sciper'])
+            except ObjectDoesNotExist:
+                person_obj= Person()
                 person_obj.sciper = phd['sciper']
                 person_obj.save()
-            except Exception as ex:
-                print("{} - unable to save sciper".format(phd['sciper']))
-                raise ex
 
             try:
                 person_obj.username = phd['username']
