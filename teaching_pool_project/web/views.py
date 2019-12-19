@@ -388,7 +388,7 @@ def apply(request, course_id):
         return render(request, 'web/blank.html')
 
     # Check that the person does not have more than 3 pending applications
-    number_of_pending_applications = Applications.objects.filter(course__year=year, course__term=term, status="Pending").count()
+    number_of_pending_applications = Applications.objects.filter(course__year=year, course__term=term, status="Pending", applicant=request.user).count()
     if number_of_pending_applications >= 3:
         messages.error(
             request,
