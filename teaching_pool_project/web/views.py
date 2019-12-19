@@ -387,6 +387,14 @@ def apply(request, course_id):
             request, "The applications for Teaching Assistants positions are not open for this year / term")
         return render(request, 'web/blank.html')
 
+    # Check that the person does not have more than 3 pending applications
+    number_of_pending_applications = Applications.objects.filter(course__year=year, course__term=term, status="Pending").count()
+    if number_of_pending_applications >= 3:
+        messages.error(
+            request,
+            "You are not allowed to have more than 3 applications pending"
+        )
+        return render(request, 'web/blank.html')
     try:
         application = Applications.objects.get(
             applicant=request.user, course=course)
