@@ -157,7 +157,7 @@ class Availability(models.Model):
         return "{} -> {} -> {}".format(self.year, self.person, self.availability)
 
     class Meta:
-        unique_together = [['year', 'person']]
+        unique_together = [['year', 'term', 'person']]
         index_together = [
             ['year', 'person']
         ]
