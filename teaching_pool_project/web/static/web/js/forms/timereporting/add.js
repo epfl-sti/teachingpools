@@ -12,6 +12,25 @@ function toggleTabs(tab_to_keep, activate_tab = true) {
     });
 }
 
+// function checkRequiredFields(chosenType) {
+//     fields = $('form#form :input[data-tab]');
+//     fields.each(function() {
+//         if ($(this).attr('data-tab') == chosenType) {
+//             if (((/true/i).test($(this).attr('data-required')))) {
+//                 $(this).prop('required', true);
+//             } else {
+//                 $(this).prop('required', false);
+//             }
+//         } else {
+//             // the field is not part of the current choice and should not be managed
+//             console.log($(this).attr('data-tab'));
+//         }
+
+//         // reset the validation for the field
+//         $(this).parsley().reset();
+//     });
+// }
+
 $(document).ready(function() {
     /* Hide all the tabs except the 'Common' one */
     // Get the id of the currently selected activity type radio
@@ -22,6 +41,53 @@ $(document).ready(function() {
     $('input[type=radio][name=activity_type]').change(function() {
         var tab_name = this.labels[0].innerText;
         toggleTabs(tab_name, activate_tab = true);
+
+        //        // handle custom validation because of type change
+        //        checkRequiredFields(tab_name);
+    });
+
+    //    // Validation related stuff
+    //    // create a custom validation for the years input
+    //    window.Parsley
+    //        .addValidator('consecutiveYears', {
+    //            requirementType: 'string',
+    //            validateString: function(value, requirement) {
+    //                let re = /(\d{4})-(\d{4})/;
+    //                let result = value.match(re);
+    //
+    //                // first quick test to make sure that the value matches the expected structure
+    //                if (!Array.isArray(result)) {
+    //                    return false;
+    //                } else {
+    //                    // simple test
+    //                    if (result.length != 3) {
+    //                        return false;
+    //                    } else {
+    //
+    //                        // Test if the two year are consecutive
+    //                        let first_year = parseInt(result[1]);
+    //                        let second_year = parseInt(result[2]);
+    //                        if (second_year == (first_year + 1)) {
+    //                            return true;
+    //                        } else {
+    //                            return false;
+    //                        }
+    //                    }
+    //                }
+    //            },
+    //            messages: {
+    //                en: "This value must represent two consecutive years separated by a dash (e.g. 2019-2020)"
+    //            }
+    //        });
+    //
+    //    // activate the validation
+    //    var form = $("#form").parsley();
+
+    // Highlight the tabs containing validation errors
+    $('span[class="invalid-feedback"], p[class="invalid-feedback"]').each(function() {
+        let tabname = $(this).parents('.tab-pane').attr('id');
+        let tabheader = $('a[data-toggle="tab"][href="#' + tabname + '"]')
+        $(tabheader).css({ 'color': 'red', 'font-weight': 'bold' })
     });
 });
 

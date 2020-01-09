@@ -80,10 +80,14 @@ def group_required(*group_names):
 @group_required('phds')
 def add_time_report(request):
     timereporting = TimeReport()
-    timereporting_form = TimeReportForm(request.POST or None, instance=timereporting)
+    timereporting_form = TimeReportForm(request.POST or None, instance=timereporting, user=request.user)
 
     if request.method == 'POST':
-        pass
+        if timereporting_form.is_valid():
+            logger.info(timereporting_form.cleaned_data.get('year'))
+            pass
+        else:
+            messages.error(request, "Please correct the errors below and resubmit.")
 
     context = {
         'form': timereporting_form,
