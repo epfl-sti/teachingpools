@@ -498,7 +498,7 @@ class Applications(models.Model):
                     requesters.append(self.applicant.email)
                     admins = [item.email for item in self.course.teachers.all()]
 
-                    mail.notify_people(
+                    mail.notify_admins_and_requester(
                         data=data,
                         template='processed_application',
                         admins_subject = 'An application as {} for your course has been updated'.format(self.role),
@@ -523,7 +523,7 @@ class Applications(models.Model):
                     requesters.append(self.applicant.email)
                     admins = [item.email for item in self.course.teachers.all()]
 
-                    mail.notify_people(
+                    mail.notify_admins_and_requester(
                         data=data,
                         template='processed_application',
                         admins_subject = 'An application as {} for your course has been updated'.format(self.role),
