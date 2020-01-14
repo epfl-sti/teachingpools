@@ -14,7 +14,9 @@ import distutils.util
 import os
 from os.path import abspath, dirname, join
 
+import sentry_sdk
 from dotenv import load_dotenv
+from sentry_sdk.integrations.django import DjangoIntegration
 
 DOTENV_PATH = join(dirname(dirname(dirname(abspath(__file__)))), '.env')
 load_dotenv(dotenv_path=DOTENV_PATH, verbose=True)
@@ -171,3 +173,12 @@ APP_BASE_URL = os.environ.get('DJANGO_APP_BASE_URL', 'https://localhost')
 
 DEBUG = distutils.util.strtobool(os.environ.get('DJANGO_DEBUG')) or False
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+
+sentry_sdk.init(
+    dsn="https://42afcb097fa8406cbc7d4af140616686@sentry.io/1880740",
+    integrations=[DjangoIntegration()],
+
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True
+)
