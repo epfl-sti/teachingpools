@@ -7,7 +7,7 @@ Dear {{ application.applicant.first_name }},
 
 Your application for the {{ application.role }} position for the {{ application.course.subject }} ({{ application.course.code }}) has been processed.
 
-It's current status is: {% if application.status == "Rejected" %}declined{% endif %}{% else %}{{ application.status }}{% endif %}
+It's current status is: {% if application.status == "Rejected" %}declined{% else %}{{ application.status }}{% endif %}
 
 {% if application.decisionReason %}
 The reason for this decision is: {{ application.decisionReason }}
