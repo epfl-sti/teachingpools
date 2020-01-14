@@ -500,7 +500,7 @@ class Applications(models.Model):
 
                     mail.notify_admins_and_requester(
                         data=data,
-                        template='processed_application',
+                        template_base='processed_application',
                         admins_subject = 'An application as {} for your course has been updated'.format(self.role),
                         requesters_subject='Your application has been processed',
                         admins=admins,
@@ -525,7 +525,7 @@ class Applications(models.Model):
 
                     mail.notify_admins_and_requester(
                         data=data,
-                        template='processed_application',
+                        template_base='processed_application',
                         admins_subject = 'An application as {} for your course has been updated'.format(self.role),
                         requesters_subject='Your application has been processed',
                         admins=admins,
