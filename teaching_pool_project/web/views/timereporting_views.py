@@ -13,6 +13,7 @@ from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core import serializers
 from django.db.models import Prefetch, Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -78,22 +79,89 @@ def group_required(*group_names):
 
 
 @group_required('phds')
+def get_time_reports(request):
+    context = {}
+    return render(request, 'web/timereporting/list.html', context)
+
+
+@group_required('phds')
 def add_time_report(request):
-    timereporting = TimeReport()
+    timereporting = TimeReport(created_by=request.user)
     timereporting_form = TimeReportForm(request.POST or None, instance=timereporting, user=request.user)
 
     if request.method == 'POST':
         if timereporting_form.is_valid():
-            logger.info(timereporting_form.cleaned_data.get('year'))
-            pass
+            timereporting.save()
+            messages.success(request, "Time reporting entry successfully saved.")
+            return redirect('web:get_time_reports')
         else:
             messages.error(request, "Please correct the errors below and resubmit.")
 
     context = {
+        'action': 'Add',
         'form': timereporting_form,
     }
 
     return render(request, 'web/forms/timereporting/add.html', context)
+
+
+@group_required('phds')
+def delete_time_report(request, id):
+    try:
+        time_report = TimeReport.objects.get(pk=id)
+    except ObjectDoesNotExist:
+        messages.error(request, "Unable to find the time report in the database")
+        return redirect('web:get_time_reports')
+
+    if time_report.created_by != request.user:
+        messages.error(request, "You are not allowed to delete this entry")
+        raise PermissionDenied
+    else:
+        time_report.delete()
+        messages.success(request, "Entry successfully deleted")
+        return redirect('web:get_time_reports')
+
+
+@group_required('phds')
+def edit_time_report(request, id):
+    try:
+        time_report = TimeReport.objects.get(pk=id)
+    except ObjectDoesNotExist:
+        messages.error(request, "Unable to find the time report in the database")
+        return redirect('web:time_reports')
+
+    if time_report.created_by != request.user:
+        messages.error(request, "You are not allowed to edit this entry")
+        raise PermissonDenied
+
+    time_report_form = TimeReportForm(request.POST or None, instance=time_report, user=request.user)
+
+    if request.method == 'POST':
+        if time_report_form.is_valid():
+            time_report.save()
+            messages.success(request, "Time reporting entry successfully edited.")
+            return redirect('web:get_time_reports')
+        else:
+            messages.error(request, "PLease correct the errors below and resubmit.")
+
+    context = {
+        'action': 'Edit',
+        'form': time_report_form,
+    }
+
+    return render(request, 'web/forms/timereporting/add.html', context)
+
+
+@group_required('phds')
+def get_user_time_reports(request):
+    if request.is_ajax():
+        entries = TimeReport.objects.filter(created_by=request.user).all()
+        return_value = serializers.serialize('json', entries)
+    else:
+        return_value = 'fail'
+
+    mimetype = "application/json"
+    return HttpResponse(return_value, mimetype)
 
 
 @group_required('phds')
@@ -147,4 +215,44 @@ def autocomplete_all_students(request):
         return_value = 'fail'
 
     mimetype = "application/json"
+    return HttpResponse(return_value, mimetype)
+
+
+@group_required('phds')
+def autocomplete_all_units(request):
+    if request.is_ajax:
+        q = request.GET.get('term', '')
+        units = epfl_ldap.get_units_by_partial_name_or_partial_last_acronym(settings, q)
+        return_value = json.dumps(units)
+    else:
+        return_value = 'fail'
+
+    mimetype = "application/json"
+    return HttpResponse(return_value, mimetype)
+
+
+@group_required('phds')
+def get_teacher(request, id):
+    if request.is_ajax():
+        person = get_object_or_404(Person, pk=id)
+        if not person.groups.filter(name='teachers').exists():
+            return_value = ''
+        else:
+            return_value = serializers.serialize('json', [person], fields=['first_name', 'last_name'])
+    else:
+        return_value = 'fail'
+
+    mimetype = 'application/json'
+    return HttpResponse(return_value, mimetype)
+
+
+@group_required('phds')
+def get_course(request, id):
+    if request.is_ajax():
+        course = get_object_or_404(Course, pk=id)
+        return_value = serializers.serialize('json', [course], fields=['year', 'term', 'code', 'subject'])
+    else:
+        return_value = 'fail'
+
+    mimetype = 'application/json'
     return HttpResponse(return_value, mimetype)

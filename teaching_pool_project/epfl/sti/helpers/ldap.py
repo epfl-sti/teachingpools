@@ -1,4 +1,5 @@
 from ldap3 import ALL, Connection, Server
+from ldap3.core.exceptions import LDAPInvalidFilterError
 
 
 def get_sciper(settings, username):
@@ -110,10 +111,10 @@ def get_user_by_partial_first_name_and_partial_last_name(settings, partial_first
 
 
 def get_students_by_partial_first_name_or_partial_last_name(settings, partial_first_name='', partial_last_name=''):
-    filter = "(&(description;lang-en=Student)(|(sn=*{partial_last_name}*)(givenName=*{partial_first_name}*))(!(userClass=Doctorant)))".format(partial_first_name= partial_first_name, partial_last_name=partial_last_name)
+    filter = "(&(description;lang-en=Student)(|(sn=*{partial_last_name}*)(givenName=*{partial_first_name}*))(!(userClass=Doctorant)))".format(partial_first_name=partial_first_name, partial_last_name=partial_last_name)
     ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
     conn = Connection(ldap_server, auto_bind=True)
-    conn.search(settings.LDAP_BASEDN, filter,attributes=['uniqueIdentifier', 'uid', 'givenName', 'sn', 'mail'])
+    conn.search(settings.LDAP_BASEDN, filter, attributes=['uniqueIdentifier', 'uid', 'givenName', 'sn', 'mail'])
     return_value = list()
     for entry in conn.entries:
         current_entry = dict()
@@ -128,6 +129,25 @@ def get_students_by_partial_first_name_or_partial_last_name(settings, partial_fi
         return_value.append(current_entry)
 
     return return_value
+
+
+def get_student_by_sciper(settings, sciper='00000'):
+    filter = "(&(description;lang-en=Student)(uniqueIdentifier={sciper})(!(userClass=Doctorant)))".format(sciper=sciper)
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search(settings.LDAP_BASEDN, filter, attributes=['uniqueIdentifier', 'uid', 'givenName', 'sn', 'mail'], size_limit=1)
+    if len(conn.entries) == 1:
+        entry = conn.entries[0]
+        current_entry = dict()
+        current_entry['sciper'] = str(entry['uniqueIdentifier'])
+        current_entry['username'] = min(entry['uid'], key=len)
+        if entry['mail']:
+            current_entry['mail'] = min(entry['mail'], key=len)
+        else:
+            current_entry['mail'] = None
+        current_entry['first_name'] = min(entry['givenName'], key=len)
+        current_entry['last_name'] = min(entry['sn'], key=len)
+        return current_entry
 
 
 def is_phd(settings, sciper=''):
@@ -192,3 +212,43 @@ def get_users_by_partial_username_or_partial_sciper(settings, input):
     # deduplicate the entries
     return_value = list(dict.fromkeys(return_value))
     return return_value
+
+
+def get_units_by_partial_name_or_partial_last_acronym(settings, input):
+    return_value = list()
+
+    filter = "(&"
+    filter += "(objectClass=EPFLorganizationalUnit)"
+    filter += "(|"
+    filter += "(ou=*{}*)".format(input)
+    filter += "(ou;lang-en=*{}*)".format(input)
+    filter += ")"
+    filter += ")"
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    try:
+        conn = Connection(ldap_server, auto_bind=True)
+        conn.search(settings.LDAP_BASEDN, filter, attributes=['ou', 'ou;lang-en'])
+        for entry in conn.entries:
+            acronym = min(entry['ou'], key=len)
+            if entry['ou;lang-en']:
+                name = str(entry['ou;lang-en'])
+            else:
+                name = max(entry['ou'], key=len)
+            displayed_value = "{} ({})".format(name, acronym)
+            return_value.append(displayed_value)
+    except LDAPInvalidFilterError:
+        pass
+
+    return_value = list(set(return_value))
+    return return_value
+
+
+def is_valid_unit_acronym(settings, acronym):
+    filter = "(&"
+    filter += "(objectClass=EPFLorganizationalUnit)"
+    filter += "(ou={})".format(acronym)
+    filter += ")"
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search(settings.LDAP_BASEDN, filter, attributes=['ou', 'ou;lang-en'])
+    return len(conn.entries) == 1

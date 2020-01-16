@@ -17,18 +17,27 @@ class CourseClassChoiceField(ModelChoiceField):
         return "{} - {} - {}".format(obj.year, obj.term, obj.subject)
 
 
+class TeacherChoiceField(ModelChoiceField):
+    def label_from_instance(self, obj):
+        return "{}, {}".format(obj.last_name, obj.first_name)
+
+
 class TimeReportForm(ModelForm):
     class Meta:
         model = TimeReport
         fields = '__all__'
+        initial_fields = ['created_by']
         field_classes = {
-            'class_teaching_course': CourseClassChoiceField
+            'class_teaching_course': CourseClassChoiceField,
+            'master_thesis_teacher_in_charge': TeacherChoiceField,
+            'semester_project_teacher_in_charge': TeacherChoiceField,
+            'other_job_teacher_in_charge': TeacherChoiceField,
         }
         widgets = {
             # 'class_teaching_course': TextInput(),
-            'master_thesis_teacher_in_charge': TextInput(),
-            'semester_project_teacher_in_charge': TextInput(),
-            'other_job_teacher_in_charge': TextInput()
+            # 'master_thesis_teacher_in_charge': TextInput(),
+            # 'semester_project_teacher_in_charge': TextInput(),
+            # 'other_job_teacher_in_charge': TextInput()
         }
 
     def __init__(self, *args, **kwargs):
@@ -39,10 +48,16 @@ class TimeReportForm(ModelForm):
         # It should probably be kept there in case we want to go back to select inputs
         #
         # restrict the dropdown lists to actual teachers
-        # teachers = Group.objects.get(name="teachers").user_set.all()
-        # self.fields['master_thesis_teacher_in_charge'].queryset = teachers
-        # self.fields['semester_project_teacher_in_charge'].queryset = teachers
-        # self.fields['other_job_teacher_in_charge'].queryset = teachers
+        teachers = Group.objects.get(name="teachers").user_set.all()
+        self.fields['master_thesis_teacher_in_charge'].queryset = teachers
+        self.fields['semester_project_teacher_in_charge'].queryset = teachers
+        self.fields['other_job_teacher_in_charge'].queryset = teachers
+        # self.fields['master_thesis_teacher_in_charge'].queryset = Person.objects.none()
+        # self.fields['semester_project_teacher_in_charge'].queryset = Person.objects.none()
+        # self.fields['other_job_teacher_in_charge'].queryset = Person.objects.none()
+
+        # Restrict the list of users to the currently logged in user to improve performances
+        self.fields['created_by'].queryset = Person.objects.filter(id = user.id).all()
 
         # Restrict the list of courses to the Hired applications
         courses_keys = Applications.objects.filter(applicant=user, status="Hired").values_list('course', flat=True).distinct()
@@ -116,6 +131,7 @@ class TimeReportForm(ModelForm):
                         css_class='form-row'
                     ),
                     Field('other_job_name', data_tab="Other job", data_required="true"),
+                    Field('other_job_unit', data_tab="Other job", data_required="true", data_autocomplete="true", data_autocomplete_source=reverse("web:autocomplete_all_units")),
                     Field('other_job_teacher_in_charge', data_tab="Other job", data_required="true", data_autocomplete="true", data_autocomplete_source=reverse("web:autocomplete_all_teachers")),
                     AppendedText('other_job_hours', 'Hr', active=True, data_tab="Other job", data_required="true"),
                     Field('other_job_comments', data_tab="Other job", data_required="false"),
@@ -144,68 +160,3 @@ class TimeReportForm(ModelForm):
                 Button('cancel', 'Cancel'),
                 Reset('reset', 'Reset')
             ))
-
-    def clean(self):
-        cleaned_data = super().clean()
-
-        # validate the common fields
-        year_raw_value = cleaned_data.get('year')
-        pattern = r'(?P<year1>\d{4})-(?P<year2>\d{4})'
-        p = re.compile(pattern)
-
-        if not p.match(year_raw_value):
-            self.add_error('year', "The year should be under the form of two consecutive years (e.g. 2019-2020)")
-        else:
-            m = p.search(year_raw_value)
-            year1 = int(m.group('year1'))
-            year2 = int(m.group('year2'))
-            if year2 != (year1+1):
-                self.add_error('year', "The year should be under the form of two consecutive years (e.g. 2019-2020)")
-
-        activity_type = cleaned_data.get('activity_type')
-
-        if activity_type == 'class teaching':
-            if not cleaned_data.get('class_teaching_course'):
-                msg = "When selecting a 'class teaching' activity, a course should be selected"
-                self.add_error('activity_type', msg)
-                self.add_error('class_teaching_course', msg)
-
-            if cleaned_data.get('class_teaching_preparation_hours') is None:
-                msg = "When selecting a 'class teaching' activity, the preparation hours must have a value"
-                self.add_error('class_teaching_preparation_hours', msg)
-                self.add_error('activity_type', msg)
-
-            if cleaned_data.get('class_teaching_teaching_hours') is None:
-                msg = "When selecting a 'class teaching' activity, the teaching hours must have a value"
-                self.add_error('class_teaching_teaching_hours', msg)
-                self.add_error('activity_type', msg)
-
-            if cleaned_data.get('class_teaching_practical_work_hours') is None:
-                msg = "When selecting a 'class teaching' activity, the practical work hours must have a value"
-                self.add_error('class_teaching_practical_work_hours', msg)
-                self.add_error('activity_type', msg)
-
-            if cleaned_data.get('class_teaching_preparation_hours') == 0 and cleaned_data.get('class_teaching_teaching_hours') == 0 and cleaned_data.get('class_teaching_practical_work_hours') == 0:
-                msg = "At least one of the number of hours (preparation, teaching or practical work hours) should have a value above 0"
-                self.add_error('class_teaching_preparation_hours', msg)
-                self.add_error('class_teaching_teaching_hours', msg)
-                self.add_error('class_teaching_practical_work_hours', msg)
-
-            # clean up the year and the term with data from the selected course
-            self.cleaned_data['year'] = cleaned_data.get('class_teaching_course').year
-            self.instance.year = cleaned_data.get('class_teaching_course').year
-            french_term = cleaned_data.get('class_teaching_course').term
-            if french_term == "ETE":
-                english_term = "summer"
-            elif french_term == "HIVER":
-                english_term = "winter"
-            else:
-                english_term = self.cleaned_data['term']
-            self.cleaned_data['term'] = english_term
-            self.instance.year = english_term
-
-            # Remove the data from possibly other data
-
-
-        # time to go back
-        return self.cleaned_data
