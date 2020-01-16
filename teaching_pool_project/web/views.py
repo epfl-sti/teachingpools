@@ -1246,7 +1246,7 @@ def add_assignment(request):
 
                 application.course = course
                 application.applicant = applicant
-                application.role = add_assignment_form.cleaned_data['role']
+                # application.role = add_assignment_form.cleaned_data['role']
                 application.status = "Hired"
                 application.closedAt = now()
                 application.closedBy = request.user
