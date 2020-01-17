@@ -3,8 +3,8 @@ import re
 from crispy_forms.bootstrap import (AppendedText, FormActions, InlineRadios,
                                     Tab, TabHolder)
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (Button, Column, Field, Layout, Reset, Row,
-                                 Submit, Div, HTML)
+from crispy_forms.layout import (HTML, Button, Column, Div, Field, Layout,
+                                 Reset, Row, Submit)
 from django.contrib.auth.models import Group
 from django.forms import ModelChoiceField, ModelForm, TextInput
 from django.urls import reverse
@@ -33,31 +33,19 @@ class TimeReportForm(ModelForm):
             'semester_project_teacher_in_charge': TeacherChoiceField,
             'other_job_teacher_in_charge': TeacherChoiceField,
         }
-        widgets = {
-            # 'class_teaching_course': TextInput(),
-            # 'master_thesis_teacher_in_charge': TextInput(),
-            # 'semester_project_teacher_in_charge': TextInput(),
-            # 'other_job_teacher_in_charge': TextInput()
-        }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')
         super(TimeReportForm, self).__init__(*args, **kwargs)
 
-        # The below code is commented out because the fields are now rendered as text inputs.
-        # It should probably be kept there in case we want to go back to select inputs
-        #
         # restrict the dropdown lists to actual teachers
         teachers = Group.objects.get(name="teachers").user_set.all()
         self.fields['master_thesis_teacher_in_charge'].queryset = teachers
         self.fields['semester_project_teacher_in_charge'].queryset = teachers
         self.fields['other_job_teacher_in_charge'].queryset = teachers
-        # self.fields['master_thesis_teacher_in_charge'].queryset = Person.objects.none()
-        # self.fields['semester_project_teacher_in_charge'].queryset = Person.objects.none()
-        # self.fields['other_job_teacher_in_charge'].queryset = Person.objects.none()
 
         # Restrict the list of users to the currently logged in user to improve performances
-        self.fields['created_by'].queryset = Person.objects.filter(id = user.id).all()
+        self.fields['created_by'].queryset = Person.objects.filter(id=user.id).all()
 
         # Restrict the list of courses to the Hired applications
         courses_keys = Applications.objects.filter(applicant=user, status="Hired").values_list('course', flat=True).distinct()
