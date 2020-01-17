@@ -816,10 +816,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             msg = "You should provide the name of the other activity"
             validation_errors.append({'other_job_name': msg})
 
-        if self.other_job_teacher_in_charge is None:
-            msg = "When selecting a 'other' activity, you should provide the name of the teacher supervising the thesis"
-            validation_errors.append({'other_job_teacher_in_charge': msg})
-
         if self.other_job_hours is None or self.other_job_hours == 0:
             msg = "When selecting a 'other' activity, you should provide the number of hours you worked on this activity"
             validation_errors.append({'other_job_hours': msg})
