@@ -87,12 +87,6 @@ class TimeReportForm(ModelForm):
                     Field('master_thesis_teacher_in_charge',  data_tab="Master thesis", data_required="true", data_autocomplete="true", data_autocomplete_source=reverse("web:autocomplete_all_teachers")),
                     AppendedText('master_thesis_supervision_hours', 'Hr', active=True,  data_tab="Master thesis", data_required="true"),
                     Field('master_thesis_comments',  data_tab="Master thesis", data_required="false"),
-                    Row(
-                        Column(Field('master_thesis_section',  data_tab="Master thesis", data_required="true"), css_class="form-group col-md-6 mb-0"),
-                        Column(Field('master_thesis_other_section',  data_tab="Master thesis", data_required="false"), css_class="form-group col-md-6 mb-0"),
-                        css_class='form-row'
-                    ),
-
                     ),
 
                 Tab('Semester project',

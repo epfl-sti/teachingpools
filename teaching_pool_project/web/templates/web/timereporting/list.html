@@ -90,8 +90,6 @@ function format(d){
         }
     if (d.fields.master_thesis_supervision_hours != null) { return_value += `<tr><td>Master thesis supervision hours:</td><td>${d.fields.master_thesis_supervision_hours}</td></tr>`}
     if (d.fields.master_thesis_comments != null) { return_value += `<tr><td>Master thesis comments:</td><td>${d.fields.master_thesis_comments}</td></tr>`}
-    if (d.fields.master_thesis_section != null) { return_value += `<tr><td>Master thesis section:</td><td>${d.fields.master_thesis_section}</td></tr>`}
-    if (d.fields.master_thesis_other_section != null) { return_value += `<tr><td>Master thesis other section:</td><td>${d.fields.master_thesis_other_section}</td></tr>`}
     if (d.fields.class_teaching_course != null) {
         $.ajax({
             url: `/api/timereporting/course/${d.fields.class_teaching_course}`,

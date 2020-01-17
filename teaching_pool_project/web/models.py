@@ -627,15 +627,6 @@ class TimeReport(ValidateModelMixin, models.Model):
     master_thesis_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the thesis", on_delete=models.DO_NOTHING, related_name="supervised_master_thesis")
     master_thesis_supervision_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Number of hours of supervision")
     master_thesis_comments = models.TextField(blank=True, null=True, verbose_name="Comments regarding the master thesis activity")
-    MASTER_THESIS_SECTION_CHOICES = [
-        ('SGM', 'SGM'),
-        ('SEL', 'SEL'),
-        ('SMT', 'SMT'),
-        ('SMX', 'SMX'),
-        ('other', 'other')
-    ]
-    master_thesis_section = models.CharField(max_length=255, choices=MASTER_THESIS_SECTION_CHOICES, default=None, blank=True, null=True, verbose_name="Teacher's section")
-    master_thesis_other_section = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Other section (if the section is not found in the previous list)")
 
     class_teaching_course = models.ForeignKey(Course, default=None, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Class teaching course")
     class_teaching_preparation_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of preparation hours for class teaching for the semester")
@@ -766,16 +757,6 @@ class TimeReport(ValidateModelMixin, models.Model):
         if self.master_thesis_supervision_hours is None or self.master_thesis_supervision_hours == 0:
             msg = "When selecting a 'master thesis' activity, you should provide the number of hours you worked on this activity"
             validation_errors.append({'master_thesis_supervision_hours': msg})
-
-        if self.master_thesis_section == 'other' and self.master_thesis_other_section is None:
-            msg = "Because you chose 'other' as teacher's section, a value is required"
-            validation_errors.append({'master_thesis_other_section': msg})
-
-        if self.master_thesis_teacher_in_charge is not None:
-            teacher_section = self.master_thesis_teacher_in_charge.section
-            if teacher_section is not None and self.master_thesis_section != teacher_section.name:
-                msg = "The section you chose does not match the section of the teacher ({})".format(teacher_section)
-                validation_errors.append({'master_thesis_section': msg})
 
         result = {}
         for validation_error in validation_errors:
@@ -928,8 +909,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.master_thesis_teacher_in_charge = None
             self.master_thesis_supervision_hours = None
             self.master_thesis_comments = None
-            self.master_thesis_section = None
-            self.master_thesis_other_section = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
             self.semester_project_teacher_in_charge = None
@@ -970,8 +949,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.master_thesis_teacher_in_charge = None
             self.master_thesis_supervision_hours = None
             self.master_thesis_comments = None
-            self.master_thesis_section = None
-            self.master_thesis_other_section = None
             self.class_teaching_course = None
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
@@ -992,8 +969,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.master_thesis_teacher_in_charge = None
             self.master_thesis_supervision_hours = None
             self.master_thesis_comments = None
-            self.master_thesis_section = None
-            self.master_thesis_other_section = None
             self.class_teaching_course = None
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
@@ -1017,8 +992,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.master_thesis_teacher_in_charge = None
             self.master_thesis_supervision_hours = None
             self.master_thesis_comments = None
-            self.master_thesis_section = None
-            self.master_thesis_other_section = None
             self.class_teaching_course = None
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
@@ -1039,8 +1012,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.master_thesis_teacher_in_charge = None
             self.master_thesis_supervision_hours = None
             self.master_thesis_comments = None
-            self.master_thesis_section = None
-            self.master_thesis_other_section = None
             self.class_teaching_course = None
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
@@ -1065,8 +1036,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.master_thesis_teacher_in_charge = None
             self.master_thesis_supervision_hours = None
             self.master_thesis_comments = None
-            self.master_thesis_section = None
-            self.master_thesis_other_section = None
             self.class_teaching_course = None
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
