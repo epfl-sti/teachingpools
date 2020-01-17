@@ -73,8 +73,6 @@ function format(d){
     creation_ts = moment(d.fields.created_at).fromNow()
     let return_value = '<table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
     return_value += `<tr><td>Creation date:</td><td>${creation_ts}</td></tr>`;
-    if (d.fields.master_thesis_year != null) { return_value += `<tr><td>Master thesis year:</td><td>${d.fields.master_thesis_year}</td></tr>`}
-    if (d.fields.master_thesis_term != null) { return_value += `<tr><td>Master thesis term:</td><td>${d.fields.master_thesis_term}</td></tr>`}
     if (d.fields.master_thesis_title != null) { return_value += `<tr><td>Master thesis title:</td><td>${d.fields.master_thesis_title}</td></tr>`}
     if (d.fields.master_thesis_student_name != null) { return_value += `<tr><td>Master thesis student name:</td><td>${d.fields.master_thesis_student_name}</td></tr>`}
     if (d.fields.master_thesis_teacher_in_charge != null) {
@@ -111,8 +109,6 @@ function format(d){
     if (d.fields.class_teaching_teaching_hours != null) { return_value += `<tr><td>Class teaching teaching hours:</td><td>${d.fields.class_teaching_teaching_hours}</td></tr>`}
     if (d.fields.class_teaching_practical_work_hours != null) { return_value += `<tr><td>Class teaching practical work hours:</td><td>${d.fields.class_teaching_practical_work_hours}</td></tr>`}
     if (d.fields.class_teaching_comments != null) { return_value += `<tr><td>Class teaching comments:</td><td>${d.fields.class_teaching_comments}</td></tr>`}
-    if (d.fields.semester_project_year != null) { return_value += `<tr><td>Semester project year:</td><td>${d.fields.semester_project_year}</td></tr>`}
-    if (d.fields.semester_project_term != null) { return_value += `<tr><td>Semester project term:</td><td>${d.fields.semester_project_term}</td></tr>`}
     if (d.fields.semester_project_thesis_title != null) { return_value += `<tr><td>Semester project thesis title:</td><td>${d.fields.semester_project_thesis_title}</td></tr>`}
     if (d.fields.semester_student_name != null) { return_value += `<tr><td>Semester project student name:</td><td>${d.fields.semester_project_student_name}</td></tr>`}
     if (d.fields.semester_project_teacher_in_charge != null) {
@@ -130,8 +126,6 @@ function format(d){
          }
     if (d.fields.semester_supervision_hours != null) { return_value += `<tr><td>Semester supervision hours:</td><td>${d.fields.semester_supervision_hours}</td></tr>`}
     if (d.fields.semester_project_comments != null) { return_value += `<tr><td>Semester project comments:</td><td>${d.fields.semester_project_comments}</td></tr>`}
-    if (d.fields.other_job_year != null) { return_value += `<tr><td>Other job year:</td><td>${d.fields.other_job_year}</td></tr>`}
-    if (d.fields.other_job_term != null) { return_value += `<tr><td>Other job term:</td><td>${d.fields.other_job_term}</td></tr>`}
     if (d.fields.other_job_name != null) { return_value += `<tr><td>Other job name:</td><td>${d.fields.other_job_name}</td></tr>`}
     if (d.fields.other_job_unit != null) { return_value += `<tr><td>Other job unit:</td><td>${d.fields.other_job_unit}</td></tr>`}
     if (d.fields.other_job_teacher_in_charge != null) {
@@ -151,8 +145,6 @@ function format(d){
     if (d.fields.other_job_comments != null) { return_value += `<tr><td>Other job comments:</td><td>${d.fields.other_job_comments}</td></tr>`}
     if (d.fields.nothing_to_report_comments != null) { return_value += `<tr><td>Nothing to report comments:</td><td>${d.fields.nothing_to_report_comments}</td></tr>`}
     if (d.fields.not_available_comments != null) { return_value += `<tr><td>Not available comments:</td><td>${d.fields.not_available_comments}</td></tr>`}
-    if (d.fields.MAN_year != null) { return_value += `<tr><td>MAN year:</td><td>${d.fields.MAN_year}</td></tr>`}
-    if (d.fields.MAN_term != null) { return_value += `<tr><td>MAN term:</td><td>${d.fields.MAN_term}</td></tr>`}
     if (d.fields.MAN_hours != null) { return_value += `<tr><td>MAN hours:</td><td>${d.fields.MAN_hours}</td></tr>`}
     if (d.fields.MAN_comments != null) { return_value += `<tr><td>MAN comments:</td><td>${d.fields.MAN_comments}</td></tr>`}
     return_value += '</table>';

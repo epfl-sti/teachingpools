@@ -94,11 +94,6 @@ class TimeReportForm(ModelForm):
                     ),
                     ),
                 Tab('Master thesis',
-                    Row(
-                        Column(Field('master_thesis_year',  data_tab="Master thesis", data_required="true"), css_class="form-group col-md-6 mb-0"),
-                        Column(Field('master_thesis_term',  data_tab="Master thesis", data_required="true"), css_class="form-group col-md-6 mb-0"),
-                        css_class='form-row'
-                    ),
                     Field('master_thesis_title',  data_tab="Master thesis", data_required="true"),
                     Field('master_thesis_student_name',  data_tab="Master thesis", data_required="true", data_autocomplete="true", data_autocomplete_source=reverse("web:autocomplete_all_students")),
                     Field('master_thesis_teacher_in_charge',  data_tab="Master thesis", data_required="true", data_autocomplete="true", data_autocomplete_source=reverse("web:autocomplete_all_teachers")),
@@ -113,11 +108,6 @@ class TimeReportForm(ModelForm):
                     ),
 
                 Tab('Semester project',
-                    Row(
-                        Column(Field('semester_project_year',  data_tab="Semester project", data_required="true"), css_class="form-group col-md-6 mb-0"),
-                        Column(Field('semester_project_term', data_tab="Semester project", data_required="true"), css_class="form-group col-md-6 mb-0"),
-                        css_class='form-row'
-                    ),
                     Field('semester_project_thesis_title', data_tab="Semester project", data_required="true"),
                     Field('semester_project_student_name', data_tab="Semester project", data_required="true", data_autocomplete="true", data_autocomplete_source=reverse("web:autocomplete_all_students")),
                     Field('semester_project_teacher_in_charge', data_tab="Semester project", data_required="true", data_autocomplete="true", data_autocomplete_source=reverse("web:autocomplete_all_teachers")),
@@ -125,11 +115,6 @@ class TimeReportForm(ModelForm):
                     Field('semester_project_comments', data_tab="Semester project", data_required="false"),
                     ),
                 Tab('Other job',
-                    Row(
-                        Column(Field('other_job_year', data_tab="Other job", data_required="true"), css_class="form-group col-md-6 mb-0"),
-                        Column(Field('other_job_term', data_tab="Other job", data_required="true"), css_class="form-group col-md-6 mb-0"),
-                        css_class='form-row'
-                    ),
                     Field('other_job_name', data_tab="Other job", data_required="true"),
                     Field('other_job_unit', data_tab="Other job", data_required="true", data_autocomplete="true", data_autocomplete_source=reverse("web:autocomplete_all_units")),
                     Field('other_job_teacher_in_charge', data_tab="Other job", data_required="true", data_autocomplete="true", data_autocomplete_source=reverse("web:autocomplete_all_teachers")),
@@ -145,11 +130,6 @@ class TimeReportForm(ModelForm):
 
                     ),
                 Tab('MAN',
-                    Row(
-                        Column(Field('MAN_year', data_tab="MAN", data_required="true"), css_class="form-group col-md-6 mb-0"),
-                        Column(Field('MAN_term', data_tab="MAN", data_required="true"), css_class="form-group col-md-6 mb-0"),
-                        css_class='form-row'
-                    ),
                     AppendedText('MAN_hours', 'Hr', active=True, data_tab="MAN", data_required="true"),
                     Field('MAN_comments', data_tab="MAN", data_required="false"),
 

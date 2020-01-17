@@ -622,8 +622,6 @@ class TimeReport(ValidateModelMixin, models.Model):
         ('nothing to report', 'Nothing to report')
     ]
     activity_type = models.CharField(max_length=255, choices=ACTIVITY_TYPE_CHOICES)
-    master_thesis_year = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Year of the thesis")
-    master_thesis_term = models.CharField(max_length=255, choices=TERM_CHOICES, default=None, blank=True, null=True, verbose_name="Term of the thesis")
     master_thesis_title = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Title of the Master thesis")
     master_thesis_student_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the student")
     master_thesis_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the thesis", on_delete=models.DO_NOTHING, related_name="supervised_master_thesis")
@@ -645,16 +643,12 @@ class TimeReport(ValidateModelMixin, models.Model):
     class_teaching_practical_work_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of practical work hours (over the semester)")
     class_teaching_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the class teaching activity")
 
-    semester_project_year = models.CharField(max_length=9, default=None, blank=True, null=True, verbose_name="Academic year of the semester project")
-    semester_project_term = models.CharField(max_length=255, choices=TERM_CHOICES, default=None, blank=True, null=True, verbose_name="Term of the semester project")
     semester_project_thesis_title = models.CharField(max_length=255, blank=True, null=True, verbose_name="Ttitle of the thesis")
     semester_project_student_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the student")
     semester_project_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the thesis", on_delete=models.DO_NOTHING, related_name="supervised_semester_projects")
     semester_project_supervision_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of supervision hours (over the semester)")
     semester_project_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the semester project activity")
 
-    other_job_year = models.CharField(max_length=9, default=None, blank=True, null=True, verbose_name="Academic year of the other job")
-    other_job_term = models.CharField(max_length=255, choices=TERM_CHOICES, default=None, blank=True, null=True, verbose_name="Term of the other job")
     other_job_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the activity")
     other_job_unit = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the unit asking for this other job")
     other_job_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the other job", on_delete=models.DO_NOTHING, related_name="supervised_other_job")
@@ -665,8 +659,6 @@ class TimeReport(ValidateModelMixin, models.Model):
 
     not_available_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'not available' activity")
 
-    MAN_year = models.CharField(max_length=9, default=None, blank=True, null=True, verbose_name="Academic year of the MAN")
-    MAN_term = models.CharField(max_length=255, choices=TERM_CHOICES, default=None, blank=True, null=True, verbose_name="Term of MAN")
     MAN_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of hours spent on MAN (over the semester)")
     MAN_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the MAN activity")
 
@@ -745,14 +737,6 @@ class TimeReport(ValidateModelMixin, models.Model):
     def __validate_master_thesis(self):
         validation_errors = list()
 
-        if not self.__is_valid_year(self.master_thesis_year):
-            msg = "The year of the master thesis should be under the form of two consecutive years (e.g. 2019-2020)"
-            validation_errors.append({'master_thesis_year': msg})
-
-        if not self.master_thesis_term:
-            msg = "When selecting a 'master thesis' activity, you should provide a term"
-            validation_errors.append({'master_thesis_term': msg})
-
         if self.master_thesis_title is None:
             msg = "When selecting a 'master thesis' activity, you should provide the title of the thesis"
             validation_errors.append({'master_thesis_title': msg})
@@ -805,14 +789,6 @@ class TimeReport(ValidateModelMixin, models.Model):
     def __validate_semester_project(self):
         validation_errors = list()
 
-        if not self.__is_valid_year(self.semester_project_year):
-            msg = "The year of the semester project should be under the form of two consecutive years (e.g. 2019-2020)"
-            validation_errors.append({'semester_project_year': msg})
-
-        if not self.semester_project_term:
-            msg = "When selecting a 'semester project' activity, you should provide a term"
-            validation_errors.append({'semester_project_term': msg})
-
         if self.semester_project_thesis_title is None:
             msg = "When selecting a 'semester project' activity, you should provide the title of the thesis"
             validation_errors.append({'semester_project_thesis_title': msg})
@@ -855,14 +831,6 @@ class TimeReport(ValidateModelMixin, models.Model):
     def __validate_other(self):
         validation_errors = list()
 
-        if not self.__is_valid_year(self.other_job_year):
-            msg = "The year should be under the form of two consecutive years (e.g. 2019-2020)"
-            validation_errors.append({'other_job_year': msg})
-
-        if not self.other_job_term:
-            msg = "You should provide a term"
-            validation_errors.append({'other_job_term': msg})
-
         if self.other_job_name is None:
             msg = "You should provide the name of the other activity"
             validation_errors.append({'other_job_name': msg})
@@ -902,14 +870,6 @@ class TimeReport(ValidateModelMixin, models.Model):
 
     def __validate_man(self):
         validation_errors = list()
-
-        if not self.__is_valid_year(self.MAN_year):
-            msg = "The year of the MAN should be under the form of two consecutive years (e.g. 2019-2020)"
-            validation_errors.append({'MAN_year': msg})
-
-        if not self.MAN_term:
-            msg = "When selecting a 'MAN' activity, you should provide a term"
-            validation_errors.append({'MAN_term': msg})
 
         if self.MAN_hours is None or self.MAN_hours == 0:
             msg = "When selecting a 'MAN' activity, you should provide the number of hours you worked on this activity"
@@ -963,8 +923,6 @@ class TimeReport(ValidateModelMixin, models.Model):
 
         # model clean-up
         if activity_type == 'class teaching':
-            self.master_thesis_year = None
-            self.master_thesis_term = None
             self.master_thesis_title = None
             self.master_thesis_student_name = None
             self.master_thesis_teacher_in_charge = None
@@ -972,15 +930,11 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.master_thesis_comments = None
             self.master_thesis_section = None
             self.master_thesis_other_section = None
-            self.semester_project_year = None
-            self.semester_project_term = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
             self.semester_project_teacher_in_charge = None
             self.semester_project_supervision_hours = None
             self.semester_project_comments = None
-            self.other_job_year = None
-            self.other_job_term = None
             self.other_job_name = None
             self.other_job_unit = None
             self.other_job_teacher_in_charge = None
@@ -988,8 +942,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.other_job_comments = None
             self.nothing_to_report_comments = None
             self.not_available_comments = None
-            self.MAN_year = None
-            self.MAN_term = None
             self.MAN_hours = None
             self.MAN_comments = None
         elif activity_type == 'master thesis':
@@ -998,15 +950,11 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
             self.class_teaching_comments = None
-            self.semester_project_year = None
-            self.semester_project_term = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
             self.semester_project_teacher_in_charge = None
             self.semester_project_supervision_hours = None
             self.semester_project_comments = None
-            self.other_job_year = None
-            self.other_job_term = None
             self.other_job_name = None
             self.other_job_unit = None
             self.other_job_teacher_in_charge = None
@@ -1014,13 +962,9 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.other_job_comments = None
             self.nothing_to_report_comments = None
             self.not_available_comments = None
-            self.MAN_year = None
-            self.MAN_term = None
             self.MAN_hours = None
             self.MAN_comments = None
         elif activity_type == 'semester project':
-            self.master_thesis_year = None
-            self.master_thesis_term = None
             self.master_thesis_title = None
             self.master_thesis_student_name = None
             self.master_thesis_teacher_in_charge = None
@@ -1033,8 +977,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
             self.class_teaching_comments = None
-            self.other_job_year = None
-            self.other_job_term = None
             self.other_job_name = None
             self.other_job_unit = None
             self.other_job_teacher_in_charge = None
@@ -1042,13 +984,9 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.other_job_comments = None
             self.nothing_to_report_comments = None
             self.not_available_comments = None
-            self.MAN_year = None
-            self.MAN_term = None
             self.MAN_hours = None
             self.MAN_comments = None
         elif activity_type == 'MAN':
-            self.master_thesis_year = None
-            self.master_thesis_term = None
             self.master_thesis_title = None
             self.master_thesis_student_name = None
             self.master_thesis_teacher_in_charge = None
@@ -1061,15 +999,11 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
             self.class_teaching_comments = None
-            self.semester_project_year = None
-            self.semester_project_term = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
             self.semester_project_teacher_in_charge = None
             self.semester_project_supervision_hours = None
             self.semester_project_comments = None
-            self.other_job_year = None
-            self.other_job_term = None
             self.other_job_name = None
             self.other_job_unit = None
             self.other_job_teacher_in_charge = None
@@ -1078,8 +1012,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.nothing_to_report_comments = None
             self.not_available_comments = None
         elif activity_type == 'other job':
-            self.master_thesis_year = None
-            self.master_thesis_term = None
             self.master_thesis_title = None
             self.master_thesis_student_name = None
             self.master_thesis_teacher_in_charge = None
@@ -1092,8 +1024,6 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
             self.class_teaching_comments = None
-            self.semester_project_year = None
-            self.semester_project_term = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
             self.semester_project_teacher_in_charge = None
@@ -1101,13 +1031,9 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.semester_project_comments = None
             self.nothing_to_report_comments = None
             self.not_available_comments = None
-            self.MAN_year = None
-            self.MAN_term = None
             self.MAN_hours = None
             self.MAN_comments = None
         elif activity_type == 'not available':
-            self.master_thesis_year = None
-            self.master_thesis_term = None
             self.master_thesis_title = None
             self.master_thesis_student_name = None
             self.master_thesis_teacher_in_charge = None
@@ -1120,28 +1046,20 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
             self.class_teaching_comments = None
-            self.semester_project_year = None
-            self.semester_project_term = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
             self.semester_project_teacher_in_charge = None
             self.semester_project_supervision_hours = None
             self.semester_project_comments = None
-            self.other_job_year = None
-            self.other_job_term = None
             self.other_job_name = None
             self.other_job_unit = None
             self.other_job_teacher_in_charge = None
             self.other_job_hours = None
             self.other_job_comments = None
             self.nothing_to_report_comments = None
-            self.MAN_year = None
-            self.MAN_term = None
             self.MAN_hours = None
             self.MAN_comments = None
         elif activity_type == 'nothing to report':
-            self.master_thesis_year = None
-            self.master_thesis_term = None
             self.master_thesis_title = None
             self.master_thesis_student_name = None
             self.master_thesis_teacher_in_charge = None
@@ -1154,23 +1072,17 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
             self.class_teaching_comments = None
-            self.semester_project_year = None
-            self.semester_project_term = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
             self.semester_project_teacher_in_charge = None
             self.semester_project_supervision_hours = None
             self.semester_project_comments = None
-            self.other_job_year = None
-            self.other_job_term = None
             self.other_job_name = None
             self.other_job_unit = None
             self.other_job_teacher_in_charge = None
             self.other_job_hours = None
             self.other_job_comments = None
             self.not_available_comments = None
-            self.MAN_year = None
-            self.MAN_term = None
             self.MAN_hours = None
             self.MAN_comments = None
 
