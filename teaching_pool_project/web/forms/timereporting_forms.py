@@ -77,7 +77,11 @@ class TimeReportForm(ModelForm):
                     Row(
                         Column(AppendedText('class_teaching_preparation_hours', 'Hr', active=True, data_tab="Class teaching", data_required="false"), css_class="form-group col-md-4 mb-0"),
                         Column(AppendedText('class_teaching_teaching_hours', 'Hr', active=True, data_tab="Class teaching", data_required="false"), css_class="form-group col-md-4 mb-0"),
+                        css_class='form-row'
+                    ),
+                    Row(
                         Column(AppendedText('class_teaching_practical_work_hours', 'Hr', active=True, data_tab="Class teaching", data_required="false"), css_class="form-group col-md-4 mb-0"),
+                        Column(AppendedText('class_teaching_exam_hours', 'Hr', active=True, data_tab="Class teaching", data_required="false"), css_class="form-group col-md-4 mb-0"),
                         css_class='form-row'
                     ),
                     ),

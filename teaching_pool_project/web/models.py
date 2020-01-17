@@ -632,6 +632,7 @@ class TimeReport(ValidateModelMixin, models.Model):
     class_teaching_preparation_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of preparation hours for class teaching for the semester")
     class_teaching_teaching_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of teaching hours (courses and exercises over the semester)")
     class_teaching_practical_work_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of practical work hours (over the semester)")
+    class_teaching_exam_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of exam supervision and grading hours (over the semester)")
     class_teaching_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the class teaching activity")
 
     semester_project_thesis_title = models.CharField(max_length=255, blank=True, null=True, verbose_name="Ttitle of the thesis")
@@ -693,28 +694,34 @@ class TimeReport(ValidateModelMixin, models.Model):
             msg = "When selecting a 'class teaching' activity, the practical work hours must have a value"
             validation_errors.append({'class_teaching_practical_work_hours': msg})
 
-        if self.class_teaching_preparation_hours == 0 and self.class_teaching_teaching_hours == 0 and self.class_teaching_practical_work_hours == 0:
-            msg = "At least one of the number of hours (preparation, teaching or practical work hours) should have a value above 0"
+        if self.class_teaching_exam_hours is None:
+            msg = "When selecting a 'class teaching' activity, the exam supervision and grading hours must have a value"
+            validation_errors.append({'class_teaching_exam_hours': msg})
+
+        if self.class_teaching_preparation_hours == 0 and self.class_teaching_teaching_hours == 0 and self.class_teaching_practical_work_hours == 0 and self.class_teaching_exam_hours == 0:
+            msg = "At least one of the number of hours (preparation, teaching, practical work or exam supervision and grading hours) should have a value above 0"
             validation_errors.append({
                 'class_teaching_preparation_hours': msg,
                 'class_teaching_teaching_hours': msg,
-                'class_teaching_practical_work_hours': msg
+                'class_teaching_practical_work_hours': msg,
+                'class_teaching_exam_hours': msg
             })
 
         # clean up the data based on the selected course
-        if self.year != self.class_teaching_course.year:
+        if self.class_teaching_course is not None and self.year != self.class_teaching_course.year:
             msg = "The year you provided does not match the year of the course ({})".format(self.class_teaching_course.year)
             validation_errors.append({'year': msg})
 
-        english_term = None
-        if self.class_teaching_course.term == "ETE":
-            english_term = "summer"
-        if self.class_teaching_course.term == "HIVER":
-            english_term = "winter"
+        if self.class_teaching_course is not None:
+            english_term = None
+            if self.class_teaching_course.term == "ETE":
+                english_term = "summer"
+            if self.class_teaching_course.term == "HIVER":
+                english_term = "winter"
 
-        if self.term != english_term:
-            msg = "The term you provided does not match the term of the course ({})".format(english_term)
-            validation_errors.append({'term': msg})
+            if self.term != english_term:
+                msg = "The term you provided does not match the term of the course ({})".format(english_term)
+                validation_errors.append({'term': msg})
 
         result = {}
         for validation_error in validation_errors:
@@ -924,6 +931,7 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
             self.class_teaching_comments = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
@@ -949,6 +957,7 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
             self.class_teaching_comments = None
             self.other_job_name = None
             self.other_job_unit = None
@@ -969,6 +978,7 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
             self.class_teaching_comments = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
@@ -992,6 +1002,7 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
             self.class_teaching_comments = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
@@ -1012,6 +1023,7 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
             self.class_teaching_comments = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None
@@ -1036,6 +1048,7 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.class_teaching_preparation_hours = None
             self.class_teaching_teaching_hours = None
             self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
             self.class_teaching_comments = None
             self.semester_project_thesis_title = None
             self.semester_project_student_name = None

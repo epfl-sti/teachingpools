@@ -106,6 +106,7 @@ function format(d){
     if (d.fields.class_teaching_preparation_hours != null) { return_value += `<tr><td>Class teaching preparation hours:</td><td>${d.fields.class_teaching_preparation_hours}</td></tr>`}
     if (d.fields.class_teaching_teaching_hours != null) { return_value += `<tr><td>Class teaching teaching hours:</td><td>${d.fields.class_teaching_teaching_hours}</td></tr>`}
     if (d.fields.class_teaching_practical_work_hours != null) { return_value += `<tr><td>Class teaching practical work hours:</td><td>${d.fields.class_teaching_practical_work_hours}</td></tr>`}
+    if (d.fields.class_teaching_exam_hours != null) { return_value += `<tr><td>Class teaching exam supervision and granding hours:</td><td>${d.fields.class_teaching_exam_hours}</td></tr>`}
     if (d.fields.class_teaching_comments != null) { return_value += `<tr><td>Class teaching comments:</td><td>${d.fields.class_teaching_comments}</td></tr>`}
     if (d.fields.semester_project_thesis_title != null) { return_value += `<tr><td>Semester project thesis title:</td><td>${d.fields.semester_project_thesis_title}</td></tr>`}
     if (d.fields.semester_student_name != null) { return_value += `<tr><td>Semester project student name:</td><td>${d.fields.semester_project_student_name}</td></tr>`}
@@ -195,6 +196,7 @@ $(document).ready(function() {
                         value += data.fields.class_teaching_preparation_hours;
                         value += data.fields.class_teaching_teaching_hours;
                         value += data.fields.class_teaching_practical_work_hours;
+                        value += data.fields.class_teaching_exam_hours;
                         value += data.fields.semester_project_supervision_hours;
                         value += data.fields.other_job_hours;
                         value += data.fields.MAN_hours;
