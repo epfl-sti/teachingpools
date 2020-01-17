@@ -606,18 +606,18 @@ class Config(models.Model):
 class TimeReport(ValidateModelMixin, models.Model):
     created_at = models.DateTimeField(default=datetime.now)
     created_by = models.ForeignKey(Person, on_delete=models.DO_NOTHING, related_name="created_activities")
-    year = models.CharField(max_length=9)  # TODO: implement validation upon save (the year should be under the form of 20xx-20yy)
+    year = models.CharField(max_length=9)
     TERM_CHOICES = [
         ('winter', 'winter'),
         ('summer', 'summer')
     ]
     term = models.CharField(max_length=255, choices=TERM_CHOICES)
     ACTIVITY_TYPE_CHOICES = [
-        ('class teaching', 'Class teaching'),  # TODO: implement validation to force selection of a course
+        ('class teaching', 'Class teaching'),
         ('master thesis', 'Master thesis'),
         ('semester project', 'Semester project'),
         ('MAN', 'MAN'),
-        ('other job', 'Other job'),  # TODO: implement validation of required explanation
+        ('other job', 'Other job'),
         ('not available', 'Not available'),
         ('nothing to report', 'Nothing to report')
     ]
@@ -636,7 +636,7 @@ class TimeReport(ValidateModelMixin, models.Model):
         ('SMX', 'SMX'),
         ('other', 'other')
     ]
-    master_thesis_section = models.CharField(max_length=255, choices=MASTER_THESIS_SECTION_CHOICES, default=None, blank=True, null=True, verbose_name="Teacher's section")  # TODO: implement validation when 'other' is selected, a value must be passed in the master_thesis_other_section field
+    master_thesis_section = models.CharField(max_length=255, choices=MASTER_THESIS_SECTION_CHOICES, default=None, blank=True, null=True, verbose_name="Teacher's section")
     master_thesis_other_section = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Other section (if the section is not found in the previous list)")
 
     class_teaching_course = models.ForeignKey(Course, default=None, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Class teaching course")
