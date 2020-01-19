@@ -6,7 +6,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (HTML, Button, Column, Div, Field, Layout,
                                  Reset, Row, Submit)
 from django.contrib.auth.models import Group
-from django.forms import ModelChoiceField, ModelForm, TextInput
+from django.forms import ModelChoiceField, ModelForm, Select, TextInput
 from django.urls import reverse
 
 from web.models import *
@@ -32,6 +32,10 @@ class TimeReportForm(ModelForm):
             'master_thesis_teacher_in_charge': TeacherChoiceField,
             'semester_project_teacher_in_charge': TeacherChoiceField,
             'other_job_teacher_in_charge': TeacherChoiceField,
+        }
+        years_choices = [('{}-{}'.format(year, year+1), '{}-{}'.format(year, year+1)) for year in [2019, 2020, 2021, 2022, 2023, 2024, 2025]]
+        widgets = {
+            'year': Select(choices=years_choices),
         }
 
     def __init__(self, *args, **kwargs):
