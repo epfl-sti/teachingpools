@@ -686,16 +686,32 @@ class TimeReport(ValidateModelMixin, models.Model):
             msg = "When selecting a 'class teaching' activity, the preparation hours must have a value"
             validation_errors.append({'class_teaching_preparation_hours': msg})
 
+        if self.class_teaching_preparation_hours is not None and self.class_teaching_preparation_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'class_teaching_preparation_hours': msg})
+
         if self.class_teaching_teaching_hours is None:
             msg = "When selecting a 'class teaching' activity, the teaching hours must have a value"
+            validation_errors.append({'class_teaching_teaching_hours': msg})
+
+        if self.class_teaching_teaching_hours is not None and self.class_teaching_teaching_hours < 0:
+            msg = "The value provided cannot be negative"
             validation_errors.append({'class_teaching_teaching_hours': msg})
 
         if self.class_teaching_practical_work_hours is None:
             msg = "When selecting a 'class teaching' activity, the practical work hours must have a value"
             validation_errors.append({'class_teaching_practical_work_hours': msg})
 
+        if self.class_teaching_practical_work_hours is not None and self.class_teaching_practical_work_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'class_teaching_practical_work_hours': msg})
+
         if self.class_teaching_exam_hours is None:
             msg = "When selecting a 'class teaching' activity, the exam supervision and grading hours must have a value"
+            validation_errors.append({'class_teaching_exam_hours': msg})
+
+        if self.class_teaching_exam_hours is not None and self.class_teaching_exam_hours < 0:
+            msg = "The value provided cannot be negative"
             validation_errors.append({'class_teaching_exam_hours': msg})
 
         if self.class_teaching_preparation_hours == 0 and self.class_teaching_teaching_hours == 0 and self.class_teaching_practical_work_hours == 0 and self.class_teaching_exam_hours == 0:
@@ -765,6 +781,10 @@ class TimeReport(ValidateModelMixin, models.Model):
             msg = "When selecting a 'master thesis' activity, you should provide the number of hours you worked on this activity"
             validation_errors.append({'master_thesis_supervision_hours': msg})
 
+        if self.master_thesis_supervision_hours is not None and self.master_thesis_supervision_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'master_thesis_supervision_hours': msg})
+
         result = {}
         for validation_error in validation_errors:
             for key, value in validation_error.items():
@@ -807,6 +827,10 @@ class TimeReport(ValidateModelMixin, models.Model):
             msg = "When selecting a 'semester project' activity, you should provide the number of hours you worked on this activity"
             validation_errors.append({'semester_project_supervision_hours': msg})
 
+        if self.semester_project_supervision_hours is not None and self.semester_project_supervision_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'semester_project_supervision_hours': msg})
+
         result = {}
         for validation_error in validation_errors:
             for key, value in validation_error.items():
@@ -825,6 +849,10 @@ class TimeReport(ValidateModelMixin, models.Model):
 
         if self.other_job_hours is None or self.other_job_hours == 0:
             msg = "When selecting a 'other' activity, you should provide the number of hours you worked on this activity"
+            validation_errors.append({'other_job_hours': msg})
+
+        if self.other_job_hours is not None and self.other_job_hours < 0:
+            msg = "The value provided cannot be negative"
             validation_errors.append({'other_job_hours': msg})
 
         if self.other_job_unit is None:
@@ -857,6 +885,10 @@ class TimeReport(ValidateModelMixin, models.Model):
 
         if self.MAN_hours is None or self.MAN_hours == 0:
             msg = "When selecting a 'MAN' activity, you should provide the number of hours you worked on this activity"
+            validation_errors.append({'MAN_hours': msg})
+
+        if self.MAN_hours is not None and self.MAN_hours < 0:
+            msg = "The value provided cannot be negative"
             validation_errors.append({'MAN_hours': msg})
 
         result = {}
