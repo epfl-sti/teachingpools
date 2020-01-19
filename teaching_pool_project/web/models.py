@@ -1100,6 +1100,9 @@ class TimeReport(ValidateModelMixin, models.Model):
         if not self.__is_valid_year(self.year):
             raise ValidationError({'year': "The year should be under the form of two consecutive years (e.g. 2019-2020)"})
 
+        if self.term is None or self.term == '':
+            raise ValidationError({'term': "A term should be selected"})
+
         # validation based upon the teaching type
         if activity_type == 'class teaching':
             is_valid, errors = self.__validate_class_teaching()

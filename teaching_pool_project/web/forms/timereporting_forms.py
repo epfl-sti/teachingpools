@@ -42,6 +42,10 @@ class TimeReportForm(ModelForm):
         user = kwargs.pop('user')
         super(TimeReportForm, self).__init__(*args, **kwargs)
 
+        # Make the Year and Semester fields not required (they will be handled later)
+        self.fields['year'].required = False
+        self.fields['term'].required = False
+
         # restrict the dropdown lists to actual teachers
         teachers = Group.objects.get(name="teachers").user_set.all()
         self.fields['master_thesis_teacher_in_charge'].queryset = teachers
