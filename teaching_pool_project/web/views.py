@@ -759,7 +759,14 @@ def phds_report(request):
         phds_ids.append(phd.id)
 
     # Get the profile information about the phds
-    availabilities = Availability.objects.filter(year=year, term=term, person_id__in=phds_ids).all()
+    if term == "HIVER":
+        english_term = "winter"
+    elif term == "ETE":
+        english_term = "summer"
+    else:
+        pass
+
+    availabilities = Availability.objects.filter(year=year, term=english_term, person_id__in=phds_ids).all()
     for availability in availabilities:
         phds_info[availability.person_id]['availability'] = availability.availability
 
@@ -846,7 +853,14 @@ def download_phds_report(request):
         phds_ids.append(phd.id)
 
     # Get the profile information about the phds
-    availabilities = Availability.objects.filter(year=year, term=term, person_id__in=phds_ids).all()
+    if term == "HIVER":
+        english_term = "winter"
+    elif term == "ETE":
+        english_term = "summer"
+    else:
+        pass
+
+    availabilities = Availability.objects.filter(year=year, term=english_term, person_id__in=phds_ids).all()
     for availability in availabilities:
         phds_info[availability.person_id]['availability'] = availability.availability
 
