@@ -737,12 +737,6 @@ def download_course_report(request):
 def phds_report(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
-    # if term == "HIVER":
-    #     term = "winter"
-    # elif term == "ETE":
-    #     term = "summer"
-    # else:
-    #     pass
 
     phds_info = dict()
     phds_ids = list()
@@ -830,12 +824,6 @@ def phds_report(request):
 def download_phds_report(request):
     year = config.get_config('current_year')
     term = config.get_config('current_term')
-    # if term == "HIVER":
-    #     term = "winter"
-    # elif term == "ETE":
-    #     term = "summer"
-    # else:
-    #     pass
 
     phds_info = dict()
     phds_ids = list()
