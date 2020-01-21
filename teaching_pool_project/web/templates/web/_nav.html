@@ -36,7 +36,7 @@
         {% if request.user|is_staff %}
           <a class="dropdown-item" href="{% url "web:phds_profiles" %}">All profiles</a>
           <a class="dropdown-item" href="{% url "web:applications_list" %}">All applications</a>
-          <a class="dropdown-item" href="{% url "web:phds_report" %}">Applications status per PhD</a>
+          <a class="dropdown-item" href="{% url "web:phds_report" CURRENT_YEAR CURRENT_TERM %}">Applications status per PhD</a>
         {% endif %}
         {% comment %} <a class="dropdown-item" href="{% url "web:phds_with_multiple_hirings_report" %}">Multiple acceptance</a> {% endcomment %}
       </li>

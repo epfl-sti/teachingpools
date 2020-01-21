@@ -734,10 +734,7 @@ def download_course_report(request):
 
 
 @is_staff()
-def phds_report(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
-
+def phds_report(request, year, term):
     phds_info = dict()
     phds_ids = list()
 
@@ -814,6 +811,8 @@ def phds_report(request):
             phds_info[phd]['applications_withdrawn'] = ''
 
     context = {
+        'year': year,
+        'term': term,
         'phds': phds_info.values
     }
 
@@ -821,10 +820,7 @@ def phds_report(request):
 
 
 @is_staff()
-def download_phds_report(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
-
+def download_phds_report(request, year, term):
     phds_info = dict()
     phds_ids = list()
 
