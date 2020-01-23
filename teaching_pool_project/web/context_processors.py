@@ -8,5 +8,6 @@ def app_base_info(request):
         'CURRENT_TERM': config.get_config('current_term'),
         'REQUESTS_FOR_TAS_ARE_OPEN': config.get_config('requests_for_TAs_are_open'),
         'APPLICATIONS_ARE_OPEN': config.get_config('applications_are_open'),
-        'PHD_CAN_WITHDRAW_APPLICATION': config.get_config('phds_can_withdraw_applications')
+        'PHD_CAN_WITHDRAW_APPLICATION': config.get_config('phds_can_withdraw_applications'),
+        'TIME_REPORTING_IS_OPEN': config.get_config('time_reporting_is_open'),
     }

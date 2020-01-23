@@ -12,7 +12,7 @@
         Actions
     </div>
     <div class="card-body">
-        <a class="btn btn-primary" href="{% url 'web:add_time_report' %}"><i class="fas fa-plus-circle"></i>&nbsp; New</a><span id="btn_spacer">&nbsp;</span>
+        {% if TIME_REPORTING_IS_OPEN %}<a class="btn btn-primary" href="{% url 'web:add_time_report' %}"><i class="fas fa-plus-circle"></i>&nbsp; New</a>{% endif %}<span id="btn_spacer">&nbsp;</span>
     </div>
 </div>
 <div class="card">
@@ -223,8 +223,12 @@ $(document).ready(function() {
                     "data": null,
                     "defaultContent": '',
                     "render": function(data, type, row){
+                        {% if TIME_REPORTING_IS_OPEN %}
                         return  '<a class="btn btn-primary btn-sm" href="'+ edit_base_url + data.pk + '"><i class="fas fa-edit"></i>' +
                                 '<a class="btn btn-danger btn-sm" href="#" data-href="'+ delete_base_url + data.pk +'" data-toggle="modal" data-target="#confirm-delete"><i class="fas fa-trash"></i>';
+                        {% else %}
+                        return '';
+                        {% endif %}
                     },
                     "orderable": false,
                     "searchable": false,

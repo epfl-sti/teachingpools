@@ -592,6 +592,7 @@ class Config(models.Model):
     applications_are_open = models.BooleanField(default=True)
     send_notification_to_admins_upon_ta_request = models.BooleanField(default=True)
     phds_can_withdraw_applications = models.BooleanField(default=True)
+    time_reporting_is_open = models.BooleanField(default=False)
 
     def __str__(self):
         return '{} - {}'.format(self.current_year, self.current_term)

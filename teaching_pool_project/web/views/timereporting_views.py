@@ -86,6 +86,11 @@ def get_time_reports(request):
 
 @group_required('phds')
 def add_time_report(request):
+    time_reporting_is_open = config.get_config('time_reporting_is_open')
+    if time_reporting_is_open == False:
+        messages.error(request, "You are not allowed to enter new time reporting entries at the moment.")
+        raise PermissionDenied
+
     timereporting = TimeReport(created_by=request.user)
     timereporting_form = TimeReportForm(request.POST or None, instance=timereporting, user=request.user)
 
