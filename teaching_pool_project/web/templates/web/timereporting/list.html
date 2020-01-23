@@ -146,6 +146,21 @@ function format(d){
     if (d.fields.not_available_comments != null) { return_value += `<tr><td>Not available comments:</td><td>${d.fields.not_available_comments}</td></tr>`}
     if (d.fields.MAN_hours != null) { return_value += `<tr><td>MAN hours:</td><td>${d.fields.MAN_hours}</td></tr>`}
     if (d.fields.MAN_comments != null) { return_value += `<tr><td>MAN comments:</td><td>${d.fields.MAN_comments}</td></tr>`}
+    if (d.fields.exam_proctoring_and_grading_course != null) {
+        $.ajax({
+            url: `/api/timereporting/course/${d.fields.exam_proctoring_and_grading_course}`,
+            async: false,
+            success: function (data, textStatus, jqXHR){
+                if (data.length > 0){
+                    course_name = `${data[0].fields.subject} (${data[0].fields.code} - ${data[0].fields.year} - ${data[0].fields.term})`;
+                }
+                else { course_name = ''}
+            }
+        });
+        return_value += `<tr><td>Exam proctoring and grading course:</td><td>${course_name}</td></tr>`
+        }
+    if (d.fields.exam_proctoring_and_grading_hours != null) { return_value += `<tr><td>Exam proctoring and grading hours:</td><td>${d.fields.exam_proctoring_and_grading_hours}</td></tr>`}
+    if (d.fields.exam_proctoring_and_grading_comments != null) { return_value += `<tr><td>Exam proctoring and grading comments:</td><td>${d.fields.exam_proctoring_and_grading_comments}</td></tr>`}
     return_value += '</table>';
     return return_value
 }
@@ -200,6 +215,7 @@ $(document).ready(function() {
                         value += data.fields.semester_project_supervision_hours;
                         value += data.fields.other_job_hours;
                         value += data.fields.MAN_hours;
+                        value += data.fields.exam_proctoring_and_grading_hours;
                         return value
                     },
                     },

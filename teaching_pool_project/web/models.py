@@ -619,7 +619,8 @@ class TimeReport(ValidateModelMixin, models.Model):
         ('MAN', 'MAN'),
         ('other job', 'Other job'),
         ('not available', 'Not available'),
-        ('nothing to report', 'Nothing to report')
+        ('nothing to report', 'Nothing to report'),
+        ('exam proctoring and grading', 'exam proctoring and grading')
     ]
     activity_type = models.CharField(max_length=255, choices=ACTIVITY_TYPE_CHOICES)
     master_thesis_title = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Title of the Master thesis")
@@ -653,6 +654,10 @@ class TimeReport(ValidateModelMixin, models.Model):
 
     MAN_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of hours spent on MAN (over the semester)")
     MAN_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the MAN activity")
+
+    exam_proctoring_and_grading_course = models.ForeignKey(Course, default=None, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Exam proctoring and grading course", related_name="proctored_course")
+    exam_proctoring_and_grading_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of hours spent on the exam proctoring and grading (over the semester)")
+    exam_proctoring_and_grading_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'exam proctoring and grading' activity")
 
     def __is_valid_year(self, year):
         if not year:
@@ -738,6 +743,26 @@ class TimeReport(ValidateModelMixin, models.Model):
             if self.term != english_term:
                 msg = "The term you provided does not match the term of the course ({})".format(english_term)
                 validation_errors.append({'term': msg})
+
+        result = {}
+        for validation_error in validation_errors:
+            for key, value in validation_error.items():
+                result[key] = value
+        if len(result.keys()) > 0:
+            return False, result
+        else:
+            return True, result
+
+    def __validate_exam_proctoring_and_grading(self):
+        validation_errors = list()
+
+        if self.exam_proctoring_and_grading_hours is None or self.exam_proctoring_and_grading_hours < 1:
+            msg = "When selecting a 'proctoring' activity, the number of hours spent should be above 0"
+            validation_errors.append({'exam_proctoring_and_grading_hours': msg})
+
+        if not self.exam_proctoring_and_grading_course:
+            msg = "When selecting an 'exam proctoring and grading' activity, a course should be selected"
+            validation_errors.append({'exam_proctoring_and_grading_course': msg})
 
         result = {}
         for validation_error in validation_errors:
@@ -958,6 +983,9 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.not_available_comments = None
             self.MAN_hours = None
             self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
         elif activity_type == 'master thesis':
             self.class_teaching_course = None
             self.class_teaching_preparation_hours = None
@@ -979,6 +1007,9 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.not_available_comments = None
             self.MAN_hours = None
             self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
         elif activity_type == 'semester project':
             self.master_thesis_title = None
             self.master_thesis_student_name = None
@@ -1000,6 +1031,9 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.not_available_comments = None
             self.MAN_hours = None
             self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
         elif activity_type == 'MAN':
             self.master_thesis_title = None
             self.master_thesis_student_name = None
@@ -1024,6 +1058,9 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.other_job_comments = None
             self.nothing_to_report_comments = None
             self.not_available_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
         elif activity_type == 'other job':
             self.master_thesis_title = None
             self.master_thesis_student_name = None
@@ -1045,6 +1082,9 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.not_available_comments = None
             self.MAN_hours = None
             self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
         elif activity_type == 'not available':
             self.master_thesis_title = None
             self.master_thesis_student_name = None
@@ -1070,6 +1110,9 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.nothing_to_report_comments = None
             self.MAN_hours = None
             self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
         elif activity_type == 'nothing to report':
             self.master_thesis_title = None
             self.master_thesis_student_name = None
@@ -1095,6 +1138,35 @@ class TimeReport(ValidateModelMixin, models.Model):
             self.not_available_comments = None
             self.MAN_hours = None
             self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
+        elif activity_type == 'exam proctoring and grading':
+            self.master_thesis_title = None
+            self.master_thesis_student_name = None
+            self.master_thesis_teacher_in_charge = None
+            self.master_thesis_supervision_hours = None
+            self.master_thesis_comments = None
+            self.class_teaching_course = None
+            self.class_teaching_preparation_hours = None
+            self.class_teaching_teaching_hours = None
+            self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
+            self.class_teaching_comments = None
+            self.semester_project_thesis_title = None
+            self.semester_project_student_name = None
+            self.semester_project_teacher_in_charge = None
+            self.semester_project_supervision_hours = None
+            self.semester_project_comments = None
+            self.other_job_name = None
+            self.other_job_unit = None
+            self.other_job_teacher_in_charge = None
+            self.other_job_hours = None
+            self.other_job_comments = None
+            self.not_available_comments = None
+            self.MAN_hours = None
+            self.MAN_comments = None
+            self.nothing_to_report_comments = None
 
         # validate the common fields
         if not self.__is_valid_year(self.year):
@@ -1118,6 +1190,8 @@ class TimeReport(ValidateModelMixin, models.Model):
             is_valid, errors = self.__validate_not_available()
         elif activity_type == "nothing to report":
             is_valid, errors = self.__validate_nothing_to_report()
+        elif activity_type == 'exam proctoring and grading':
+            is_valid, errors = self.__validate_exam_proctoring_and_grading()
         else:
             is_valid = False
             errors = [{'activity_type': "Unknow activity type"}]

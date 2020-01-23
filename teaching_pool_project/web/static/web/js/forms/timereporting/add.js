@@ -1,11 +1,11 @@
 function toggleTabs(tab_to_keep, activate_tab = true) {
     var all_tabs = $('form>ul.nav-tabs>li.nav-item');
     all_tabs.each(function() {
-        if (this.innerText != tab_to_keep & this.innerText != "Common") {
+        if (this.innerText.toLowerCase() != tab_to_keep.toLowerCase() & this.innerText.toLowerCase() != "common") {
             $(this).hide();
         } else {
             $(this).show();
-            if (activate_tab & this.innerText == tab_to_keep) {
+            if (activate_tab & this.innerText.toLowerCase() == tab_to_keep.toLowerCase()) {
                 $(this).find("a").trigger("click");
             }
         }

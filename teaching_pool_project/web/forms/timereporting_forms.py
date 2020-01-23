@@ -32,6 +32,7 @@ class TimeReportForm(ModelForm):
             'master_thesis_teacher_in_charge': TeacherChoiceField,
             'semester_project_teacher_in_charge': TeacherChoiceField,
             'other_job_teacher_in_charge': TeacherChoiceField,
+            'exam_proctoring_and_grading_course': CourseClassChoiceField,
         }
         years_choices = [('{}-{}'.format(year, year+1), '{}-{}'.format(year, year+1)) for year in [2019, 2020, 2021, 2022, 2023, 2024, 2025]]
         widgets = {
@@ -126,6 +127,12 @@ class TimeReportForm(ModelForm):
                 Tab('MAN',
                     AppendedText('MAN_hours', 'Hr', active=True, data_tab="MAN", data_required="true"),
                     Field('MAN_comments', data_tab="MAN", data_required="false"),
+
+                    ),
+                Tab('Exam proctoring and grading',
+                    Field('exam_proctoring_and_grading_course',  data_tab="exam proctoring and grading", data_required="true"),
+                    AppendedText('exam_proctoring_and_grading_hours', 'Hr', active=True, data_tab="exam proctoring and grading", data_required="true"),
+                    Field('exam_proctoring_and_grading_comments', data_tab="exam proctoring and grading", data_required="false"),
 
                     )
             ),
