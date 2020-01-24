@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 import logging
+import re
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -9,8 +11,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 
-from epfl.sti.helpers import mail
+from epfl.sti.helpers import mail, ldap
 
+from .models_mixins import ValidateModelMixin
 from .validators import validate_year_config
 
 logger = logging.getLogger(__name__)
@@ -387,7 +390,6 @@ class Applications(models.Model):
             # Use case 05: 'regular workflow'. This should trigger a notification to the student and the teachers
             # Use case 06: 'regular workflow'. This should trigger a notification to the student and the teachers. However, this use case is different from Use case 05 because it is transition from a state that should be final (hired, rejected)
 
-
             use_case = None
             use_case = 1 if original_status == None and self.status == None else use_case
             use_case = 2 if original_status == None and self.status == "Pending" else use_case
@@ -427,24 +429,24 @@ class Applications(models.Model):
                 # None -> Pending
 
                     # we only want to notify people when the application has been recorded through the web interface
-                    if self.source == 'web':
-                        # Notify people of this change
-                        data = {
-                            'course': self.course,
-                            'application': self,
-                            'base_url': settings.APP_BASE_URL,
-                        }
-                        requesters = list()
-                        requesters.append(self.applicant.email)
-                        admins = [item.email for item in self.course.teachers.all()]
+                if self.source == 'web':
+                    # Notify people of this change
+                    data = {
+                        'course': self.course,
+                        'application': self,
+                        'base_url': settings.APP_BASE_URL,
+                    }
+                    requesters = list()
+                    requesters.append(self.applicant.email)
+                    admins = [item.email for item in self.course.teachers.all()]
 
-                        mail.notify_admins_and_requester(
-                            data=data,
-                            template_base='new_application',
-                            admins_subject='A new application as TA or AE has been recorded for your course',
-                            requesters_subject='Your application has been recorded',
-                            admins=admins,
-                            requesters=requesters)
+                    mail.notify_admins_and_requester(
+                        data=data,
+                        template_base='new_application',
+                        admins_subject='A new application as TA or AE has been recorded for your course',
+                        requesters_subject='Your application has been recorded',
+                        admins=admins,
+                        requesters=requesters)
 
             elif use_case == 3:
                 # Typically what happens when the teacher or the section hires the student directly. This should trigger a notification that the student has been enrolled to both the student and the teachers
@@ -531,7 +533,6 @@ class Applications(models.Model):
                         admins=admins,
                         requesters=requesters)
 
-
             # if original_status == None:
             #     if self.status == "Pending":
             #         # Update the counters of the course
@@ -591,6 +592,7 @@ class Config(models.Model):
     applications_are_open = models.BooleanField(default=True)
     send_notification_to_admins_upon_ta_request = models.BooleanField(default=True)
     phds_can_withdraw_applications = models.BooleanField(default=True)
+    time_reporting_is_open = models.BooleanField(default=False)
 
     def __str__(self):
         return '{} - {}'.format(self.current_year, self.current_term)
@@ -600,3 +602,600 @@ class Config(models.Model):
             raise ValidationError(
                 "There can only be one instance of the configuration")
         return super(Config, self).save(*args, **kwargs)
+
+
+class TimeReport(ValidateModelMixin, models.Model):
+    created_at = models.DateTimeField(default=datetime.now)
+    created_by = models.ForeignKey(Person, on_delete=models.DO_NOTHING, related_name="created_activities")
+    year = models.CharField(max_length=9)
+    TERM_CHOICES = [
+        ('winter', 'winter'),
+        ('summer', 'summer')
+    ]
+    term = models.CharField(max_length=255, choices=TERM_CHOICES)
+    ACTIVITY_TYPE_CHOICES = [
+        ('class teaching', 'Class teaching'),
+        ('master thesis', 'Master thesis'),
+        ('semester project', 'Semester project'),
+        ('MAN', 'MAN'),
+        ('other job', 'Other job'),
+        ('not available', 'Not available'),
+        ('nothing to report', 'Nothing to report'),
+        ('exam proctoring and grading', 'exam proctoring and grading')
+    ]
+    activity_type = models.CharField(max_length=255, choices=ACTIVITY_TYPE_CHOICES)
+    master_thesis_title = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Title of the Master thesis")
+    master_thesis_student_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the student")
+    master_thesis_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the thesis", on_delete=models.DO_NOTHING, related_name="supervised_master_thesis")
+    master_thesis_supervision_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Number of hours of supervision")
+    master_thesis_comments = models.TextField(blank=True, null=True, verbose_name="Comments regarding the master thesis activity")
+
+    class_teaching_course = models.ForeignKey(Course, default=None, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Class teaching course")
+    class_teaching_preparation_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of preparation hours for class teaching for the semester")
+    class_teaching_teaching_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of teaching hours (courses and exercises over the semester)")
+    class_teaching_practical_work_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of practical work hours (over the semester)")
+    class_teaching_exam_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of exam supervision and grading hours (over the semester)")
+    class_teaching_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the class teaching activity")
+
+    semester_project_thesis_title = models.CharField(max_length=255, blank=True, null=True, verbose_name="Ttitle of the thesis")
+    semester_project_student_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the student")
+    semester_project_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the thesis", on_delete=models.DO_NOTHING, related_name="supervised_semester_projects")
+    semester_project_supervision_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of supervision hours (over the semester)")
+    semester_project_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the semester project activity")
+
+    other_job_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the activity")
+    other_job_unit = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the unit asking for this other job")
+    other_job_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the other job", on_delete=models.DO_NOTHING, related_name="supervised_other_job")
+    other_job_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of hours spent on the other job (over the semester)")
+    other_job_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'other job' activity")
+
+    nothing_to_report_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'nothing to report' activity")
+
+    not_available_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'not available' activity")
+
+    MAN_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of hours spent on MAN (over the semester)")
+    MAN_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the MAN activity")
+
+    exam_proctoring_and_grading_course = models.ForeignKey(Course, default=None, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Exam proctoring and grading course", related_name="proctored_course")
+    exam_proctoring_and_grading_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of hours spent on the exam proctoring and grading (over the semester)")
+    exam_proctoring_and_grading_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'exam proctoring and grading' activity")
+
+    def __is_valid_year(self, year):
+        if not year:
+            return False
+
+        if not isinstance(year, str):
+            return False
+
+        pattern = r'(?P<year1>\d{4})-(?P<year2>\d{4})'
+        p = re.compile(pattern)
+
+        if not p.match(year):
+            return False
+        else:
+            m = p.search(year)
+            year1 = int(m.group('year1'))
+            year2 = int(m.group('year2'))
+            if year2 != (year1+1):
+                return False
+
+        return True
+
+    def __validate_class_teaching(self):
+        validation_errors = list()
+
+        if not self.class_teaching_course:
+            msg = "When selecting a 'class teaching' activity, a course should be selected"
+            validation_errors.append({'class_teaching_course': msg})
+
+        if self.class_teaching_preparation_hours is None:
+            msg = "When selecting a 'class teaching' activity, the preparation hours must have a value"
+            validation_errors.append({'class_teaching_preparation_hours': msg})
+
+        if self.class_teaching_preparation_hours is not None and self.class_teaching_preparation_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'class_teaching_preparation_hours': msg})
+
+        if self.class_teaching_teaching_hours is None:
+            msg = "When selecting a 'class teaching' activity, the teaching hours must have a value"
+            validation_errors.append({'class_teaching_teaching_hours': msg})
+
+        if self.class_teaching_teaching_hours is not None and self.class_teaching_teaching_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'class_teaching_teaching_hours': msg})
+
+        if self.class_teaching_practical_work_hours is None:
+            msg = "When selecting a 'class teaching' activity, the practical work hours must have a value"
+            validation_errors.append({'class_teaching_practical_work_hours': msg})
+
+        if self.class_teaching_practical_work_hours is not None and self.class_teaching_practical_work_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'class_teaching_practical_work_hours': msg})
+
+        if self.class_teaching_exam_hours is None:
+            msg = "When selecting a 'class teaching' activity, the exam supervision and grading hours must have a value"
+            validation_errors.append({'class_teaching_exam_hours': msg})
+
+        if self.class_teaching_exam_hours is not None and self.class_teaching_exam_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'class_teaching_exam_hours': msg})
+
+        if self.class_teaching_preparation_hours == 0 and self.class_teaching_teaching_hours == 0 and self.class_teaching_practical_work_hours == 0 and self.class_teaching_exam_hours == 0:
+            msg = "At least one of the number of hours (preparation, teaching, practical work or exam supervision and grading hours) should have a value above 0"
+            validation_errors.append({
+                'class_teaching_preparation_hours': msg,
+                'class_teaching_teaching_hours': msg,
+                'class_teaching_practical_work_hours': msg,
+                'class_teaching_exam_hours': msg
+            })
+
+        # clean up the data based on the selected course
+        if self.class_teaching_course is not None and self.year != self.class_teaching_course.year:
+            msg = "The year you provided does not match the year of the course ({})".format(self.class_teaching_course.year)
+            validation_errors.append({'year': msg})
+
+        if self.class_teaching_course is not None:
+            english_term = None
+            if self.class_teaching_course.term == "ETE":
+                english_term = "summer"
+            if self.class_teaching_course.term == "HIVER":
+                english_term = "winter"
+
+            if self.term != english_term:
+                msg = "The term you provided does not match the term of the course ({})".format(english_term)
+                validation_errors.append({'term': msg})
+
+        result = {}
+        for validation_error in validation_errors:
+            for key, value in validation_error.items():
+                result[key] = value
+        if len(result.keys()) > 0:
+            return False, result
+        else:
+            return True, result
+
+    def __validate_exam_proctoring_and_grading(self):
+        validation_errors = list()
+
+        if self.exam_proctoring_and_grading_hours is None or self.exam_proctoring_and_grading_hours < 1:
+            msg = "When selecting a 'proctoring' activity, the number of hours spent should be above 0"
+            validation_errors.append({'exam_proctoring_and_grading_hours': msg})
+
+        if not self.exam_proctoring_and_grading_course:
+            msg = "When selecting an 'exam proctoring and grading' activity, a course should be selected"
+            validation_errors.append({'exam_proctoring_and_grading_course': msg})
+
+        result = {}
+        for validation_error in validation_errors:
+            for key, value in validation_error.items():
+                result[key] = value
+        if len(result.keys()) > 0:
+            return False, result
+        else:
+            return True, result
+
+    def __validate_master_thesis(self):
+        validation_errors = list()
+
+        if self.master_thesis_title is None:
+            msg = "When selecting a 'master thesis' activity, you should provide the title of the thesis"
+            validation_errors.append({'master_thesis_title': msg})
+
+        if self.master_thesis_student_name is None:
+            msg = "When selecting a 'master thesis' activity, you should provide the name of the student you supervised"
+            validation_errors.append({'master_thesis_student_name': msg})
+        else:
+            pattern = r".*\s\((?P<sciper>\d+)\)"
+            p = re.compile(pattern)
+
+            if not p.match(self.master_thesis_student_name):
+                msg = "The name of the student is not valid"
+                validation_errors.append({'master_thesis_student_name': msg})
+            else:
+                m = p.search(self.master_thesis_student_name)
+                sciper = m.group('sciper')
+                student = ldap.get_student_by_sciper(settings, sciper)
+                if student is None:
+                    msg = "Could not find the student with the given sciper"
+                    validation_errors.append({'master_thesis_student_name': msg})
+
+        if self.master_thesis_teacher_in_charge is None:
+            msg = "When selecting a 'master thesis' activity, you should provide the name of the teacher supervising the thesis"
+            validation_errors.append({'master_thesis_teacher_in_charge': msg})
+
+        if self.master_thesis_supervision_hours is None or self.master_thesis_supervision_hours == 0:
+            msg = "When selecting a 'master thesis' activity, you should provide the number of hours you worked on this activity"
+            validation_errors.append({'master_thesis_supervision_hours': msg})
+
+        if self.master_thesis_supervision_hours is not None and self.master_thesis_supervision_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'master_thesis_supervision_hours': msg})
+
+        result = {}
+        for validation_error in validation_errors:
+            for key, value in validation_error.items():
+                result[key] = value
+        if len(result.keys()) > 0:
+            return False, result
+        else:
+            return True, result
+
+    def __validate_semester_project(self):
+        validation_errors = list()
+
+        if self.semester_project_thesis_title is None:
+            msg = "When selecting a 'semester project' activity, you should provide the title of the thesis"
+            validation_errors.append({'semester_project_thesis_title': msg})
+
+        if self.semester_project_student_name is None:
+            msg = "When selecting a 'semester project' activity, you should provide the name of the student you supervised"
+            validation_errors.append({'semester_project_student_name': msg})
+        else:
+            pattern = r".*\s\((?P<sciper>\d+)\)"
+            p = re.compile(pattern)
+
+            if not p.match(self.semester_project_student_name):
+                msg = "The name of the student is not valid"
+                validation_errors.append({'semester_project_student_name': msg})
+            else:
+                m = p.search(self.semester_project_student_name)
+                sciper = m.group('sciper')
+                student = ldap.get_student_by_sciper(settings, sciper)
+                if student is None:
+                    msg = "Could not find the student with the given sciper"
+                    validation_errors.append({'semester_project_student_name': msg})
+
+        if self.semester_project_teacher_in_charge is None:
+            msg = "When selecting a 'semester project' activity, you should provide the name of the teacher supervising the thesis"
+            validation_errors.append({'semester_project_teacher_in_charge': msg})
+
+        if self.semester_project_supervision_hours is None or self.semester_project_supervision_hours == 0:
+            msg = "When selecting a 'semester project' activity, you should provide the number of hours you worked on this activity"
+            validation_errors.append({'semester_project_supervision_hours': msg})
+
+        if self.semester_project_supervision_hours is not None and self.semester_project_supervision_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'semester_project_supervision_hours': msg})
+
+        result = {}
+        for validation_error in validation_errors:
+            for key, value in validation_error.items():
+                result[key] = value
+        if len(result.keys()) > 0:
+            return False, result
+        else:
+            return True, result
+
+    def __validate_other(self):
+        validation_errors = list()
+
+        if self.other_job_name is None:
+            msg = "You should provide the name of the other activity"
+            validation_errors.append({'other_job_name': msg})
+
+        if self.other_job_hours is None or self.other_job_hours == 0:
+            msg = "When selecting a 'other' activity, you should provide the number of hours you worked on this activity"
+            validation_errors.append({'other_job_hours': msg})
+
+        if self.other_job_hours is not None and self.other_job_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'other_job_hours': msg})
+
+        if self.other_job_unit is None:
+            msg = "When selecting a 'other' activity, you should provide the EPFL unit that asked for this activity"
+            validation_errors.append({'other_job_unit': msg})
+        else:
+            pattern = r'^.*\s\((?P<unit_acronym>.*)\)$'
+            p = re.compile(pattern)
+            if not p.match(self.other_job_unit):
+                msg = "The unit you provided does not match the expected format: 'unit name (unit acronym)'"
+                validation_errors.append({'other_job_unit': msg})
+            else:
+                m = p.search(self.other_job_unit)
+                acronym = m.group('unit_acronym')
+                if not ldap.is_valid_unit_acronym(settings, acronym):
+                    msg = "Unit not found in directory"
+                    validation_errors.append({'other_job_unit': msg})
+
+        result = {}
+        for validation_error in validation_errors:
+            for key, value in validation_error.items():
+                result[key] = value
+        if len(result.keys()) > 0:
+            return False, result
+        else:
+            return True, result
+
+    def __validate_man(self):
+        validation_errors = list()
+
+        if self.MAN_hours is None or self.MAN_hours == 0:
+            msg = "When selecting a 'MAN' activity, you should provide the number of hours you worked on this activity"
+            validation_errors.append({'MAN_hours': msg})
+
+        if self.MAN_hours is not None and self.MAN_hours < 0:
+            msg = "The value provided cannot be negative"
+            validation_errors.append({'MAN_hours': msg})
+
+        result = {}
+        for validation_error in validation_errors:
+            for key, value in validation_error.items():
+                result[key] = value
+        if len(result.keys()) > 0:
+            return False, result
+        else:
+            return True, result
+
+    def __validate_not_available(self):
+        validation_errors = list()
+
+        if self.not_available_comments == '':
+            msg = "When selecting a 'not available' activity, you should provide a comment."
+            validation_errors.append({'not_available_comments': msg})
+
+        result = {}
+        for validation_error in validation_errors:
+            for key, value in validation_error.items():
+                result[key] = value
+        if len(result.keys()) > 0:
+            return False, result
+        else:
+            return True, result
+
+    def __validate_nothing_to_report(self):
+        validation_errors = list()
+
+        if self.nothing_to_report_comments == '':
+            msg = "When selecting a 'nothing to report' activity, you should provide a comment."
+            validation_errors.append({'nothing_to_report_comments': msg})
+
+        result = {}
+        for validation_error in validation_errors:
+            for key, value in validation_error.items():
+                result[key] = value
+        if len(result.keys()) > 0:
+            return False, result
+        else:
+            return True, result
+
+    def clean(self, *args, **kwargs):
+        super(TimeReport, *args, **kwargs)
+
+        activity_type = self.activity_type
+
+        # model clean-up
+        if activity_type == 'class teaching':
+            self.master_thesis_title = None
+            self.master_thesis_student_name = None
+            self.master_thesis_teacher_in_charge = None
+            self.master_thesis_supervision_hours = None
+            self.master_thesis_comments = None
+            self.semester_project_thesis_title = None
+            self.semester_project_student_name = None
+            self.semester_project_teacher_in_charge = None
+            self.semester_project_supervision_hours = None
+            self.semester_project_comments = None
+            self.other_job_name = None
+            self.other_job_unit = None
+            self.other_job_teacher_in_charge = None
+            self.other_job_hours = None
+            self.other_job_comments = None
+            self.nothing_to_report_comments = None
+            self.not_available_comments = None
+            self.MAN_hours = None
+            self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
+        elif activity_type == 'master thesis':
+            self.class_teaching_course = None
+            self.class_teaching_preparation_hours = None
+            self.class_teaching_teaching_hours = None
+            self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
+            self.class_teaching_comments = None
+            self.semester_project_thesis_title = None
+            self.semester_project_student_name = None
+            self.semester_project_teacher_in_charge = None
+            self.semester_project_supervision_hours = None
+            self.semester_project_comments = None
+            self.other_job_name = None
+            self.other_job_unit = None
+            self.other_job_teacher_in_charge = None
+            self.other_job_hours = None
+            self.other_job_comments = None
+            self.nothing_to_report_comments = None
+            self.not_available_comments = None
+            self.MAN_hours = None
+            self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
+        elif activity_type == 'semester project':
+            self.master_thesis_title = None
+            self.master_thesis_student_name = None
+            self.master_thesis_teacher_in_charge = None
+            self.master_thesis_supervision_hours = None
+            self.master_thesis_comments = None
+            self.class_teaching_course = None
+            self.class_teaching_preparation_hours = None
+            self.class_teaching_teaching_hours = None
+            self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
+            self.class_teaching_comments = None
+            self.other_job_name = None
+            self.other_job_unit = None
+            self.other_job_teacher_in_charge = None
+            self.other_job_hours = None
+            self.other_job_comments = None
+            self.nothing_to_report_comments = None
+            self.not_available_comments = None
+            self.MAN_hours = None
+            self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
+        elif activity_type == 'MAN':
+            self.master_thesis_title = None
+            self.master_thesis_student_name = None
+            self.master_thesis_teacher_in_charge = None
+            self.master_thesis_supervision_hours = None
+            self.master_thesis_comments = None
+            self.class_teaching_course = None
+            self.class_teaching_preparation_hours = None
+            self.class_teaching_teaching_hours = None
+            self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
+            self.class_teaching_comments = None
+            self.semester_project_thesis_title = None
+            self.semester_project_student_name = None
+            self.semester_project_teacher_in_charge = None
+            self.semester_project_supervision_hours = None
+            self.semester_project_comments = None
+            self.other_job_name = None
+            self.other_job_unit = None
+            self.other_job_teacher_in_charge = None
+            self.other_job_hours = None
+            self.other_job_comments = None
+            self.nothing_to_report_comments = None
+            self.not_available_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
+        elif activity_type == 'other job':
+            self.master_thesis_title = None
+            self.master_thesis_student_name = None
+            self.master_thesis_teacher_in_charge = None
+            self.master_thesis_supervision_hours = None
+            self.master_thesis_comments = None
+            self.class_teaching_course = None
+            self.class_teaching_preparation_hours = None
+            self.class_teaching_teaching_hours = None
+            self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
+            self.class_teaching_comments = None
+            self.semester_project_thesis_title = None
+            self.semester_project_student_name = None
+            self.semester_project_teacher_in_charge = None
+            self.semester_project_supervision_hours = None
+            self.semester_project_comments = None
+            self.nothing_to_report_comments = None
+            self.not_available_comments = None
+            self.MAN_hours = None
+            self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
+        elif activity_type == 'not available':
+            self.master_thesis_title = None
+            self.master_thesis_student_name = None
+            self.master_thesis_teacher_in_charge = None
+            self.master_thesis_supervision_hours = None
+            self.master_thesis_comments = None
+            self.class_teaching_course = None
+            self.class_teaching_preparation_hours = None
+            self.class_teaching_teaching_hours = None
+            self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
+            self.class_teaching_comments = None
+            self.semester_project_thesis_title = None
+            self.semester_project_student_name = None
+            self.semester_project_teacher_in_charge = None
+            self.semester_project_supervision_hours = None
+            self.semester_project_comments = None
+            self.other_job_name = None
+            self.other_job_unit = None
+            self.other_job_teacher_in_charge = None
+            self.other_job_hours = None
+            self.other_job_comments = None
+            self.nothing_to_report_comments = None
+            self.MAN_hours = None
+            self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
+        elif activity_type == 'nothing to report':
+            self.master_thesis_title = None
+            self.master_thesis_student_name = None
+            self.master_thesis_teacher_in_charge = None
+            self.master_thesis_supervision_hours = None
+            self.master_thesis_comments = None
+            self.class_teaching_course = None
+            self.class_teaching_preparation_hours = None
+            self.class_teaching_teaching_hours = None
+            self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
+            self.class_teaching_comments = None
+            self.semester_project_thesis_title = None
+            self.semester_project_student_name = None
+            self.semester_project_teacher_in_charge = None
+            self.semester_project_supervision_hours = None
+            self.semester_project_comments = None
+            self.other_job_name = None
+            self.other_job_unit = None
+            self.other_job_teacher_in_charge = None
+            self.other_job_hours = None
+            self.other_job_comments = None
+            self.not_available_comments = None
+            self.MAN_hours = None
+            self.MAN_comments = None
+            self.exam_proctoring_and_grading_comments = None
+            self.exam_proctoring_and_grading_course = None
+            self.exam_proctoring_and_grading_hours = None
+        elif activity_type == 'exam proctoring and grading':
+            self.master_thesis_title = None
+            self.master_thesis_student_name = None
+            self.master_thesis_teacher_in_charge = None
+            self.master_thesis_supervision_hours = None
+            self.master_thesis_comments = None
+            self.class_teaching_course = None
+            self.class_teaching_preparation_hours = None
+            self.class_teaching_teaching_hours = None
+            self.class_teaching_practical_work_hours = None
+            self.class_teaching_exam_hours = None
+            self.class_teaching_comments = None
+            self.semester_project_thesis_title = None
+            self.semester_project_student_name = None
+            self.semester_project_teacher_in_charge = None
+            self.semester_project_supervision_hours = None
+            self.semester_project_comments = None
+            self.other_job_name = None
+            self.other_job_unit = None
+            self.other_job_teacher_in_charge = None
+            self.other_job_hours = None
+            self.other_job_comments = None
+            self.not_available_comments = None
+            self.MAN_hours = None
+            self.MAN_comments = None
+            self.nothing_to_report_comments = None
+
+        # validate the common fields
+        if not self.__is_valid_year(self.year):
+            raise ValidationError({'year': "The year should be under the form of two consecutive years (e.g. 2019-2020)"})
+
+        if self.term is None or self.term == '':
+            raise ValidationError({'term': "A term should be selected"})
+
+        # validation based upon the teaching type
+        if activity_type == 'class teaching':
+            is_valid, errors = self.__validate_class_teaching()
+        elif activity_type == 'master thesis':
+            is_valid, errors = self.__validate_master_thesis()
+        elif activity_type == 'semester project':
+            is_valid, errors = self.__validate_semester_project()
+        elif activity_type == 'MAN':
+            is_valid, errors = self.__validate_man()
+        elif activity_type == 'other job':
+            is_valid, errors = self.__validate_other()
+        elif activity_type == "not available":
+            is_valid, errors = self.__validate_not_available()
+        elif activity_type == "nothing to report":
+            is_valid, errors = self.__validate_nothing_to_report()
+        elif activity_type == 'exam proctoring and grading':
+            is_valid, errors = self.__validate_exam_proctoring_and_grading()
+        else:
+            is_valid = False
+            errors = [{'activity_type': "Unknow activity type"}]
+
+        if not is_valid:
+            raise ValidationError(errors)

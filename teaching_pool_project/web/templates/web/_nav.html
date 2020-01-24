@@ -42,6 +42,14 @@
       </li>
       {% endif %}
 
+      {% if request.user|is_phd %}
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item {% if url_name == "get_time_reports" %}active{% endif %}">
+          <a class="nav-link" href="{% url "web:get_time_reports" %}">Time reporting{% if url_name == "get_time_reports" %} <span class="sr-only">(current)</span>{% endif %}</a>
+        </li>
+      </ul>
+      {% endif %}
+
       {% if request.user|is_staff or request.user|is_teacher %}
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

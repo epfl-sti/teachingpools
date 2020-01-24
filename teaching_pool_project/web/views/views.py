@@ -26,8 +26,8 @@ from django.views import generic
 from epfl.sti.helpers import ldap as epfl_ldap
 from web.helpers import config
 
-from .forms import *
-from .models import *
+from web.forms.forms import *
+from web.models import *
 
 logger = logging.getLogger(__name__)
 

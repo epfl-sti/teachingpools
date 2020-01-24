@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'mathfilters',
+    'crispy_forms',
 ]
 
 AUTH_USER_MODEL = 'web.Person'
@@ -182,3 +183,6 @@ sentry_sdk.init(
     # django.contrib.auth) you may enable sending PII data.
     send_default_pii=True
 )
+
+# Crispy forms stuff
+CRISPY_TEMPLATE_PACK = 'bootstrap4'

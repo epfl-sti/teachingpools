@@ -25,6 +25,7 @@ psycopg2-binary = "*"
 gunicorn = "*"
 Django = "*"
 sentry-sdk = "*"
+django-crispy-forms = "*"
 
 [requires]
 python_version = "3.7"
