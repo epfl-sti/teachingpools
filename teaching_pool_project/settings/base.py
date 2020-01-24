@@ -175,14 +175,5 @@ APP_BASE_URL = os.environ.get('DJANGO_APP_BASE_URL', 'https://localhost')
 DEBUG = distutils.util.strtobool(os.environ.get('DJANGO_DEBUG')) or False
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 
-sentry_sdk.init(
-    dsn="https://42afcb097fa8406cbc7d4af140616686@sentry.io/1880740",
-    integrations=[DjangoIntegration()],
-
-    # If you wish to associate users to errors (assuming you are using
-    # django.contrib.auth) you may enable sending PII data.
-    send_default_pii=True
-)
-
 # Crispy forms stuff
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

@@ -53,3 +53,13 @@ LOGGING = {
 }
 
 ENVIRONMENT_TYPE = "test"
+
+sentry_sdk.init(
+    dsn="https://42afcb097fa8406cbc7d4af140616686@sentry.io/1880740",
+    integrations=[DjangoIntegration()],
+
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True,
+    environment="staging",
+)
