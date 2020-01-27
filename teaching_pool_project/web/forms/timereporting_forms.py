@@ -14,7 +14,7 @@ from web.models import *
 
 class CourseClassChoiceField(ModelChoiceField):
     def label_from_instance(self, obj):
-        return "{} - {} - {}".format(obj.year, obj.term, obj.subject)
+        return "{} - {} - {} - {}".format(obj.year, obj.term, obj.code, obj.subject)
 
 
 class TeacherChoiceField(ModelChoiceField):
@@ -130,7 +130,7 @@ class TimeReportForm(ModelForm):
 
                     ),
                 Tab('Exam proctoring and grading',
-                    Field('exam_proctoring_and_grading_course',  data_tab="exam proctoring and grading", data_required="true"),
+                    Field('exam_proctoring_and_grading_course',  data_tab="exam proctoring and grading", data_required="true", data_use_select2="true"),
                     AppendedText('exam_proctoring_and_grading_hours', 'Hr', active=True, data_tab="exam proctoring and grading", data_required="true"),
                     Field('exam_proctoring_and_grading_comments', data_tab="exam proctoring and grading", data_required="false"),
 
