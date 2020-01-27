@@ -3,6 +3,8 @@
 {% load static %}
 {% block headers%}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css" type="text/css" media="all">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.12/dist/css/select2.min.css" rel="stylesheet" />
+<link href="{% static 'web/css/select2-bootstrap4-theme.css' %}" rel="stylesheet"/>
 {% endblock headers%}
 {% block maincontent %}
 <div class="row">
@@ -17,5 +19,6 @@
 {% endblock maincontent %}
 {% block scripts %}
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.12/dist/js/select2.min.js"></script>
 <script type="text/javascript" src="{% static 'web/js/forms/timereporting/add.js' %}"></script>
 {% endblock scripts %}

@@ -13,6 +13,13 @@ function toggleTabs(tab_to_keep, activate_tab = true) {
 }
 
 $(document).ready(function() {
+    // Use select2 on the dropdown that require it
+    $('select[data-use-select2="true"]').each(function() {
+        $(this).select2({
+            theme: 'bootstrap4',
+        });
+    })
+
     /* Hide all the tabs except the 'Common' one */
     // Get the id of the currently selected activity type radio
     var selected_activity_type = $('input[type=radio][name=activity_type]:checked')[0].id;
