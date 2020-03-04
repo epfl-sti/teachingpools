@@ -534,8 +534,10 @@ def view_profile(request, person_id):
 
     try:
         availability = Availability.objects.get(person_id=person_id, year=year, term=term).availability
+        unavailability_reason = Availability.objects.get(person_id=person_id, year=year, term=term).reason
     except ObjectDoesNotExist:
         availability = "N/A"
+        unavailability_reason = 'N/A'
 
     try:
         topics = Interests.objects.filter(person=person).prefetch_related('topic').all()
@@ -562,6 +564,7 @@ def view_profile(request, person_id):
     context = {
         'person': person,
         'availability': availability,
+        'unavailability_reason': unavailability_reason,
         'topics': topics,
         'languages': languages,
     }
