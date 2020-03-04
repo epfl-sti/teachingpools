@@ -142,7 +142,8 @@ def get_applications_for_my_courses(request):
         person=request.user).prefetch_related('course').all()
     courses_ids = [item.course.pk for item in teachings]
     applications = Applications.objects.filter(
-        course_id__in=courses_ids).select_related('course').all()
+        course_id__in=courses_ids).select_related('course').order_by('course__year', 'course__term', 'course__subject', 'applicant__last_name', 'applicant__first_name').all()
+
     context = {
         'applications': applications,
     }

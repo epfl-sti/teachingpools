@@ -45,3 +45,19 @@ def get_application_course_teachers(application):
     # return_value += "</ul>"
     return_value += ""
     return mark_safe(return_value)
+
+@register.filter
+def has_applications(course):
+    return Applications.objects.filter(course=course).count() > 0
+
+@register.filter
+def has_accepted_applications(course):
+    return Applications.objects.filter(course=course, status='Hired').count() > 0
+
+@register.filter
+def has_rejected_applications(course):
+    return Applications.objects.filter(course=course, status='Rejected').count() > 0
+
+@register.filter
+def has_withdrawn_applications(course):
+    return Applications.objects.filter(course=course, status='Withdrawn').count() > 0

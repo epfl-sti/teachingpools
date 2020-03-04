@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="card-header">
-        {{ course.grouper.subject }} ({{ course.grouper.code }})
+        {{ course.grouper.year }} - {{ course.grouper.term }} - {{ course.grouper.subject }} ({{ course.grouper.code }})
         </div>
         <div class="card-body">
             {% for application in course.list %}
@@ -25,6 +25,21 @@
 
             </p>
             {% endfor %}
+            {% if course.grouper|has_applications %}
+            <p class="card-header"><i class="fas fa-envelope"></i>&nbsp;Contact the TAs</p>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><a href="mailto:{% for application in course.list %}{{ application.applicant.email }},{% endfor %}?subject=TA duty for {{ course.grouper.subject|urlencode }}">All TAs</a></li>
+                {% if course.grouper|has_accepted_applications %}
+                <li class="list-group-item"><a href="mailto:{% for application in course.list %}{% if application.status == 'Hired' %}{{ application.applicant.email }},{% endif %}{% endfor %}?subject=TA duty for {{ course.grouper.subject|urlencode }}">All accepted TAs</a></li>
+                {% endif %}
+                {% if course.grouper|has_rejected_applications %}
+                <li class="list-group-item"><a href="mailto:{% for application in course.list %}{% if application.status == 'Declined' %}{{ application.applicant.email }},{% endif %}{% endfor %}?subject=TA duty for {{ course.grouper.subject|urlencode }}">All rejected TAs</a></li>
+                {% endif %}
+                {% if course.grouper|has_withdrawn_applications %}
+                <li class="list-group-item"><a href="mailto:{% for application in course.list %}{% if application.status == 'Withdrawn' %}{{ application.applicant.email }},{% endif %}{% endfor %}?subject=TA duty for {{ course.grouper.subject|urlencode }}">All TAs who withdrew their application</a></li>
+                {% endif %}
+            </ul>
+            {% endif %}
         </div>
     </div>
     {% endfor %}
