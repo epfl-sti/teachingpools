@@ -17,6 +17,7 @@
         <div class="card-header">As a teacher, you can</div>
         <div class="card-body">
           <ul>
+              <li><a href="https://inside.epfl.ch/sti-ta/sti-teaching-assistants-welcome/" target="_blank">Read the documentation</a></li>
               <li><a href="{% url "web:courses_list_year_teacher" year=CURRENT_YEAR %}" role="button">Review your courses</a></li>
               <li><a href="{% url "web:requests_for_tas_teacher" %}">View your request(s) for Teaching Assistants</a></li>
               <li><a href='{% url "web:applications_for_my_courses" %}'>Review the applications to your course(s)</a></li>
@@ -30,6 +31,7 @@
         <div class="card-header">As a PhD, you can</div>
         <div class="card-body">
           <ul>
+            <li><a href="https://inside.epfl.ch/sti-ta/sti-teaching-assistants-welcome/" target="_blank">Read the documentation</a></li>
             <li><a href="{% url "web:update_my_profile" %}" role="button">Update your profile</a></li>
             {% if APPLICATIONS_ARE_OPEN %}
             <li><a href="{% url "web:courses_full_list" year=CURRENT_YEAR %}">Apply for teaching assistant positions</a></li>
@@ -46,6 +48,7 @@
         <div class="card-header">As a staff member, you can</div>
         <div class="card-body">
           <ul>
+            <li><a href="https://inside.epfl.ch/sti-ta/sti-teaching-assistants-welcome/" target="_blank">Read the documentation</a></li>
             <li><a href="{% url "web:get_TAs_requests_to_validate" %}" role="button">Review the requests for Teaching Assistants</a></li>
             <li><a href="{% url "web:courses_report" %}" role="button">Review the status of all courses</a></li>
           </ul>
