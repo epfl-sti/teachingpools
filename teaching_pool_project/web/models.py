@@ -9,9 +9,10 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.text import slugify
 from django.utils.timezone import now
 
-from epfl.sti.helpers import mail, ldap
+from epfl.sti.helpers import ldap, mail
 
 from .models_mixins import ValidateModelMixin
 from .validators import validate_year_config
@@ -71,6 +72,22 @@ class Course(models.Model):
     applications_accepted = models.IntegerField(default=0)
     applications_rejected = models.IntegerField(default=0)
     applications_withdrawn = models.IntegerField(default=0)
+    coursebook_url = models.URLField(verbose_name="Custom URL to coursebook", null=True, blank=True, default=None)
+
+    @property
+    def get_coursebook_url(self):
+        if self.coursebook_url:
+            return self.coursebook_url
+        else:
+            return_value = settings.BASE_COURSEBOOK_URL
+            if self.taughtInEnglish:
+                return_value += "en/"
+            else:
+                return_value += "fr/"
+            return_value += slugify(self.subject)
+            return_value += "-"
+            return_value += self.code
+            return return_value
 
     def __str__(self):
         return "{year} - {term} - {code}".format(year=self.year, term=self.term, code=self.code)

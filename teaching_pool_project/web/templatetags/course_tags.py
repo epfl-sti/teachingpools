@@ -97,16 +97,3 @@ def get_apply_button(course, user):
         reverse('web:apply', args=[course.pk]))
 
     return mark_safe(return_value)
-
-
-@register.simple_tag
-def get_slug(course, base_url):
-    return_value = base_url
-    if course.taughtInEnglish:
-        return_value += "en/"
-    else:
-        return_value += "fr/"
-    return_value += slugify(course.subject)
-    return_value += "-"
-    return_value += course.code
-    return return_value

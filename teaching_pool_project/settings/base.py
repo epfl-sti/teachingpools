@@ -177,3 +177,6 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 
 # Crispy forms stuff
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# Coursebook related stuff
+BASE_COURSEBOOK_URL = "https://edu.epfl.ch/coursebook/"
