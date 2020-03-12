@@ -50,7 +50,7 @@
           <ul>
             <li><a href="https://inside.epfl.ch/sti-ta/sti-teaching-assistants-welcome/" target="_blank">Read the documentation</a></li>
             <li><a href="{% url "web:get_TAs_requests_to_validate" %}" role="button">Review the requests for Teaching Assistants</a></li>
-            <li><a href="{% url "web:courses_report" %}" role="button">Review the status of all courses</a></li>
+            <li><a href="{% url "web:courses_report" year=CURRENT_YEAR term=CURRENT_TERM %}" role="button">Review the status of all courses</a></li>
           </ul>
         </div>
     </div>

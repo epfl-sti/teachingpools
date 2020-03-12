@@ -604,9 +604,7 @@ def edit_config(request):
 
 
 @is_staff()
-def courses_report(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+def courses_report(request, year, term):
 
     courses = Course.objects.filter(
         year=year, term=term).prefetch_related('teachers').all()
@@ -616,6 +614,8 @@ def courses_report(request):
         sections_dict[section['id']] = section['name']
 
     context = {
+        'year': year,
+        'term': term,
         'sections': sections_dict,
         'courses': courses
     }
@@ -624,9 +624,7 @@ def courses_report(request):
 
 
 @is_staff()
-def download_course_report(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+def download_course_report(request, year, term):
 
     courses = Course.objects.filter(
         year=year, term=term).prefetch_related('teachers').all()
