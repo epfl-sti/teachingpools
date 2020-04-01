@@ -641,6 +641,7 @@ class TimeReport(ValidateModelMixin, models.Model):
         ('exam proctoring and grading', 'exam proctoring and grading')
     ]
     activity_type = models.CharField(max_length=255, choices=ACTIVITY_TYPE_CHOICES)
+
     master_thesis_title = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Title of the Master thesis")
     master_thesis_student_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the student")
     master_thesis_teacher_in_charge = models.ForeignKey(Person, default=None, blank=True, null=True, verbose_name="Teacher supervising the thesis", on_delete=models.DO_NOTHING, related_name="supervised_master_thesis")
@@ -653,6 +654,9 @@ class TimeReport(ValidateModelMixin, models.Model):
     class_teaching_practical_work_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of practical work hours (over the semester)")
     class_teaching_exam_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of exam supervision and grading hours (over the semester)")
     class_teaching_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the class teaching activity")
+    @property
+    def class_teaching_total_hours(self):
+        return self.class_teaching_exam_hours + self.class_teaching_practical_work_hours + self.class_teaching_preparation_hours + self.class_teaching_teaching_hours
 
     semester_project_thesis_title = models.CharField(max_length=255, blank=True, null=True, verbose_name="Ttitle of the thesis")
     semester_project_student_name = models.CharField(max_length=255, default=None, blank=True, null=True, verbose_name="Name of the student")
@@ -676,6 +680,10 @@ class TimeReport(ValidateModelMixin, models.Model):
     exam_proctoring_and_grading_course = models.ForeignKey(Course, default=None, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name="Exam proctoring and grading course", related_name="proctored_course")
     exam_proctoring_and_grading_hours = models.IntegerField(default=None, blank=True, null=True, verbose_name="Total number of hours spent on the exam proctoring and grading (over the semester)")
     exam_proctoring_and_grading_comments = models.TextField(default=None, blank=True, null=True, verbose_name="Comments regarding the 'exam proctoring and grading' activity")
+
+    @property
+    def total_hours(self):
+        return self.master_thesis_supervision_hours + self.class_teaching_total_hours + self.semester_project_supervision_hours + self.other_job_hours + self.MAN_hours + self.exam_proctoring_and_grading_hours
 
     def __is_valid_year(self, year):
         if not year:

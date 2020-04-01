@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from datetime import datetime, date
 import json
 import logging
 import re
@@ -14,7 +15,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core import serializers
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, F, ExpressionWrapper, IntegerField, Value
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import Context
@@ -79,9 +80,18 @@ def group_required(*group_names):
 
 
 @group_required('phds')
-def get_time_reports(request):
+def get_user_time_reports(request):
     context = {}
     return render(request, 'web/timereporting/list.html', context)
+
+
+@is_staff_or_teacher()
+def get_time_reports(request, year, term):
+    context = {
+        'year': year,
+        'term': term
+    }
+    return render(request, 'web/timereporting/list_all.html', context)
 
 
 @group_required('phds')
@@ -158,7 +168,7 @@ def edit_time_report(request, id):
 
 
 @group_required('phds')
-def get_user_time_reports(request):
+def get_user_time_reports_api(request):
     if request.is_ajax():
         entries = TimeReport.objects.filter(created_by=request.user).all()
         return_value = serializers.serialize('json', entries)
@@ -167,6 +177,47 @@ def get_user_time_reports(request):
 
     mimetype = "application/json"
     return HttpResponse(return_value, mimetype)
+
+def default(o):
+    if isinstance(o, (datetime, date)):
+        return o.isoformat()
+
+@is_staff_or_teacher()
+def get_time_reports_api(request, year, term):
+    if request.is_ajax():
+        qs = TimeReport.objects \
+                .filter(year=year, term=term) \
+                .annotate(
+                    created_by_first_name=F('created_by__first_name'),
+                    created_by_last_name=F('created_by__last_name'),
+                    ) \
+                .all().values()
+        for item in qs:
+            total_hours = 0
+            if item['master_thesis_supervision_hours']:
+                total_hours += item['master_thesis_supervision_hours']
+            if item['class_teaching_exam_hours']:
+                total_hours += item['class_teaching_exam_hours']
+            if item['class_teaching_practical_work_hours']:
+                total_hours += item['class_teaching_practical_work_hours']
+            if item['class_teaching_preparation_hours']:
+                total_hours += item['class_teaching_preparation_hours']
+            if item['class_teaching_teaching_hours']:
+                total_hours += item['class_teaching_teaching_hours']
+            if item['semester_project_supervision_hours']:
+                total_hours += item['semester_project_supervision_hours']
+            if item['other_job_hours']:
+                total_hours += item['other_job_hours']
+            if item['MAN_hours']:
+                total_hours += item['MAN_hours']
+            if item['exam_proctoring_and_grading_hours']:
+                total_hours += item['exam_proctoring_and_grading_hours']
+            item['total_hours'] = total_hours
+    else:
+        return_value = 'fail'
+
+    mimetype = "application/json"
+    return HttpResponse(json.dumps(list(qs), default=default), mimetype)
 
 
 @group_required('phds')
@@ -261,3 +312,30 @@ def get_course(request, id):
 
     mimetype = 'application/json'
     return HttpResponse(return_value, mimetype)
+
+
+@is_staff_or_teacher()
+def reports_entry_page(request):
+    return render(request, 'web/timereporting/reports_entry_page.html')
+
+
+@is_staff_or_teacher()
+def get_reports_years(request):
+    if request.is_ajax():
+        years = list(TimeReport.objects.values_list('year', flat=True).distinct().order_by('year'))
+    else:
+        return_value = 'fail'
+
+    mimetype = 'application/json'
+    return HttpResponse(json.dumps(years), mimetype)
+
+
+@is_staff_or_teacher()
+def get_reports_terms(request):
+    if request.is_ajax():
+        terms = list(TimeReport.objects.values_list('term', flat=True).distinct().order_by('term'))
+    else:
+        return_value = 'fail'
+
+    mimetype = 'application/json'
+    return HttpResponse(json.dumps(terms), mimetype)

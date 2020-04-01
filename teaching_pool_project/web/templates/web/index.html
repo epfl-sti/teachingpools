@@ -37,7 +37,7 @@
             <li><a href="{% url "web:courses_full_list" year=CURRENT_YEAR %}">Apply for teaching assistant positions</a></li>
             {% endif %}
             <li><a href='{% url "web:my_applications" %}'>Review your application(s)</a></li>
-            <li><a href='{% url "web:get_time_reports" %}'>Report the time you spent on the TA duties</a></li>
+            <li><a href='{% url "web:get_user_time_reports" %}'>Report the time you spent on the TA duties</a></li>
           </ul>
         </div>
     </div>
@@ -51,6 +51,7 @@
             <li><a href="https://inside.epfl.ch/sti-ta/sti-teaching-assistants-welcome/" target="_blank">Read the documentation</a></li>
             <li><a href="{% url "web:get_TAs_requests_to_validate" %}" role="button">Review the requests for Teaching Assistants</a></li>
             <li><a href="{% url "web:courses_report" year=CURRENT_YEAR term=CURRENT_TERM %}" role="button">Review the status of all courses</a></li>
+            <li><a href="{% url "web:reports_entry_page" %}">Review the time reporting</a></li>
           </ul>
         </div>
     </div>

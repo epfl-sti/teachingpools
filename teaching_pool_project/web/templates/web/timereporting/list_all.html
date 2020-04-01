@@ -1,0 +1,263 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load timereporting_tags %}
+{% load static %}
+{% block headers %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/jszip-2.5.0/dt-1.10.18/b-1.5.6/b-html5-1.5.6/fh-3.1.4/sc-2.0.0/datatables.min.css"/>
+<link rel="stylesheet" type="text/css" href="{% static 'web/css/fontawesome.css' %}" />
+{% endblock headers %}
+{% block maincontent %}
+<div class="card">
+    <div class="card-header">
+        Base information
+    </div>
+    <div class="card-body">
+        <p>Year: {{ year }}</p>
+        <p>Term: {{ term }}</p>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        Actions
+    </div>
+    <div class="card-body">
+        <span id="btn_spacer">&nbsp;</span>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped table-inverse table-responsive" id="entries">
+            <thead class="thead-inverse">
+                <tr>
+                    <th></th>
+                    <th>Creation</th>
+                    <th>TA</th>
+                    <th>Year</th>
+                    <th>Term</th>
+                    <th>Type</th>
+                    <th>Total hours</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot class="thead-inverse">
+                <tr>
+                    <th></th>
+                    <th>Creation</th>
+                    <th>TA</th>
+                    <th>Year</th>
+                    <th>Term</th>
+                    <th>Type</th>
+                    <th>Total hours</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock maincontent %}
+{% block scripts%}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/jszip-2.5.0/dt-1.10.18/b-1.5.6/b-html5-1.5.6/fh-3.1.4/sc-2.0.0/datatables.min.js"></script>
+<script type="text/javascript">
+function format(d){
+    let return_value = '<table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">';
+    if (d.master_thesis_title != null) { return_value += `<tr><td>Master thesis title:</td><td>${d.master_thesis_title}</td></tr>`}
+    if (d.master_thesis_student_name != null) { return_value += `<tr><td>Master thesis student name:</td><td>${d.master_thesis_student_name}</td></tr>`}
+    if (d.master_thesis_teacher_in_charge_id != null) {
+        $.ajax({
+            url: `/api/timereporting/teacher/${d.master_thesis_teacher_in_charge_id}`,
+            async: false,
+            success: function (data, textStatus, jqXHR){
+                if (data.length > 0){
+                    teacher_name = `${data[0].fields.last_name}, ${data[0].fields.first_name}`;
+                }
+                else { teacher_name = ''}
+            }
+        });
+        return_value += `<tr><td>Master thesis teacher in charge:</td><td>${teacher_name}</td></tr>`
+        }
+    if (d.master_thesis_supervision_hours != null) { return_value += `<tr><td>Master thesis supervision hours:</td><td>${d.master_thesis_supervision_hours}</td></tr>`}
+    if (d.master_thesis_comments != null) { return_value += `<tr><td>Master thesis comments:</td><td>${d.master_thesis_comments}</td></tr>`}
+    if (d.class_teaching_course_id != null) {
+        $.ajax({
+            url: `/api/timereporting/course/${d.class_teaching_course_id}`,
+            async: false,
+            success: function (data, textStatus, jqXHR){
+                if (data.length > 0){
+                    course_name = `${data[0].fields.subject} (${data[0].fields.code} - ${data[0].fields.year} - ${data[0].fields.term})`;
+                }
+                else { course_name = ''}
+            }
+        });
+        return_value += `<tr><td>Class teaching course:</td><td>${course_name}</td></tr>`
+        }
+    if (d.class_teaching_preparation_hours != null) { return_value += `<tr><td>Class teaching preparation hours:</td><td>${d.class_teaching_preparation_hours}</td></tr>`}
+    if (d.class_teaching_teaching_hours != null) { return_value += `<tr><td>Class teaching teaching hours:</td><td>${d.class_teaching_teaching_hours}</td></tr>`}
+    if (d.class_teaching_practical_work_hours != null) { return_value += `<tr><td>Class teaching practical work hours:</td><td>${d.class_teaching_practical_work_hours}</td></tr>`}
+    if (d.class_teaching_exam_hours != null) { return_value += `<tr><td>Class teaching exam supervision and granding hours:</td><td>${d.class_teaching_exam_hours}</td></tr>`}
+    if (d.class_teaching_comments != null) { return_value += `<tr><td>Class teaching comments:</td><td>${d.class_teaching_comments}</td></tr>`}
+    if (d.semester_project_thesis_title != null) { return_value += `<tr><td>Semester project thesis title:</td><td>${d.semester_project_thesis_title}</td></tr>`}
+    if (d.semester_student_name != null) { return_value += `<tr><td>Semester project student name:</td><td>${d.semester_project_student_name}</td></tr>`}
+    if (d.semester_project_teacher_in_charge_id != null) {
+        $.ajax({
+            url: `/api/timereporting/teacher/${d.semester_project_teacher_in_charge_id}`,
+            async: false,
+            success: function (data, textStatus, jqXHR){
+                if (data.length > 0){
+                    teacher_name = `${data[0].fields.last_name}, ${data[0].fields.first_name}`;
+                }
+                else { teacher_name = ''}
+            }
+        });
+         return_value += `<tr><td>Semester project teacher in charge:</td><td>${teacher_name}</td></tr>`
+         }
+    if (d.semester_supervision_hours != null) { return_value += `<tr><td>Semester supervision hours:</td><td>${d.semester_supervision_hours}</td></tr>`}
+    if (d.semester_project_comments != null) { return_value += `<tr><td>Semester project comments:</td><td>${d.semester_project_comments}</td></tr>`}
+    if (d.other_job_name != null) { return_value += `<tr><td>Other job name:</td><td>${d.other_job_name}</td></tr>`}
+    if (d.other_job_unit != null) { return_value += `<tr><td>Other job unit:</td><td>${d.other_job_unit}</td></tr>`}
+    if (d.other_job_teacher_in_charge_id != null) {
+        $.ajax({
+            url: `/api/timereporting/teacher/${d.other_job_teacher_in_charge_id}`,
+            async: false,
+            success: function (data, textStatus, jqXHR){
+                if (data.length > 0){
+                    teacher_name = `${data[0].fields.last_name}, ${data[0].fields.first_name}`;
+                }
+                else { teacher_name = ''}
+            }
+        });
+        return_value += `<tr><td>Other job teacher in charge:</td><td>${teacher_name}</td></tr>`
+        }
+    if (d.other_job_hours != null) { return_value += `<tr><td>Other job hours:</td><td>${d.other_job_hours}</td></tr>`}
+    if (d.other_job_comments != null) { return_value += `<tr><td>Other job comments:</td><td>${d.other_job_comments}</td></tr>`}
+    if (d.nothing_to_report_comments != null) { return_value += `<tr><td>Nothing to report comments:</td><td>${d.nothing_to_report_comments}</td></tr>`}
+    if (d.not_available_comments != null) { return_value += `<tr><td>Not available comments:</td><td>${d.not_available_comments}</td></tr>`}
+    if (d.MAN_hours != null) { return_value += `<tr><td>MAN hours:</td><td>${d.MAN_hours}</td></tr>`}
+    if (d.MAN_comments != null) { return_value += `<tr><td>MAN comments:</td><td>${d.MAN_comments}</td></tr>`}
+    if (d.exam_proctoring_and_grading_course_id != null) {
+        $.ajax({
+            url: `/api/timereporting/course/${d.exam_proctoring_and_grading_course_id}`,
+            async: false,
+            success: function (data, textStatus, jqXHR){
+                if (data.length > 0){
+                    course_name = `${data[0].fields.subject} (${data[0].fields.code} - ${data[0].fields.year} - ${data[0].fields.term})`;
+                }
+                else { course_name = ''}
+            }
+        });
+        return_value += `<tr><td>Exam proctoring and grading course:</td><td>${course_name}</td></tr>`
+        }
+    if (d.exam_proctoring_and_grading_hours != null) { return_value += `<tr><td>Exam proctoring and grading hours:</td><td>${d.exam_proctoring_and_grading_hours}</td></tr>`}
+    if (d.exam_proctoring_and_grading_comments != null) { return_value += `<tr><td>Exam proctoring and grading comments:</td><td>${d.exam_proctoring_and_grading_comments}</td></tr>`}
+    return_value += '</table>';
+    return return_value
+}
+
+$(document).ready(function() {
+    // Setup - add a text input to each footer cell
+    $('#entries tfoot th').each( function () {
+        var title = $(this).text();
+        if (title != ''){
+            $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+        }
+
+    } );
+
+    // DataTable
+    var table = $('#entries').DataTable(
+        {
+            dom: 'B<"clear">'+
+                "<'row'<'col-sm-6'l><'col-sm-6'f>>" +
+                "<'row'<'col-sm-12'tr>>" +
+                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+            "processing": true,
+            'order':[[2, 'asc']],
+            'ajax': {
+                "url": "{% url 'web:get_time_reports_api' year term %}",
+                "dataSrc": "",
+                },
+            "columns": [
+                {
+                    "className": 'eyeicon',
+                    "orderable": false,
+                    "data": null,
+                    "defaultContent": ''
+                },
+                {
+                    data: null,
+                    'defaultContent': "N/A",
+                    'render': function(data, type, row){
+                        return moment(data.created_at).fromNow()
+                    },
+                },
+                {
+                    data: null,
+                    'defaultContent': '',
+                    'render': function(data, type, row){
+                        return `${data.created_by_last_name}, ${data.created_by_first_name}`;
+                    },
+                },
+                {"data": "year"},
+                {"data": "term"},
+                {"data": "activity_type"},
+                {"data": "total_hours"},
+            ],
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fa fa-file-excel-o"></i>&nbsp;Download excel file',
+                    className: 'btnDummy',
+                    exportOptions: {
+                        modifier: {
+                            order: 'current',
+                            search: 'applied',
+                            page: 'all'
+                            }
+                    },
+                    extension: '.xlsx',
+                    filename: 'STI_TEACHING_POOLS_time_reporting_' + moment().format('YMMDD_HHmmss'),
+                    title: 'List of time reporting entries',
+                    messageTop: 'entries as of ' + moment().format('DD.MM.Y') + ' at ' + moment().format('HH:mm:ss')
+                }
+            ]
+        }
+    );
+
+   // Add event listener for opening and closing details
+    $('#entries tbody').on('click', 'td.eyeicon', function () {
+        var tr = $(this).closest('tr');
+        var row = table.row( tr );
+
+        if ( row.child.isShown() ) {
+            // This row is already open - close it
+            row.child.hide();
+            tr.removeClass('shown');
+        }
+        else {
+            // Open this row
+            //row.child( format(row.data()) ).show();
+            row.child( format(row.data()) ).show();
+            tr.addClass('shown');
+        }
+    } );
+
+    table.buttons().container().insertAfter( '#btn_spacer' );
+
+    // stupid trick to make sure that the button will get displayed as a primary button
+    $(".btnDummy").removeClass( "btn-secondary" ).removeClass('btnDummy').addClass( "btn-primary");
+
+    // Apply the search
+    table.columns().every( function () {
+        var that = this;
+
+        $( 'input', this.footer() ).on( 'keyup change clear', function () {
+            if ( that.search() !== this.value ) {
+                that
+                    .search( this.value )
+                    .draw();
+            }
+        } );
+    } );
+} );
+</script>
+{%endblock scripts%}

@@ -70,6 +70,11 @@
           <a class="dropdown-item" href="{% url "web:courses_report" year=CURRENT_YEAR term=CURRENT_TERM %}">Status of all courses</a>
           {% endif %}
       </li>
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item {% if url_name == "reports_entry_page" %}active{% endif %}">
+          <a class="nav-link" href="{% url "web:reports_entry_page" %}">Time reporting{% if url_name == "reports_entry_page" %} <span class="sr-only">(current)</span>{% endif %}</a>
+        </li>
+      </ul>
       {% endif %}
     </ul>
     {% if request.user.is_authenticated %}
