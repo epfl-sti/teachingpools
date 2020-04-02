@@ -7,6 +7,7 @@ import re
 from datetime import date, datetime
 from functools import wraps
 
+import pandas as pd
 import xlwt
 from django.conf import settings
 from django.contrib import messages
@@ -15,8 +16,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, User
 from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import (ExpressionWrapper, F, IntegerField, Prefetch, Q,
-                              Value)
+from django.db.models import ExpressionWrapper, F, IntegerField, Prefetch, Q, Value
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import Context
@@ -394,3 +394,61 @@ def get_reports_terms(request):
 
     mimetype = "application/json"
     return HttpResponse(json.dumps(terms), mimetype)
+
+
+@is_staff_or_teacher()
+def reports_charts(request, year, term):
+    context = {
+        "year": year,
+        "term": term,
+    }
+    return render(request, "web/timereporting/reports_charts.html", context=context)
+
+
+@is_staff_or_teacher()
+def get_data_for_report_chart_1(request, year, term):
+    if request.is_ajax():
+        entries = (
+            TimeReport.objects.filter(year=year, term=term)
+            .exclude(activity_type__in=["not available", "nothing to report"])
+            .all()
+            .values(
+                "created_by_id",
+                "activity_type",
+                "master_thesis_supervision_hours",
+                "class_teaching_preparation_hours",
+                "class_teaching_teaching_hours",
+                "class_teaching_practical_work_hours",
+                "class_teaching_exam_hours",
+                "semester_project_supervision_hours",
+                "other_job_hours",
+                "MAN_hours",
+                "exam_proctoring_and_grading_hours",
+            )
+        )
+        df = pd.DataFrame(list(entries))
+
+        # calculate the total number of hours spent by item
+        df["hours"] = df.filter(like="_hours").sum(axis=1)
+
+        # drop the unused columns
+        columns = [col for col in df.columns if col.endswith("_hours")]
+        df.drop(columns=columns, inplace=True)
+
+        # calculate the total number of hours per PhD and activity
+        df = df.groupby(["created_by_id", "activity_type"]).sum()
+
+        # drop the unused column
+        df.reset_index(inplace=True)
+        df.drop(columns=["created_by_id"], inplace=True)
+
+        # Calculate the average number of hours per activity per PhD
+        df = df.groupby("activity_type").mean()
+
+        df.reset_index(inplace=True)
+        return_value = df.to_json(orient="records")
+    else:
+        return_value = "fail"
+
+    mimetype = "application/json"
+    return HttpResponse(return_value, mimetype)

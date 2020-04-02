@@ -1,0 +1,21 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load static %}
+{% block headers %}
+<link rel="stylesheet" type="text/css" href="{% static 'web/css/fontawesome.css' %}" />
+{% endblock headers %}
+{% block maincontent %}
+<div class="card">
+    <canvas id="chart_1"></canvas>
+</div>
+{% endblock maincontent %}
+{% block scripts%}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"></script>
+<script>
+let year = '{{ year }}';
+let term = '{{ term }}';
+let chart_1_endpoint = '{% url 'web:get_data_for_report_chart_1' year=year term=term %}';
+</script>
+<script type="text/javascript" src="{% static 'web/js/timereporting/reports_charts.js' %}"></script>
+{%endblock scripts%}
