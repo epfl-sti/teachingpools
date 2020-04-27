@@ -116,7 +116,7 @@ def add_time_report(request):
         if timereporting_form.is_valid():
             timereporting.save()
             messages.success(request, "Time reporting entry successfully saved.")
-            return redirect("web:get_time_reports")
+            return redirect("web:get_user_time_reports")
         else:
             messages.error(request, "Please correct the errors below and resubmit.")
 
@@ -142,7 +142,7 @@ def delete_time_report(request, id):
     else:
         time_report.delete()
         messages.success(request, "Entry successfully deleted")
-        return redirect("web:get_time_reports")
+        return redirect("web:get_user_time_reports")
 
 
 @group_required("phds")
@@ -165,7 +165,7 @@ def edit_time_report(request, id):
         if time_report_form.is_valid():
             time_report.save()
             messages.success(request, "Time reporting entry successfully edited.")
-            return redirect("web:get_time_reports")
+            return redirect("web:get_user_time_reports")
         else:
             messages.error(request, "PLease correct the errors below and resubmit.")
 
