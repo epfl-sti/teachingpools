@@ -27,6 +27,8 @@ gunicorn = "*"
 Django = "*"
 sentry-sdk = "*"
 django-crispy-forms = "*"
+openpyxl = "*"
+importlib-metadata = "*"
 
 [requires]
 python_version = "3.7"
