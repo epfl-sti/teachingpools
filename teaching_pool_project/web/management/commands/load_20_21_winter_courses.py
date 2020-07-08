@@ -24,7 +24,7 @@ def load_course(row):
     code = row["code"]
     subject = row["topic"]
     raw_teachers = row["teachers"]
-    students = int(np.nan_to_num(row["numberOfStudents"]))
+    prev_year_students = int(np.nan_to_num(row["prev_year_registered_students"]))
 
     if not pd.isnull(row["course_forms"]):
         has_course = "c" in row["course_forms"].lower()
@@ -55,7 +55,7 @@ def load_course(row):
         course.code = code
 
     course.subject = subject
-    course.numberOfStudents = students
+    course.numberOfStudents = prev_year_students
     course.taughtInFrench = taughtInFrench
     course.taughtInEnglish = taughtInEnglish
     course.taughtInGerman = taughtInGerman
