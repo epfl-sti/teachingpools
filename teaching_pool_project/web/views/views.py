@@ -40,6 +40,7 @@ def is_superuser():
         if u.is_superuser:
             return True
         raise PermissionDenied
+
     return user_passes_test(has_superuser_profile)
 
 
@@ -49,6 +50,7 @@ def is_staff():
         if u.is_staff:
             return True
         raise PermissionDenied
+
     return user_passes_test(has_staff_profile)
 
 
@@ -58,10 +60,11 @@ def is_staff_or_teacher():
             return True
         elif u.is_staff:
             return True
-        elif u.groups.filter(name='teachers').exists():
+        elif u.groups.filter(name="teachers").exists():
             return True
         else:
             raise PermissionDenied
+
     return user_passes_test(has_staff_or_teacher_profile)
 
 
@@ -69,18 +72,20 @@ def group_required(*group_names):
     """Requires user membership in at least one of the groups passed in."""
 
     def in_groups(u):
-        logger.debug("Checking if %s is member of the '%s' group(s)",
-                     u.username, group_names)
+        logger.debug(
+            "Checking if %s is member of the '%s' group(s)", u.username, group_names
+        )
         if u.is_authenticated:
             if bool(u.groups.filter(name__in=group_names)) | u.is_superuser:
                 return True
         raise PermissionDenied
+
     return user_passes_test(in_groups)
 
 
 def index(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
     if term == "HIVER":
         term = "winter"
     elif term == "ETE":
@@ -88,78 +93,118 @@ def index(request):
     else:
         pass
 
-    if request.user.is_staff and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists():
+    if (
+        request.user.is_staff
+        and NumberOfTAUpdateRequest.objects.filter(status="Pending").exists()
+    ):
         messages.info(
-            request, mark_safe("<i class='fas fa-info-circle'></i>&nbsp;You have (a) pending <a href='{}'>TA request(s) to validate</a>".format(reverse('web:get_TAs_requests_to_validate'))))
+            request,
+            mark_safe(
+                "<i class='fas fa-info-circle'></i>&nbsp;You have (a) pending <a href='{}'>TA request(s) to validate</a>".format(
+                    reverse("web:get_TAs_requests_to_validate")
+                )
+            ),
+        )
 
-    if request.user.groups.filter(name='phds').exists() and not Availability.objects.filter(year=year, term=term, person=request.user).exists():
+    if (
+        request.user.groups.filter(name="phds").exists()
+        and not Availability.objects.filter(
+            year=year, term=term, person=request.user
+        ).exists()
+    ):
         message = mark_safe(
-            "<i class='fas fa-info-circle'></i>&nbsp;You should <a href='{}'>update your profile</a>.".format(reverse('web:update_my_profile')))
+            "<i class='fas fa-info-circle'></i>&nbsp;You should <a href='{}'>update your profile</a>.".format(
+                reverse("web:update_my_profile")
+            )
+        )
         messages.info(request, message)
-    return render(request, 'web/index.html')
+    return render(request, "web/index.html")
 
 
 def courses_full_list(request, year):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
 
-    all_courses = Course.objects.filter(
-        year=year, term=term).prefetch_related('teachers').all()
+    all_courses = (
+        Course.objects.filter(year=year, term=term).prefetch_related("teachers").all()
+    )
     user_is_phd = request.user.groups.filter(name="phds").exists()
     if user_is_phd:
-        courses_applied_to = [application.course.pk for application in Applications.objects.filter(
-            applicant=request.user).all()]
+        courses_applied_to = [
+            application.course.pk
+            for application in Applications.objects.filter(applicant=request.user).all()
+        ]
     else:
         courses_applied_to = []
 
-    messages.info(request, mark_safe("<i class='fas fa-sticky-note'></i>&nbsp;Study plans: <a href='https://edu.epfl.ch/studyplan/en/bachelor' target=^_blank'>bachelor</a>, <a href='https://edu.epfl.ch/studyplan/en/master' target='_blank'>master</a>"))
+    messages.info(
+        request,
+        mark_safe(
+            "<i class='fas fa-sticky-note'></i>&nbsp;Study plans: <a href='https://edu.epfl.ch/studyplan/en/bachelor' target=^_blank'>bachelor</a>, <a href='https://edu.epfl.ch/studyplan/en/master' target='_blank'>master</a>"
+        ),
+    )
     context = {
-        'year': year,
-        'courses': all_courses,
-        'user_is_phd': user_is_phd,
-        'courses_applied_to': courses_applied_to,
+        "year": year,
+        "courses": all_courses,
+        "user_is_phd": user_is_phd,
+        "courses_applied_to": courses_applied_to,
     }
-    return render(request, 'web/all_courses.html', context)
+    return render(request, "web/all_courses.html", context)
 
 
-@group_required('teachers')
+@group_required("teachers")
 def courses_list_year_teacher(request, year):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
 
-    courses = Course.objects.filter(
-        year=year, term=term, teachers=request.user).prefetch_related('teachers').all()
+    courses = (
+        Course.objects.filter(year=year, term=term, teachers=request.user)
+        .prefetch_related("teachers")
+        .all()
+    )
 
     context = {
-        'courses': courses,
+        "courses": courses,
     }
-    return render(request, 'web/prof_courses.html', context)
+    return render(request, "web/prof_courses.html", context)
 
 
-@group_required('teachers')
+@group_required("teachers")
 def get_applications_for_my_courses(request):
-    teachings = Teaching.objects.filter(
-        person=request.user).prefetch_related('course').all()
+    teachings = (
+        Teaching.objects.filter(person=request.user).prefetch_related("course").all()
+    )
     courses_ids = [item.course.pk for item in teachings]
-    applications = Applications.objects.filter(
-        course_id__in=courses_ids).select_related('course').order_by('course__year', 'course__term', 'course__subject', 'applicant__last_name', 'applicant__first_name').all()
+    applications = (
+        Applications.objects.filter(course_id__in=courses_ids)
+        .select_related("course")
+        .order_by(
+            "course__year",
+            "course__term",
+            "course__subject",
+            "applicant__last_name",
+            "applicant__first_name",
+        )
+        .all()
+    )
 
     context = {
-        'applications': applications,
+        "applications": applications,
     }
-    return render(request, 'web/applications_to_my_courses.html', context)
+    return render(request, "web/applications_to_my_courses.html", context)
 
 
-@group_required('teachers')
+@group_required("teachers")
 def review_application(request, application_id):
     application = get_object_or_404(Applications, pk=application_id)
     application_form = ApplicationForm_teacher(
-        request.POST or None, instance=application)
+        request.POST or None, instance=application
+    )
 
     if request.method == "POST":
-        if 'Approve' in request.POST:
+        if "Approve" in request.POST:
             status = "Hired"
-        elif 'Reject' in request.POST:
+        elif "Reject" in request.POST:
             status = "Rejected"
 
         if application_form.is_valid():
@@ -168,61 +213,73 @@ def review_application(request, application_id):
             application.status = status
             application.closedAt = now()
             application.closedBy = request.user
-            if application_form.cleaned_data['decisionReason']:
-                application.decisionReason = application_form.cleaned_data['decisionReason']
+            if application_form.cleaned_data["decisionReason"]:
+                application.decisionReason = application_form.cleaned_data[
+                    "decisionReason"
+                ]
             application.save()
             messages.success(request, "Your decision has been recorded")
-            return HttpResponseRedirect(reverse('web:applications_for_my_courses'))
+            return HttpResponseRedirect(reverse("web:applications_for_my_courses"))
 
     context = {
-        'course': application.course,
-        'person': application.applicant,
-        'form': application_form,
-        'application_id': application.pk,
+        "course": application.course,
+        "person": application.applicant,
+        "form": application_form,
+        "application_id": application.pk,
     }
 
-    return render(request, 'web/application_review_form.html', context)
+    return render(request, "web/application_review_form.html", context)
 
 
-@group_required('teachers')
+@group_required("teachers")
 def requests_for_tas_teacher(request):
-    requests = NumberOfTAUpdateRequest.objects.filter(
-        requester=request.user).prefetch_related('course').order_by('openedAt').all()
-    context = {
-        'requests': requests
-    }
-    return render(request, 'web/prof_ta_requests.html', context)
+    requests = (
+        NumberOfTAUpdateRequest.objects.filter(requester=request.user)
+        .prefetch_related("course")
+        .order_by("openedAt")
+        .all()
+    )
+    context = {"requests": requests}
+    return render(request, "web/prof_ta_requests.html", context)
 
 
-@group_required('teachers')
+@group_required("teachers")
 def requests_for_tas_teacher_status(request, status):
-    requests = NumberOfTAUpdateRequest.objects.filter(
-        requester=request.user, status=status.capitalize()).prefetch_related('course').order_by('openedAt').all()
-    context = {
-        'requests': requests
-    }
-    return render(request, 'web/prof_ta_requests.html', context)
+    requests = (
+        NumberOfTAUpdateRequest.objects.filter(
+            requester=request.user, status=status.capitalize()
+        )
+        .prefetch_related("course")
+        .order_by("openedAt")
+        .all()
+    )
+    context = {"requests": requests}
+    return render(request, "web/prof_ta_requests.html", context)
 
 
-@group_required('teachers')
+@group_required("teachers")
 def request_for_TA(request, course_id):
-    if not config.get_config('requests_for_TAs_are_open'):
+    if not config.get_config("requests_for_TAs_are_open"):
         messages.error(
-            request, "The requests for Teaching Assistants are not open at the moment.")
-        return render(request, 'web/blank.html')
+            request, "The requests for Teaching Assistants are not open at the moment."
+        )
+        return render(request, "web/blank.html")
 
     course = get_object_or_404(Course, pk=course_id)
 
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
     if course.year != year or course.term != term:
         messages.error(
-            request, "The requests for Teaching Assistants are not open for this year / term")
-        return render(request, 'web/blank.html')
+            request,
+            "The requests for Teaching Assistants are not open for this year / term",
+        )
+        return render(request, "web/blank.html")
 
     try:
         ta_request = NumberOfTAUpdateRequest.objects.get(
-            status="Pending", course=course)
+            status="Pending", course=course
+        )
     except ObjectDoesNotExist:
         ta_request = NumberOfTAUpdateRequest()
         ta_request.course = course
@@ -235,44 +292,51 @@ def request_for_TA(request, course_id):
     if request.method == "POST":
         if form.is_valid():
             ta_request.openedAt = now()
-            ta_request.requestedNumberOfTAs = form.cleaned_data['requestedNumberOfTAs']
-            ta_request.requestReason = form.cleaned_data['requestReason']
+            ta_request.requestedNumberOfTAs = form.cleaned_data["requestedNumberOfTAs"]
+            ta_request.requestReason = form.cleaned_data["requestReason"]
             ta_request.save_and_notify()
             messages.success(
-                request, "Your request for TAs has been successfully saved")
-            return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=[config.get_config('current_year')]))
+                request, "Your request for TAs has been successfully saved"
+            )
+            return HttpResponseRedirect(
+                reverse(
+                    "web:courses_list_year_teacher",
+                    args=[config.get_config("current_year")],
+                )
+            )
 
-    context = {
-        'course_id': course_id,
-        'course': course,
-        'form': form
-    }
-    return render(request, 'web/request_for_ta_form.html', context)
+    context = {"course_id": course_id, "course": course, "form": form}
+    return render(request, "web/request_for_ta_form.html", context)
 
 
-@group_required('teachers')
+@group_required("teachers")
 def accept_theoretical_number_of_tas(request, course_id):
     # General authorization setting check if the requests for TAs are open
-    if not config.get_config('requests_for_TAs_are_open'):
+    if not config.get_config("requests_for_TAs_are_open"):
         messages.error(
-            request, "The requests for Teaching Assistants are not open at the moment.")
-        return render(request, 'web/blank.html')
+            request, "The requests for Teaching Assistants are not open at the moment."
+        )
+        return render(request, "web/blank.html")
 
     # TODO: Add a check if the teacher accessing the request screen is actually teaching this course
 
     # Check if the request is for a course for the current period
     course = get_object_or_404(Course, pk=course_id)
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
     if course.year != year or course.term != term:
         messages.error(
-            request, "The requests for Teaching Assistants are not open for this year / term")
-        return render(request, 'web/blank.html')
+            request,
+            "The requests for Teaching Assistants are not open for this year / term",
+        )
+        return render(request, "web/blank.html")
 
     # Then we should check if there are already requests pending for this course
     try:
         # find a currently pending request for TAs
-        ta_request = NumberOfTAUpdateRequest.objects.get(status="Pending", course=course)
+        ta_request = NumberOfTAUpdateRequest.objects.get(
+            status="Pending", course=course
+        )
     except ObjectDoesNotExist:
         # if it does not exist, create a simple boilerplate
         ta_request = NumberOfTAUpdateRequest()
@@ -284,147 +348,152 @@ def accept_theoretical_number_of_tas(request, course_id):
     ta_request.requestedNumberOfTAs = course.calculatedNumberOfTAs
     ta_request.requestReason = "approved theoretical number of TAs"
     ta_request.closedAt = now()
-    ta_request.decisionReason = "Auto accepted since it was a simple approval of the theoretical number of TAs"
+    ta_request.decisionReason = (
+        "Auto accepted since it was a simple approval of the theoretical number of TAs"
+    )
     ta_request.status = "Approved"
     ta_request.save()
     ta_request.update_related_course(action="approved")
     ta_request.send_mail_on_TAs_requested(action="approved")
 
     messages.success(request, "Your request for TAs has been successfully saved")
-    return HttpResponseRedirect(reverse('web:courses_list_year_teacher', args=[config.get_config('current_year')]))
+    return HttpResponseRedirect(
+        reverse(
+            "web:courses_list_year_teacher", args=[config.get_config("current_year")]
+        )
+    )
 
 
 @is_staff()
 def get_TAs_requests_to_validate(request):
-    requests = NumberOfTAUpdateRequest.objects.filter(status='Pending').all()
+    requests = NumberOfTAUpdateRequest.objects.filter(status="Pending").all()
     sections = Section.objects.all()
     context = {
-        'requests': requests,
-        'sections': sections,
+        "requests": requests,
+        "sections": sections,
     }
-    return render(request, 'web/requests_for_tas.html', context)
+    return render(request, "web/requests_for_tas.html", context)
 
 
 @is_staff()
 def validate_request_for_TA(request, request_id):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = RequestForTAApproval(request.POST)
         if form.is_valid():
-            if 'Approve' in request.POST:
+            if "Approve" in request.POST:
                 status = "Approved"
-            elif 'Decline' in request.POST:
+            elif "Decline" in request.POST:
                 status = "Declined"
 
             request_obj = NumberOfTAUpdateRequest.objects.get(
-                pk=form.cleaned_data['request_id'])
+                pk=form.cleaned_data["request_id"]
+            )
             request_obj.status = status
-            request_obj.decisionReason = form.cleaned_data['reason_for_decision']
+            request_obj.decisionReason = form.cleaned_data["reason_for_decision"]
             request_obj.closedAt = now()
             person = request.user
             request_obj.decidedBy = request.user
             request_obj.save_and_notify()
 
-            return HttpResponseRedirect(reverse('web:get_TAs_requests_to_validate'))
+            return HttpResponseRedirect(reverse("web:get_TAs_requests_to_validate"))
 
     else:
         requestForTA = NumberOfTAUpdateRequest.objects.get(pk=request_id)
         form = RequestForTAApproval()
-        form.fields['request_id'].initial = requestForTA.pk
-        form.fields['opened_at'].initial = requestForTA.openedAt
-        form.fields['requester'].initial = "{}, {}".format(
-            requestForTA.requester.last_name, requestForTA.requester.first_name)
-        form.fields['course'].initial = "{} ({})".format(
-            requestForTA.course.subject, requestForTA.course.code)
-        form.fields['requestedNumberOfTAs'].initial = requestForTA.requestedNumberOfTAs
-        form.fields['reason_for_request'].initial = requestForTA.requestReason
+        form.fields["request_id"].initial = requestForTA.pk
+        form.fields["opened_at"].initial = requestForTA.openedAt
+        form.fields["requester"].initial = "{}, {}".format(
+            requestForTA.requester.last_name, requestForTA.requester.first_name
+        )
+        form.fields["course"].initial = "{} ({})".format(
+            requestForTA.course.subject, requestForTA.course.code
+        )
+        form.fields["requestedNumberOfTAs"].initial = requestForTA.requestedNumberOfTAs
+        form.fields["reason_for_request"].initial = requestForTA.requestReason
 
         course = requestForTA.course
-        context = {
-            'request_id': request_id,
-            'course': course,
-            'form': form
-        }
-        return render(request, 'web/request_for_ta_review_form.html', context)
+        context = {"request_id": request_id, "course": course, "form": form}
+        return render(request, "web/request_for_ta_review_form.html", context)
 
 
-@group_required('teachers')
+@group_required("teachers")
 def view_request_for_TA(request, request_id):
     ta_request = get_object_or_404(NumberOfTAUpdateRequest, pk=request_id)
     form = RequestForTAView()
-    form.fields['request_id'].initial = ta_request.pk
-    form.fields['opened_at'].initial = ta_request.openedAt
-    form.fields['requester'].initial = "{}, {}".format(
-        ta_request.requester.last_name, ta_request.requester.first_name)
-    form.fields['course'].initial = "{} ({})".format(
-        ta_request.course.subject, ta_request.course.code)
-    form.fields['requestedNumberOfTAs'].initial = ta_request.requestedNumberOfTAs
-    form.fields['reason_for_request'].initial = ta_request.requestReason
-    form.fields['status'].initial = ta_request.status
-    form.fields['reason_for_decision'].initial = ta_request.decisionReason
+    form.fields["request_id"].initial = ta_request.pk
+    form.fields["opened_at"].initial = ta_request.openedAt
+    form.fields["requester"].initial = "{}, {}".format(
+        ta_request.requester.last_name, ta_request.requester.first_name
+    )
+    form.fields["course"].initial = "{} ({})".format(
+        ta_request.course.subject, ta_request.course.code
+    )
+    form.fields["requestedNumberOfTAs"].initial = ta_request.requestedNumberOfTAs
+    form.fields["reason_for_request"].initial = ta_request.requestReason
+    form.fields["status"].initial = ta_request.status
+    form.fields["reason_for_decision"].initial = ta_request.decisionReason
 
     course = ta_request.course
-    context = {
-        'course': course,
-        'request_id': request_id,
-        'form': form
-    }
+    context = {"course": course, "request_id": request_id, "form": form}
 
-    return render(request, 'web/request_for_ta_view_form.html', context)
+    return render(request, "web/request_for_ta_view_form.html", context)
 
 
-@group_required('phds')
+@group_required("phds")
 def apply(request, course_id):
-    if not config.get_config('applications_are_open'):
+    if not config.get_config("applications_are_open"):
         messages.error(
-            request, "The applications for Teaching Assistants positions are not open at the moment.")
-        return render(request, 'web/blank.html')
+            request,
+            "The applications for Teaching Assistants positions are not open at the moment.",
+        )
+        return render(request, "web/blank.html")
 
     course = get_object_or_404(Course, pk=course_id)
 
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
     if course.year != year or course.term != term:
         messages.error(
-            request, "The applications for Teaching Assistants positions are not open for this year / term")
-        return render(request, 'web/blank.html')
+            request,
+            "The applications for Teaching Assistants positions are not open for this year / term",
+        )
+        return render(request, "web/blank.html")
 
     # Check that the person does not have more than 3 pending applications
-    number_of_pending_applications = Applications.objects.filter(course__year=year, course__term=term, status="Pending", applicant=request.user).count()
+    number_of_pending_applications = Applications.objects.filter(
+        course__year=year, course__term=term, status="Pending", applicant=request.user
+    ).count()
     if number_of_pending_applications >= 3:
         messages.error(
-            request,
-            "You are not allowed to have more than 3 applications pending"
+            request, "You are not allowed to have more than 3 applications pending"
         )
-        return render(request, 'web/blank.html')
+        return render(request, "web/blank.html")
     try:
-        application = Applications.objects.get(
-            applicant=request.user, course=course)
+        application = Applications.objects.get(applicant=request.user, course=course)
     except ObjectDoesNotExist:
         application = Applications()
         application.course = course
         application.applicant = request.user
 
-    application_form = ApplicationForm_phd(
-        request.POST or None, instance=application)
+    application_form = ApplicationForm_phd(request.POST or None, instance=application)
 
     if request.method == "POST":
         if application_form.is_valid():
             application_form.save(commit=False)
             application.save()
             messages.success(request, "Your application has been submitted")
-            return HttpResponseRedirect(reverse('web:courses_full_list', args=[course.year]))
+            return HttpResponseRedirect(
+                reverse("web:courses_full_list", args=[course.year])
+            )
 
-    context = {
-        'course': course,
-        'form': application_form
-    }
+    context = {"course": course, "form": application_form}
 
-    return render(request, 'web/application_form.html', context)
+    return render(request, "web/application_form.html", context)
 
 
-@group_required('phds')
+@group_required("phds")
 def withdraw_application(request, application_id):
-    if config.get_config('phds_can_withdraw_applications') == False:
+    if config.get_config("phds_can_withdraw_applications") == False:
         messages.error(request, "Applications cannot be withdrawn at the moment")
         raise PermissionDenied
 
@@ -439,13 +508,13 @@ def withdraw_application(request, application_id):
     application.decisionReason = "Application withdrawn by the PhD"
     application.save()
 
-    return HttpResponseRedirect(reverse('web:my_applications'))
+    return HttpResponseRedirect(reverse("web:my_applications"))
 
 
-@group_required('phds')
+@group_required("phds")
 def update_my_profile(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
     if term == "HIVER":
         term = "winter"
     elif term == "ETE":
@@ -455,12 +524,14 @@ def update_my_profile(request):
 
     # Working with the availabilities
     availability, availability_created = Availability.objects.get_or_create(
-        person=request.user, year=year, term=term)
+        person=request.user, year=year, term=term
+    )
     if availability_created:
         messages.warning(
-            request, "Since you did not fill in your profile, your default availability has been set to 'Available'")
-    availability_form = AvailabilityForm(
-        request.POST or None, instance=availability)
+            request,
+            "Since you did not fill in your profile, your default availability has been set to 'Available'",
+        )
+    availability_form = AvailabilityForm(request.POST or None, instance=availability)
 
     # Working with the languages
     languages_form = LanguagesForm(request.POST or None)
@@ -472,7 +543,7 @@ def update_my_profile(request):
             languages.append("e")
         if request.user.canTeachInGerman:
             languages.append("g")
-        languages_form = LanguagesForm(initial={'languages': languages})
+        languages_form = LanguagesForm(initial={"languages": languages})
 
     # Working with the topics
     topics_form = TopicForm(request.POST or None, instance=request.user)
@@ -485,17 +556,25 @@ def update_my_profile(request):
             availability.save()
         else:
             messages.error(
-                request, "The availability section contains error. Please review it")
+                request, "The availability section contains error. Please review it"
+            )
             complete_form_is_OK = False
 
         if languages_form.is_valid():
-            request.user.canTeachInFrench = 'f' in languages_form.cleaned_data['languages']
-            request.user.canTeachInEnglish = 'e' in languages_form.cleaned_data['languages']
-            request.user.canTeachInGerman = 'g' in languages_form.cleaned_data['languages']
+            request.user.canTeachInFrench = (
+                "f" in languages_form.cleaned_data["languages"]
+            )
+            request.user.canTeachInEnglish = (
+                "e" in languages_form.cleaned_data["languages"]
+            )
+            request.user.canTeachInGerman = (
+                "g" in languages_form.cleaned_data["languages"]
+            )
             request.user.save()
         else:
             messages.error(
-                request, "The languages section contains error. Please review it")
+                request, "The languages section contains error. Please review it"
+            )
             complete_form_is_OK = False
 
         # Topics
@@ -504,28 +583,29 @@ def update_my_profile(request):
 
         else:
             messages.error(
-                request, "The list of selected topics contains error(s). Please review it")
+                request,
+                "The list of selected topics contains error(s). Please review it",
+            )
             complete_form_is_OK = False
 
         if complete_form_is_OK:
-            messages.success(
-                request, "Your profile has been succesfully updated.")
+            messages.success(request, "Your profile has been succesfully updated.")
 
     context = {
-        'year': year,
-        'term': term,
-        'availability_form': availability_form,
-        'languages_form': languages_form,
-        'topics_form': topics_form,
+        "year": year,
+        "term": term,
+        "availability_form": availability_form,
+        "languages_form": languages_form,
+        "topics_form": topics_form,
     }
-    return render(request, 'web/profile.html', context)
+    return render(request, "web/profile.html", context)
 
 
 @is_staff_or_teacher()
 def view_profile(request, person_id):
     person = get_object_or_404(Person, pk=person_id)
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
     if term == "HIVER":
         term = "winter"
     elif term == "ETE":
@@ -534,14 +614,18 @@ def view_profile(request, person_id):
         pass
 
     try:
-        availability = Availability.objects.get(person_id=person_id, year=year, term=term).availability
-        unavailability_reason = Availability.objects.get(person_id=person_id, year=year, term=term).reason
+        availability = Availability.objects.get(
+            person_id=person_id, year=year, term=term
+        ).availability
+        unavailability_reason = Availability.objects.get(
+            person_id=person_id, year=year, term=term
+        ).reason
     except ObjectDoesNotExist:
         availability = "N/A"
-        unavailability_reason = 'N/A'
+        unavailability_reason = "N/A"
 
     try:
-        topics = Interests.objects.filter(person=person).prefetch_related('topic').all()
+        topics = Interests.objects.filter(person=person).prefetch_related("topic").all()
         topics = [interest.topic.name for interest in topics]
         if len(topics) == 0:
             topics = "N/A"
@@ -563,23 +647,26 @@ def view_profile(request, person_id):
         languages = "N/A"
 
     context = {
-        'person': person,
-        'availability': availability,
-        'unavailability_reason': unavailability_reason,
-        'topics': topics,
-        'languages': languages,
+        "person": person,
+        "availability": availability,
+        "unavailability_reason": unavailability_reason,
+        "topics": topics,
+        "languages": languages,
     }
-    return render(request, 'web/profile_view.html', context)
+    return render(request, "web/profile_view.html", context)
 
 
-@group_required('phds')
+@group_required("phds")
 def my_applications(request):
-    applications = Applications.objects.filter(
-        applicant=request.user).prefetch_related('course').all()
+    applications = (
+        Applications.objects.filter(applicant=request.user)
+        .prefetch_related("course")
+        .all()
+    )
     context = {
-        'applications': applications,
+        "applications": applications,
     }
-    return render(request, 'web/applications.html', context)
+    return render(request, "web/applications.html", context)
 
 
 @is_staff()
@@ -593,57 +680,59 @@ def edit_config(request):
     if request.method == "POST":
         if config_form.is_valid():
             config_form.save()
-            messages.success(
-                request, "The configuration has been successfully saved")
+            messages.success(request, "The configuration has been successfully saved")
 
     context = {
-        'config_form': config_form,
+        "config_form": config_form,
     }
 
-    return render(request, 'web/config_form.html', context)
+    return render(request, "web/config_form.html", context)
 
 
 @is_staff()
 def courses_report(request, year, term):
 
-    courses = Course.objects.filter(
-        year=year, term=term).prefetch_related('teachers').all()
+    courses = (
+        Course.objects.filter(year=year, term=term).prefetch_related("teachers").all()
+    )
     sections_dict = dict()
-    sections_obj = Section.objects.values('id', 'name').all()
+    sections_obj = Section.objects.values("id", "name").all()
     for section in sections_obj:
-        sections_dict[section['id']] = section['name']
+        sections_dict[section["id"]] = section["name"]
 
     context = {
-        'year': year,
-        'term': term,
-        'sections': sections_dict,
-        'courses': courses
+        "year": year,
+        "term": term,
+        "sections": sections_dict,
+        "courses": courses,
     }
 
-    return render(request, 'web/reports/courses_list.html', context)
+    return render(request, "web/reports/courses_list.html", context)
 
 
 @is_staff()
 def download_course_report(request, year, term):
 
-    courses = Course.objects.filter(
-        year=year, term=term).prefetch_related('teachers').all()
+    courses = (
+        Course.objects.filter(year=year, term=term).prefetch_related("teachers").all()
+    )
 
     # Get base data about sections in order NOT TO re-query the DB for each teacher of each courses
-    sections_obj = Section.objects.values('id', 'name').all()
+    sections_obj = Section.objects.values("id", "name").all()
     sections_dict = dict()
     for section in sections_obj:
-        sections_dict[section['id']] = section['name']
+        sections_dict[section["id"]] = section["name"]
 
     # content-type of response
-    response = HttpResponse(content_type='application/ms-excel')
+    response = HttpResponse(content_type="application/ms-excel")
 
     # decide file name
-    response['Content-Disposition'] = 'attachment; filename="{year}_{term}.xls"'.format(
-        year=year, term=term)
+    response["Content-Disposition"] = 'attachment; filename="{year}_{term}.xls"'.format(
+        year=year, term=term
+    )
 
     # creating workbook
-    wb = xlwt.Workbook(encoding='utf-8')
+    wb = xlwt.Workbook(encoding="utf-8")
 
     # adding sheet
     ws = wb.add_sheet("sheet1")
@@ -656,10 +745,26 @@ def download_course_report(request, year, term):
     font_style.font.bold = True
 
     # column header names, you can use your own headers here
-    columns = ['Year', 'Term', 'Code', 'Subject', 'Teachers', 'Section(s)',
-               'Form(s)', 'Language(s)', '# Students (prev. year)', '# TAs (theory)',
-               '# TAs (requested)', '# TAs (approved)', '# Applications (received)', '# Applications (accepted)',
-               '# Applications (declined)', '# Applications (withdrawn)', '# Applications (pending)', '# TAs (to be filled)']
+    columns = [
+        "Year",
+        "Term",
+        "Code",
+        "Subject",
+        "Teachers",
+        "Section(s)",
+        "Form(s)",
+        "Language(s)",
+        "# Students (prev. year)",
+        "# TAs (theory)",
+        "# TAs (requested)",
+        "# TAs (approved)",
+        "# Applications (received)",
+        "# Applications (accepted)",
+        "# Applications (declined)",
+        "# Applications (withdrawn)",
+        "# Applications (pending)",
+        "# TAs (to be filled)",
+    ]
 
     # write column headers in sheet
     for col_num in range(len(columns)):
@@ -674,10 +779,11 @@ def download_course_report(request, year, term):
         ws.write(row_num, 1, course.term, font_style)
         ws.write(row_num, 2, course.code, font_style)
         ws.write(row_num, 3, course.subject, font_style)
-        teacher_value = ''
+        teacher_value = ""
         for teacher in course.teachers.all():
             teacher_value += "{last}, {first}\n".format(
-                first=teacher.first_name, last=teacher.last_name)
+                first=teacher.first_name, last=teacher.last_name
+            )
         ws.write(row_num, 4, teacher_value, font_style)
 
         for teacher in course.teachers.all():
@@ -688,7 +794,7 @@ def download_course_report(request, year, term):
         section_result = " / ".join(section_result_list)
         ws.write(row_num, 5, section_result, font_style)
 
-        forms_value = ''
+        forms_value = ""
         if course.has_course:
             forms_value += "course\n"
         if course.has_exercises:
@@ -698,11 +804,11 @@ def download_course_report(request, year, term):
         if course.has_practical_work:
             forms_value += "practical work\n"
         ws.write(row_num, 6, forms_value, font_style)
-        languages_value = ''
+        languages_value = ""
         if course.taughtInFrench:
             languages_value += "French\n"
         if course.taughtInEnglish:
-            languages_value = 'English\n'
+            languages_value = "English\n"
         if course.taughtInGerman:
             languages_value += "German\n"
         ws.write(row_num, 7, languages_value, font_style)
@@ -714,8 +820,16 @@ def download_course_report(request, year, term):
         ws.write(row_num, 13, course.applications_accepted)
         ws.write(row_num, 14, course.applications_rejected)
         ws.write(row_num, 15, course.applications_withdrawn)
-        ws.write(row_num, 16, xlwt.Formula("M{}-N{}-O{}-P{}".format(row_num+1, row_num+1, row_num+1, row_num+1)))
-        ws.write(row_num, 17, xlwt.Formula("L{}-N{}".format(row_num+1, row_num+1)))
+        ws.write(
+            row_num,
+            16,
+            xlwt.Formula(
+                "M{}-N{}-O{}-P{}".format(
+                    row_num + 1, row_num + 1, row_num + 1, row_num + 1
+                )
+            ),
+        )
+        ws.write(row_num, 17, xlwt.Formula("L{}-N{}".format(row_num + 1, row_num + 1)))
 
     # Create the totals of the columns
     row_num += 1
@@ -744,10 +858,10 @@ def phds_report(request, year, term):
     phds = Group.objects.get(name="phds").user_set.all()
     for phd in phds:
         phd_to_add = dict()
-        phd_to_add['id'] = phd.id
-        phd_to_add['sciper'] = phd.sciper
-        phd_to_add['first_name'] = phd.first_name
-        phd_to_add['last_name'] = phd.last_name
+        phd_to_add["id"] = phd.id
+        phd_to_add["sciper"] = phd.sciper
+        phd_to_add["first_name"] = phd.first_name
+        phd_to_add["last_name"] = phd.last_name
         phds_info[phd.id] = phd_to_add
         phds_ids.append(phd.id)
 
@@ -759,66 +873,66 @@ def phds_report(request, year, term):
     else:
         pass
 
-    availabilities = Availability.objects.filter(year=year, term=english_term, person_id__in=phds_ids).all()
+    availabilities = Availability.objects.filter(
+        year=year, term=english_term, person_id__in=phds_ids
+    ).all()
     for availability in availabilities:
-        phds_info[availability.person_id]['availability'] = availability.availability
+        phds_info[availability.person_id]["availability"] = availability.availability
 
     # Add the missing information about the availabilities
     for phd in phds_info:
-        if 'availability' not in phds_info[phd]:
-            phds_info[phd]['availability'] = ''
+        if "availability" not in phds_info[phd]:
+            phds_info[phd]["availability"] = ""
 
     # Get the courses ids in order to find the applications for them
-    courses_ids_queryset = Course.objects.filter(
-        year=year, term=term).values('id').all()
+    courses_ids_queryset = (
+        Course.objects.filter(year=year, term=term).values("id").all()
+    )
     courses_ids_list = list()
-    [courses_ids_list.append(item['id']) for item in courses_ids_queryset]
+    [courses_ids_list.append(item["id"]) for item in courses_ids_queryset]
 
     # Retrieve all the applications for the PhD students for the current courses
     applications = Applications.objects.filter(
-        course_id__in=courses_ids_list, applicant_id__in=phds_ids).all()
+        course_id__in=courses_ids_list, applicant_id__in=phds_ids
+    ).all()
 
     # Flag the PhDs with the correct information
     for application in applications:
-        if application.status == 'Pending':
-            if 'applications_pending' in phds_info[application.applicant_id]:
-                phds_info[application.applicant_id]['applications_pending'] += 1
+        if application.status == "Pending":
+            if "applications_pending" in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]["applications_pending"] += 1
             else:
-                phds_info[application.applicant_id]['applications_pending'] = 1
-        elif application.status == 'Hired':
-            if 'applications_accepted' in phds_info[application.applicant_id]:
-                phds_info[application.applicant_id]['applications_accepted'] += 1
+                phds_info[application.applicant_id]["applications_pending"] = 1
+        elif application.status == "Hired":
+            if "applications_accepted" in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]["applications_accepted"] += 1
             else:
-                phds_info[application.applicant_id]['applications_accepted'] = 1
-        elif application.status == 'Rejected':
-            if 'applications_declined' in phds_info[application.applicant_id]:
-                phds_info[application.applicant_id]['applications_declined'] += 1
+                phds_info[application.applicant_id]["applications_accepted"] = 1
+        elif application.status == "Rejected":
+            if "applications_declined" in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]["applications_declined"] += 1
             else:
-                phds_info[application.applicant_id]['applications_declined'] = 1
-        elif application.status == 'Withdrawn':
-            if 'applications_withdrawn' in phds_info[application.applicant_id]:
-                phds_info[application.applicant_id]['applications_withdrawn'] += 1
+                phds_info[application.applicant_id]["applications_declined"] = 1
+        elif application.status == "Withdrawn":
+            if "applications_withdrawn" in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]["applications_withdrawn"] += 1
             else:
-                phds_info[application.applicant_id]['applications_withdrawn'] = 1
+                phds_info[application.applicant_id]["applications_withdrawn"] = 1
 
     # Add the missing information about the applications
     for phd in phds_info:
-        if 'applications_pending' not in phds_info[phd]:
-            phds_info[phd]['applications_pending'] = ''
-        if 'applications_accepted' not in phds_info[phd]:
-            phds_info[phd]['applications_accepted'] = ''
-        if 'applications_declined' not in phds_info[phd]:
-            phds_info[phd]['applications_declined'] = ''
-        if 'applications_withdrawn' not in phds_info[phd]:
-            phds_info[phd]['applications_withdrawn'] = ''
+        if "applications_pending" not in phds_info[phd]:
+            phds_info[phd]["applications_pending"] = ""
+        if "applications_accepted" not in phds_info[phd]:
+            phds_info[phd]["applications_accepted"] = ""
+        if "applications_declined" not in phds_info[phd]:
+            phds_info[phd]["applications_declined"] = ""
+        if "applications_withdrawn" not in phds_info[phd]:
+            phds_info[phd]["applications_withdrawn"] = ""
 
-    context = {
-        'year': year,
-        'term': term,
-        'phds': phds_info.values
-    }
+    context = {"year": year, "term": term, "phds": phds_info.values}
 
-    return render(request, 'web/reports/phds_list.html', context)
+    return render(request, "web/reports/phds_list.html", context)
 
 
 @is_staff()
@@ -830,11 +944,11 @@ def download_phds_report(request, year, term):
     phds = Group.objects.get(name="phds").user_set.all()
     for phd in phds:
         phd_to_add = dict()
-        phd_to_add['id'] = phd.id
-        phd_to_add['sciper'] = phd.sciper
-        phd_to_add['first_name'] = phd.first_name
-        phd_to_add['last_name'] = phd.last_name
-        phd_to_add['email'] = phd.email
+        phd_to_add["id"] = phd.id
+        phd_to_add["sciper"] = phd.sciper
+        phd_to_add["first_name"] = phd.first_name
+        phd_to_add["last_name"] = phd.last_name
+        phd_to_add["email"] = phd.email
         phds_info[phd.id] = phd_to_add
         phds_ids.append(phd.id)
 
@@ -846,69 +960,76 @@ def download_phds_report(request, year, term):
     else:
         pass
 
-    availabilities = Availability.objects.filter(year=year, term=english_term, person_id__in=phds_ids).all()
+    availabilities = Availability.objects.filter(
+        year=year, term=english_term, person_id__in=phds_ids
+    ).all()
     for availability in availabilities:
-        phds_info[availability.person_id]['availability'] = availability.availability
+        phds_info[availability.person_id]["availability"] = availability.availability
 
     # Add the missing information about the availabilities
     for phd in phds_info:
-        if 'availability' not in phds_info[phd]:
-            phds_info[phd]['availability'] = ''
+        if "availability" not in phds_info[phd]:
+            phds_info[phd]["availability"] = ""
 
     # Get the courses ids in order to find the applications for them
-    courses_ids_queryset = Course.objects.filter(
-        year=year, term=term).values('id').all()
+    courses_ids_queryset = (
+        Course.objects.filter(year=year, term=term).values("id").all()
+    )
     courses_ids_list = list()
-    [courses_ids_list.append(item['id']) for item in courses_ids_queryset]
+    [courses_ids_list.append(item["id"]) for item in courses_ids_queryset]
 
     # Retrieve all the applications for the PhD students for the current courses
     applications = Applications.objects.filter(
-        course_id__in=courses_ids_list, applicant_id__in=phds_ids).all()
+        course_id__in=courses_ids_list, applicant_id__in=phds_ids
+    ).all()
 
     # Flag the PhDs with the correct information
     for application in applications:
-        if application.status == 'Pending':
-            if 'applications_pending' in phds_info[application.applicant_id]:
-                phds_info[application.applicant_id]['applications_pending'] += 1
+        if application.status == "Pending":
+            if "applications_pending" in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]["applications_pending"] += 1
             else:
-                phds_info[application.applicant_id]['applications_pending'] = 1
-        elif application.status == 'Hired':
-            if 'applications_accepted' in phds_info[application.applicant_id]:
-                phds_info[application.applicant_id]['applications_accepted'] += 1
+                phds_info[application.applicant_id]["applications_pending"] = 1
+        elif application.status == "Hired":
+            if "applications_accepted" in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]["applications_accepted"] += 1
             else:
-                phds_info[application.applicant_id]['applications_accepted'] = 1
-        elif application.status == 'Rejected':
-            if 'applications_declined' in phds_info[application.applicant_id]:
-                phds_info[application.applicant_id]['applications_declined'] += 1
+                phds_info[application.applicant_id]["applications_accepted"] = 1
+        elif application.status == "Rejected":
+            if "applications_declined" in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]["applications_declined"] += 1
             else:
-                phds_info[application.applicant_id]['applications_declined'] = 1
-        elif application.status == 'Withdrawn':
-            if 'applications_withdrawn' in phds_info[application.applicant_id]:
-                phds_info[application.applicant_id]['applications_withdrawn'] += 1
+                phds_info[application.applicant_id]["applications_declined"] = 1
+        elif application.status == "Withdrawn":
+            if "applications_withdrawn" in phds_info[application.applicant_id]:
+                phds_info[application.applicant_id]["applications_withdrawn"] += 1
             else:
-                phds_info[application.applicant_id]['applications_withdrawn'] = 1
+                phds_info[application.applicant_id]["applications_withdrawn"] = 1
 
     # Add the missing information about the applications
     for phd in phds_info:
-        if 'applications_pending' not in phds_info[phd]:
-            phds_info[phd]['applications_pending'] = ''
-        if 'applications_accepted' not in phds_info[phd]:
-            phds_info[phd]['applications_accepted'] = ''
-        if 'applications_declined' not in phds_info[phd]:
-            phds_info[phd]['applications_declined'] = ''
-        if 'applications_withdrawn' not in phds_info[phd]:
-            phds_info[phd]['applications_withdrawn'] = ''
+        if "applications_pending" not in phds_info[phd]:
+            phds_info[phd]["applications_pending"] = ""
+        if "applications_accepted" not in phds_info[phd]:
+            phds_info[phd]["applications_accepted"] = ""
+        if "applications_declined" not in phds_info[phd]:
+            phds_info[phd]["applications_declined"] = ""
+        if "applications_withdrawn" not in phds_info[phd]:
+            phds_info[phd]["applications_withdrawn"] = ""
 
     # Time to build the excel file
     # content-type of response
-    response = HttpResponse(content_type='application/ms-excel')
+    response = HttpResponse(content_type="application/ms-excel")
 
     # decide file name
-    response['Content-Disposition'] = 'attachment; filename="phds_report_{year}_{term}.xls"'.format(
-        year=year, term=term)
+    response[
+        "Content-Disposition"
+    ] = 'attachment; filename="phds_report_{year}_{term}.xls"'.format(
+        year=year, term=term
+    )
 
     # creating workbook
-    wb = xlwt.Workbook(encoding='utf-8')
+    wb = xlwt.Workbook(encoding="utf-8")
 
     # adding sheet
     ws = wb.add_sheet("sheet1")
@@ -921,15 +1042,17 @@ def download_phds_report(request, year, term):
     font_style.font.bold = True
 
     # column header names, you can use your own headers here
-    columns = ['sciper',
-               'first name',
-               'last name',
-               'email',
-               'availability',
-               'pending applications',
-               'accepted applications',
-               'declined applications',
-               'withdrawn applications']
+    columns = [
+        "sciper",
+        "first name",
+        "last name",
+        "email",
+        "availability",
+        "pending applications",
+        "accepted applications",
+        "declined applications",
+        "withdrawn applications",
+    ]
 
     # write column headers in sheet
     for col_num in range(len(columns)):
@@ -940,23 +1063,23 @@ def download_phds_report(request, year, term):
 
     for key, phd in phds_info.items():
         row_num = row_num + 1
-        ws.write(row_num, 0, phd['sciper'], font_style)
-        ws.write(row_num, 1, phd['first_name'], font_style)
-        ws.write(row_num, 2, phd['last_name'], font_style)
-        ws.write(row_num, 3, phd['email'], font_style)
-        ws.write(row_num, 4, phd['availability'], font_style)
-        ws.write(row_num, 5, phd['applications_pending'], font_style)
-        ws.write(row_num, 6, phd['applications_accepted'], font_style)
-        ws.write(row_num, 7, phd['applications_declined'], font_style)
-        ws.write(row_num, 8, phd['applications_withdrawn'], font_style)
+        ws.write(row_num, 0, phd["sciper"], font_style)
+        ws.write(row_num, 1, phd["first_name"], font_style)
+        ws.write(row_num, 2, phd["last_name"], font_style)
+        ws.write(row_num, 3, phd["email"], font_style)
+        ws.write(row_num, 4, phd["availability"], font_style)
+        ws.write(row_num, 5, phd["applications_pending"], font_style)
+        ws.write(row_num, 6, phd["applications_accepted"], font_style)
+        ws.write(row_num, 7, phd["applications_declined"], font_style)
+        ws.write(row_num, 8, phd["applications_withdrawn"], font_style)
     wb.save(response)
     return response
 
 
 @is_staff()
 def phds_profiles(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
     if term == "HIVER":
         term = "winter"
     elif term == "ETE":
@@ -971,47 +1094,55 @@ def phds_profiles(request):
     students = Group.objects.get(name="phds").user_set.all()
     for student in students:
         student_to_add = dict()
-        student_to_add['id'] = student.id
-        student_to_add['sciper'] = student.sciper
-        student_to_add['first_name'] = student.first_name
-        student_to_add['last_name'] = student.last_name
-        student_to_add['english'] = student.canTeachInEnglish
-        student_to_add['french'] = student.canTeachInFrench
-        student_to_add['german'] = student.canTeachInGerman
+        student_to_add["id"] = student.id
+        student_to_add["sciper"] = student.sciper
+        student_to_add["first_name"] = student.first_name
+        student_to_add["last_name"] = student.last_name
+        student_to_add["english"] = student.canTeachInEnglish
+        student_to_add["french"] = student.canTeachInFrench
+        student_to_add["german"] = student.canTeachInGerman
         students_infos[student.id] = student_to_add
         students_ids.append(student.id)
 
     # Get the profile information about the phds
-    availabilities = Availability.objects.filter(year=year, term=term, person_id__in=students_ids).all()
+    availabilities = Availability.objects.filter(
+        year=year, term=term, person_id__in=students_ids
+    ).all()
     for availability in availabilities:
-        students_infos[availability.person_id]['availability'] = availability.availability
-        students_infos[availability.person_id]['availability_reason'] = availability.reason
+        students_infos[availability.person_id][
+            "availability"
+        ] = availability.availability
+        students_infos[availability.person_id][
+            "availability_reason"
+        ] = availability.reason
 
     # Add the missing information about the availabilities
     for student in students_infos:
-        if 'availability' not in students_infos[student]:
-            students_infos[student]['availability'] = ''
-            students_infos[student]['availability_reason'] = ''
+        if "availability" not in students_infos[student]:
+            students_infos[student]["availability"] = ""
+            students_infos[student]["availability_reason"] = ""
 
     # time to render the template
-    context = {
-        'students': students_infos.values
-    }
-    return render(request, 'web/reports/students_profiles.html', context=context)
+    context = {"students": students_infos.values}
+    return render(request, "web/reports/students_profiles.html", context=context)
 
 
 @is_staff()
 def applications_list(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
 
     courses = Course.objects.filter(year=year, term=term).all()
-    applications = Applications.objects.filter(course__in=courses).prefetch_related('course', 'applicant').all()
+    applications = (
+        Applications.objects.filter(course__in=courses)
+        .prefetch_related("course", "applicant")
+        .all()
+    )
 
     context = {
-        'applications': applications,
+        "applications": applications,
     }
-    return render(request, 'web/reports/applications_list.html', context)
+    return render(request, "web/reports/applications_list.html", context)
 
 
 @is_staff()
@@ -1019,6 +1150,8 @@ def delete_application(request, application_id):
     application = get_object_or_404(Applications, id=application_id)
     application.delete()
     messages.success(request, "The application was successfully deleted")
+    return HttpResponseRedirect(reverse("web:applications_list"))
+
     return HttpResponseRedirect(reverse('web:applications_list'))
 
 
@@ -1029,106 +1162,115 @@ def add_phd(request):
     if request.method == "POST":
         if add_phd_form.is_valid():
             # extract the sciper from the passed value
-            pattern = r'.*,\s.*\((\d*)\)'
-            if not re.match(pattern, add_phd_form.cleaned_data['add_person']):
-                messages.error(
-                    request, "Unable to find the sciper in the passed value")
+            pattern = r".*,\s.*\((\d*)\)"
+            if not re.match(pattern, add_phd_form.cleaned_data["add_person"]):
+                messages.error(request, "Unable to find the sciper in the passed value")
             else:
-                sciper = re.match(
-                    pattern, add_phd_form.cleaned_data['add_person'])[1]
+                sciper = re.match(pattern, add_phd_form.cleaned_data["add_person"])[1]
                 # try to find the person in LDAP
-                person = epfl_ldap.get_user_by_username_or_sciper(
-                    settings, sciper)
+                person = epfl_ldap.get_user_by_username_or_sciper(settings, sciper)
 
                 if type(person) == type(dict()):
                     # Check if the person is already in the database
                     try:
-                        db_user = Person.objects.get(sciper=person['sciper'])
+                        db_user = Person.objects.get(sciper=person["sciper"])
                         messages.warning(
-                            request, "The user already existed in the database")
+                            request, "The user already existed in the database"
+                        )
                     except ObjectDoesNotExist:
                         db_user = Person()
-                        db_user.sciper = person['sciper']
-                        db_user.username = person['username']
-                        db_user.email = person['mail']
-                        db_user.first_name = person['first_name']
-                        db_user.last_name = person['last_name']
+                        db_user.sciper = person["sciper"]
+                        db_user.username = person["username"]
+                        db_user.email = person["mail"]
+                        db_user.first_name = person["first_name"]
+                        db_user.last_name = person["last_name"]
                         db_user.save()
 
                     # Check if the group already exists (create it if necessary)
                     try:
-                        group = Group.objects.get(name='phds')
+                        group = Group.objects.get(name="phds")
                     except ObjectDoesNotExist:
                         group = Group()
-                        group.name = 'phds'
+                        group.name = "phds"
                         group.save()
 
                     # phds = Group.objects.get(name="phds")
                     if db_user in group.user_set.all():
                         messages.warning(
-                            request, "The user was already part of the group")
+                            request, "The user was already part of the group"
+                        )
                     else:
                         group.user_set.add(db_user)
                         db_user.save()
                         group.save()
                         messages.success(
-                            request, "The student has been successfully added")
+                            request, "The student has been successfully added"
+                        )
                 else:
                     messages.error(
-                        request, "Unable to find the person in the directory ({})".format(person))
+                        request,
+                        "Unable to find the person in the directory ({})".format(
+                            person
+                        ),
+                    )
 
     context = {
-        'form': add_phd_form,
+        "form": add_phd_form,
     }
-    return render(request, 'web/add_phd_form.html', context)
+    return render(request, "web/add_phd_form.html", context)
 
 
 @is_staff()
 def autocomplete_phds(request):
     if request.is_ajax():
-        q = request.GET.get('term', '').capitalize()
-        results = epfl_ldap.get_users_by_partial_username_or_partial_sciper(
-            settings, q)
+        q = request.GET.get("term", "").capitalize()
+        results = epfl_ldap.get_users_by_partial_username_or_partial_sciper(settings, q)
         data = json.dumps(results)
     else:
-        data = 'fail'
+        data = "fail"
 
-    mimetype = 'application/json'
+    mimetype = "application/json"
     return HttpResponse(data, mimetype)
 
 
 @is_staff()
 def get_course_applications_details(request):
     if request.is_ajax():
-        year = request.POST['year']
-        term = request.POST['term']
-        courseCode = request.POST['courseCode']
-        applicationType = request.POST['type']
+        year = request.POST["year"]
+        term = request.POST["term"]
+        courseCode = request.POST["courseCode"]
+        applicationType = request.POST["type"]
 
         course = Course.objects.get(year=year, term=term, code=courseCode)
         if applicationType == "received":
             applications = Applications.objects.filter(course=course).all()
         else:
-            applications = Applications.objects.filter(course=course, status=applicationType).all()
+            applications = Applications.objects.filter(
+                course=course, status=applicationType
+            ).all()
 
         return_value = ""
         for application in applications:
             person = application.applicant
-            return_value += "{}, {}<a target='_blank' href='{}'><i style='margin-left: 5px;' class='fas fa-external-link-alt'></i></a><br/>".format(person.last_name, person.first_name, reverse('web:view_profile', args=(person.id,)))
+            return_value += "{}, {}<a target='_blank' href='{}'><i style='margin-left: 5px;' class='fas fa-external-link-alt'></i></a><br/>".format(
+                person.last_name,
+                person.first_name,
+                reverse("web:view_profile", args=(person.id,)),
+            )
         mimetype = "text/html"
         return HttpResponse(return_value, mimetype)
 
     else:
-        data: 'fail'
-        mimetype = 'application/json'
+        data: "fail"
+        mimetype = "application/json"
         return HttpResponse(data, mimetype)
 
 
 @is_staff_or_teacher()
 def autocomplete_phds_from_person(request):
     if request.is_ajax():
-        q = request.GET.get('term', '')
-        if re.match(r'^\d*$', q):
+        q = request.GET.get("term", "")
+        if re.match(r"^\d*$", q):
             # get all the phds having that sciper
             phds = Group.objects.get(name="phds").user_set.filter(sciper=q).all()
 
@@ -1139,58 +1281,85 @@ def autocomplete_phds_from_person(request):
             persons = (phds | aes).distinct()
         else:
             # get all the phds having a partial matching name
-            phds = Group.objects.get(name="phds").user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q)).all()
+            phds = (
+                Group.objects.get(name="phds")
+                .user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q))
+                .all()
+            )
 
             # get all the aes having a partial matching name
-            aes = Group.objects.get(name="aes").user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q)).all()
+            aes = (
+                Group.objects.get(name="aes")
+                .user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q))
+                .all()
+            )
 
             # merge the 2 querysets
             persons = (phds | aes).distinct()
 
         # Build the list to be displayed on the page
         return_value = list()
-        [return_value.append("{}, {} ({})".format(person.last_name, person.first_name, person.sciper)) for person in persons]
+        [
+            return_value.append(
+                "{}, {} ({})".format(person.last_name, person.first_name, person.sciper)
+            )
+            for person in persons
+        ]
 
         return_value = json.dumps(return_value)
     else:
-        return_value = 'fail'
+        return_value = "fail"
 
-    mimetype = 'application/json'
+    mimetype = "application/json"
     return HttpResponse(return_value, mimetype)
 
 
 @is_staff_or_teacher()
 def autocomplete_courses(request):
     if request.is_ajax():
-        year = config.get_config('current_year')
-        term = config.get_config('current_term')
-        q = request.GET.get('term', '')
+        year = config.get_config("current_year")
+        term = config.get_config("current_term")
+        q = request.GET.get("term", "")
 
         # get the list of courses
         # if the requester is staff, all the courses matching the query will get displayed
         # if the requester is 'simply' a teacher, only the courses belonging to that person will get displayed
         if request.user.is_staff:
-            courses = Course.objects.filter(Q(code__icontains=q) | Q(subject__icontains=q), year=year, term=term).all()
-        elif request.user.groups.filter(name='teachers').exists():
+            courses = Course.objects.filter(
+                Q(code__icontains=q) | Q(subject__icontains=q), year=year, term=term
+            ).all()
+        elif request.user.groups.filter(name="teachers").exists():
             # get all the Teachings of that person
-            teachings = Teaching.objects.filter(person=request.user).select_related('course').all()
+            teachings = (
+                Teaching.objects.filter(person=request.user)
+                .select_related("course")
+                .all()
+            )
 
             # extract the ids of the courses in order to use them downlstream
             courses_ids = []
             [courses_ids.append(teaching.course.id) for teaching in teachings]
 
             # get all the courses of that person meeting the partial name or code
-            courses = Course.objects.filter(Q(code__icontains=q) | Q(subject__icontains=q), year=year, term=term, id__in=courses_ids).all()
+            courses = Course.objects.filter(
+                Q(code__icontains=q) | Q(subject__icontains=q),
+                year=year,
+                term=term,
+                id__in=courses_ids,
+            ).all()
         else:
             raise PermissionDenied()
 
         return_value = list()
-        [return_value.append("{} ({})".format(course.subject, course.code)) for course in courses]
+        [
+            return_value.append("{} ({})".format(course.subject, course.code))
+            for course in courses
+        ]
         return_value = json.dumps(return_value)
     else:
-        return_value = 'fail'
+        return_value = "fail"
 
-    mimetype = 'application/json'
+    mimetype = "application/json"
     return HttpResponse(return_value, mimetype)
 
 
@@ -1202,21 +1371,29 @@ def add_assignment(request):
         if add_assignment_form.is_valid():
 
             # time to extract the information from the form
-            sciper_pattern = r'^.*\s\((\d*)\)$'
-            sciper = re.match(sciper_pattern, add_assignment_form.cleaned_data['person']).group(1)
+            sciper_pattern = r"^.*\s\((\d*)\)$"
+            sciper = re.match(
+                sciper_pattern, add_assignment_form.cleaned_data["person"]
+            ).group(1)
             try:
                 applicant = Person.objects.get(sciper=sciper)
             except ObjectDoesNotExist:
                 applicant = None
                 messages.error(request, "The user was not found in the database")
 
-            course_pattern = r'^(.*)\s\((.*)\)$'
-            subject = re.match(course_pattern, add_assignment_form.cleaned_data['course']).group(1)
-            code = re.match(course_pattern, add_assignment_form.cleaned_data['course']).group(2)
-            year = config.get_config('current_year')
-            term = config.get_config('current_term')
+            course_pattern = r"^(.*)\s\((.*)\)$"
+            subject = re.match(
+                course_pattern, add_assignment_form.cleaned_data["course"]
+            ).group(1)
+            code = re.match(
+                course_pattern, add_assignment_form.cleaned_data["course"]
+            ).group(2)
+            year = config.get_config("current_year")
+            term = config.get_config("current_term")
             try:
-                course = Course.objects.get(subject=subject, code=code, year=year, term=term)
+                course = Course.objects.get(
+                    subject=subject, code=code, year=year, term=term
+                )
             except ObjectDoesNotExist:
                 course = None
                 messages.error(request, "The course was not found in the database")
@@ -1228,9 +1405,13 @@ def add_assignment(request):
                 if request.user.is_staff:
                     # no need to process further
                     pass
-                elif request.user.groups.filter(name='teachers').exists():
+                elif request.user.groups.filter(name="teachers").exists():
                     # get all the Teachings of that person
-                    teachings = Teaching.objects.filter(person=request.user).select_related('course').all()
+                    teachings = (
+                        Teaching.objects.filter(person=request.user)
+                        .select_related("course")
+                        .all()
+                    )
 
                     # extract the ids of the courses in order to use them downlstream
                     courses_ids = []
@@ -1240,7 +1421,9 @@ def add_assignment(request):
                 else:
                     raise PermissionDenied()
                 try:
-                    application = Applications.objects.get(course=course, applicant=applicant)
+                    application = Applications.objects.get(
+                        course=course, applicant=applicant
+                    )
                 except ObjectDoesNotExist:
                     application = Applications()
 
@@ -1255,42 +1438,53 @@ def add_assignment(request):
                 application.save()
                 messages.success(request, "Teaching duty successfully saved.")
 
-    context = {
-        'form': add_assignment_form
-    }
-    return render(request, 'web/add_phd_assignment_form.html', context)
+    context = {"form": add_assignment_form}
+    return render(request, "web/add_phd_assignment_form.html", context)
 
 
 @is_staff()
 def phds_with_multiple_hirings_report(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
 
     all_courses = Course.objects.filter(year=year, term=term).all()
     courses_ids = [course.id for course in all_courses]
 
-    all_applications = Applications.objects.filter(
-        course_id__in=courses_ids, status="Hired").prefetch_related('applicant').all()
+    all_applications = (
+        Applications.objects.filter(course_id__in=courses_ids, status="Hired")
+        .prefetch_related("applicant")
+        .all()
+    )
 
     context = {
-        'hirings': all_applications,
+        "hirings": all_applications,
     }
 
-    return render(request, 'web/reports/phds_with_multiple_hirings.html', context)
+    return render(request, "web/reports/phds_with_multiple_hirings.html", context)
 
 
 @is_staff()
 def get_courses_without_numberOfTARequests(request):
-    year = config.get_config('current_year')
-    term = config.get_config('current_term')
+    year = config.get_config("current_year")
+    term = config.get_config("current_term")
 
     this_term_courses = Course.objects.filter(year=year, term=term).all()
-    this_term_requests = NumberOfTAUpdateRequest.objects.filter(course__year=year, course__term=term).select_related('course').all()
+    this_term_requests = (
+        NumberOfTAUpdateRequest.objects.filter(course__year=year, course__term=term)
+        .select_related("course")
+        .all()
+    )
     courses_with_requests_ids = list()
-    [courses_with_requests_ids.append(TARequest.course.id) for TARequest in this_term_requests]
-    courses_without_requests = this_term_courses.exclude(id__in=courses_with_requests_ids).prefetch_related('teachers')
-    context = {
-        'courses': courses_without_requests
-    }
+    [
+        courses_with_requests_ids.append(TARequest.course.id)
+        for TARequest in this_term_requests
+    ]
+    courses_without_requests = this_term_courses.exclude(
+        id__in=courses_with_requests_ids
+    ).prefetch_related("teachers")
+    context = {"courses": courses_without_requests}
 
-    return render(request, 'web/reports/TARequests/courses_without_requests.html', context=context)
+    return render(
+        request, "web/reports/TARequests/courses_without_requests.html", context=context
+    )
+
