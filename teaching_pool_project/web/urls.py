@@ -28,6 +28,7 @@ urlpatterns = [
     re_path('applications/review/(?P<application_id>\d*)', views.review_application, name='review_application'),
     path('config/', views.edit_config, name="edit_config"),
     path('config/add_phd', views.add_phd, name="add_phd"),
+    path("config/batch_upload_phds", views.batch_upload_phds, name="batch_upload_phds"),
     re_path('reports/phds/(?P<year>\d{4}-\d{4})/(?P<term>(HIVER|ETE))', views.phds_report, name="phds_report"),
     path('reports/applications', views.applications_list, name="applications_list"),
     re_path('applications/delete/(?P<application_id>\d*)', views.delete_application, name="delete_application"),

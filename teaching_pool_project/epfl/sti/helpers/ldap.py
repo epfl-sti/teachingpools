@@ -213,6 +213,27 @@ def get_users_by_partial_username_or_partial_sciper(settings, input):
     return_value = list(dict.fromkeys(return_value))
     return return_value
 
+def get_user_by_email(settings, email):
+    filter = "(mail={})".format(email)
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search(settings.LDAP_BASEDN, filter, attributes=["sn", "givenName", "uniqueIdentifier", "uid"], size_limit=1)
+    for entry in conn.entries:
+        return_value={}
+        if entry["givenName"]:
+            return_value["first_name"] = min(entry["givenName"])
+        else:
+            return_value["first_name"] =""
+        return_value["last_name"] = min(entry["sn"])
+        return_value["sciper"] = str(entry["uniqueIdentifier"])
+        return_value["mail"]=email
+        if '@' in min(entry['uid']):
+            return_value['username'] = min(entry['uid']).split('@')[0]
+        else:
+            return_value['username'] = min(entry['uid'])
+        return return_value
+
+
 
 def get_units_by_partial_name_or_partial_last_acronym(settings, input):
     return_value = list()

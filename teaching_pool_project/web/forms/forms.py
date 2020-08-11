@@ -166,14 +166,25 @@ class PeopleManagementForm(forms.Form):
                 "add_person",
                 "The value passed is not correct. It should be <last name>, <first name> (<sciper>)",
             )
-        self.fields['add_person'].label = "Name or sciper"
-        self.fields['add_person'].help_text = "You can search the person by sciper or by name"
+
+
+class PHDBatchUploadForm(forms.Form):
+    emails = forms.CharField(
+        widget=Textarea(attrs={"width": "100%", "cols": "80", "rows": "20"})
+    )
+
+    class Meta:
+        labels = {"emails": "email addresses of PhDs to be added"}
+
+    def __init__(self, *args, **kwargs):
+        super(PHDBatchUploadForm, self).__init__(*args, **kwargs)
+
+        self.fields["emails"].label = "Emails"
+        self.fields["emails"].help_text = "List of email addresses"
 
     def clean(self):
         cleaned_data = super().clean()
-        pattern = r'.*,\s.*\((\d*)\)'
-        if not re.match(pattern, cleaned_data['add_person']):
-            self.add_error('add_person', 'The value passed is not correct. It should be <last name>, <first name> (<sciper>)')
+        # TODO: Add custom logic to check that each line contains a valid email address here
 
 
 class AssignmentManagementForm(forms.Form):

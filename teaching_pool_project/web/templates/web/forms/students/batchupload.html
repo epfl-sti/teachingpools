@@ -1,0 +1,21 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load course_tags %}
+
+{% block headers %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css" type="text/css" media="all">
+{% endblock headers%}
+
+{% block maincontent %}
+<form action="{% url "web:batch_upload_phds" %}" method="post" class="form">
+    {% csrf_token %}
+    {% bootstrap_form form=form %}
+    {% buttons %}
+    {% bootstrap_button "Add" button_type="submit" button_class="btn-success btn-block" %}
+    {% endbuttons %}
+</form>
+{% endblock maincontent %}
+
+
+{% block scripts %}
+{% endblock scripts %}
