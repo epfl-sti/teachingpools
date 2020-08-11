@@ -1164,7 +1164,7 @@ def batch_upload_phds(request):
                 # The email address might contain multiple email addresses on the same line (e.g. emmanuel.jaep@epfl.ch,emmanuel.jaep@gmail.com).
                 # We need to keep only the one at EPFL
                 subemails = email.split(",")
-                if len(subemails)>1:
+                if len(subemails) > 1:
                     for subemail in subemails:
                         if "@epfl.ch" in subemail:
                             email = subemail
@@ -1178,7 +1178,9 @@ def batch_upload_phds(request):
                 except ObjectDoesNotExist:
                     person = epfl_ldap.get_user_by_email(settings, email)
                     if type(person) != type(dict()):
-                        messages.warning(request, "{} was not found in LDAP".format(email))
+                        messages.warning(
+                            request, "{} was not found in LDAP".format(email)
+                        )
                     else:
                         # We may have a user existing in the database without the email address but with the same username
                         username = person["username"]
@@ -1186,7 +1188,9 @@ def batch_upload_phds(request):
 
                         user_exists_with_same_username = False
                         try:
-                            user_with_same_username = Person.objects.get(username__iexact=username)
+                            user_with_same_username = Person.objects.get(
+                                username__iexact=username
+                            )
                             user_exists_with_same_username = True
                         except ObjectDoesNotExist:
                             pass
@@ -1194,27 +1198,32 @@ def batch_upload_phds(request):
                         user_exists_with_same_sciper = False
                         try:
                             user_with_same_sciper = Person.objects.get(sciper=sciper)
-                            user_exists_with_same_sciper=True
+                            user_exists_with_same_sciper = True
                         except ObjectDoesNotExist:
                             pass
 
-                        if user_exists_with_same_sciper==False and user_exists_with_same_username==False: # if we are sure that the user does not exist in the db
+                        if (
+                            user_exists_with_same_sciper == False
+                            and user_exists_with_same_username == False
+                        ):  # if we are sure that the user does not exist in the db
                             db_user = Person()
-                            db_user.sciper=person["sciper"]
+                            db_user.sciper = person["sciper"]
                             db_user.username = person["username"]
                             db_user.email = person["mail"]
                             db_user.first_name = person["first_name"]
                             db_user.last_name = person["last_name"]
                             db_user.save()
-                            messages.success(request, "{} successfully added".format(email))
+                            messages.success(
+                                request, "{} successfully added".format(email)
+                            )
                             user_exists = True
                         else:
-                            if user_exists_with_same_username==True:
+                            if user_exists_with_same_username == True:
                                 db_user = user_with_same_username
-                                user_exists=True
-                            elif user_exists_with_same_sciper==True:
+                                user_exists = True
+                            elif user_exists_with_same_sciper == True:
                                 db_user = user_with_same_sciper
-                                user_exists=True
+                                user_exists = True
 
                 # time to deal with the group membership
                 if user_exists:
@@ -1222,7 +1231,7 @@ def batch_upload_phds(request):
                         group = Group.objects.get(name="phds")
                     except ObjectDoesNotExist:
                         group = Group()
-                        group.name="phds"
+                        group.name = "phds"
                         group.save()
 
                     if db_user not in group.user_set.all():
