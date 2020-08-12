@@ -168,25 +168,6 @@ class PeopleManagementForm(forms.Form):
             )
 
 
-class PHDBatchUploadForm(forms.Form):
-    emails = forms.CharField(
-        widget=Textarea(attrs={"width": "100%", "cols": "80", "rows": "20"})
-    )
-
-    class Meta:
-        labels = {"emails": "email addresses of PhDs to be added"}
-
-    def __init__(self, *args, **kwargs):
-        super(PHDBatchUploadForm, self).__init__(*args, **kwargs)
-
-        self.fields["emails"].label = "Emails"
-        self.fields["emails"].help_text = "List of email addresses"
-
-    def clean(self):
-        cleaned_data = super().clean()
-        # TODO: Add custom logic to check that each line contains a valid email address here
-
-
 class AssignmentManagementForm(forms.Form):
     person = forms.CharField(max_length=255)
     course = forms.CharField(max_length=255)

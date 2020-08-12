@@ -7,15 +7,97 @@
 {% endblock headers%}
 
 {% block maincontent %}
-<form action="{% url "web:batch_upload_phds" %}" method="post" class="form">
-    {% csrf_token %}
-    {% bootstrap_form form=form %}
-    {% buttons %}
-    {% bootstrap_button "Add" button_type="submit" button_class="btn-success btn-block" %}
-    {% endbuttons %}
+<form id="form" method="POST">
+    <label for="id_emails">List of email addresses:</label>
+    <textarea name="emails" cols="80" rows="20" width="100%" class="form-control" placeholders="emails" title="List of email addresses" required id="id_emails"></textarea>
+    <small class="form-text text-muted">List of email addresses</small>
+    <button class="btn btn-success btn-block" type="submit" form="form">
+    <i id="loading_spinner" style="display: none;" class="spinner-border spinner-border-sm"></i>
+    Upload</button>
 </form>
+
+
+<div id="output">
+
+</div>
 {% endblock maincontent %}
 
-
 {% block scripts %}
+<script>
+function toggleSpinner(){
+    var el = document.getElementById("loading_spinner");
+    if (el.style.display === "none") {
+        el.style.display = "inline-block";
+    }
+    else {
+        el.style.display = "none";
+    }
+}
+
+$('#form').on('submit', function(e){
+    toggleSpinner();
+
+    e.preventDefault();
+
+    $.ajax({
+        type: "POST",
+        url: "{% url 'web:batch_upload_phds_post' %}",
+        data: {
+            emails: $('#id_emails').val(),
+            csrfmiddlewaretoken: "{{ csrf_token }}",
+            datatype: "json"
+        },
+
+        success: function(data){
+            debugger;
+
+            // toggle the spinner because the call is finished
+            toggleSpinner();
+
+            // build the output table
+            var output='<table class="table table-hover"><thead class="thead-dark"><tr><th>email</th><th>status</th><th>message</th></tr></thead><tbody>';
+
+            var details = data.details;
+            var details_length = details.length;
+
+            for (var i = 0; i < details_length; i++){
+                var email = details[i].email;
+                var level = details[i].level;
+                var msg = details[i].msg;
+
+                // format the output
+                var tr_output = "<tr>"; // default value
+                switch (level){
+                    case "success":
+                        tr_output = '<tr class="table-success">';
+                        level_output = '<i class="text-success far fa-check-circle"></i>';
+                        break;
+                    case "warning":
+                        tr_output = '<tr class="table-warning">';
+                        level_output = '<i class="text-warning fas fa-exclamation-circle"></i>';
+                        break;
+                    case "info":
+                        tr_output = '<tr class="table-info">';
+                        level_output = '<i class="text-info fas fa-info-circle"></i>';
+                        break;
+                }
+                output += `${tr_output}<td>${email}</td><td>${level_output}</td><td>${msg}</td></tr>`;
+            }
+            output += "</tbody></table>";
+
+            // Remove the form because the load was successful
+            var form_element = document.getElementById("form");
+            form_element.style.display = "none";
+
+            // display the results
+            $("#output").html(output)
+        },
+
+        error: function(jqXHR, textStatus, errorThrown ){
+            toggleSpinner();
+            $("#output").html(`<div class="alert alert-danger" role="alert">Unable to process request (${jqXHR.status} - ${jqXHR.statusText}).</div>`);
+        }
+    });
+})
+</script>
 {% endblock scripts %}

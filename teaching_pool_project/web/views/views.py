@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Prefetch, Q
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import Context
 from django.template.loader import get_template
@@ -1155,94 +1155,121 @@ def delete_application(request, application_id):
 
 @is_staff()
 def batch_upload_phds(request):
-    upload_form = PHDBatchUploadForm(request.POST or None)
-
-    if request.method == "POST":
-        if upload_form.is_valid():
-            emails = upload_form.cleaned_data["emails"].split()
-            for email in emails:
-                # The email address might contain multiple email addresses on the same line (e.g. emmanuel.jaep@epfl.ch,emmanuel.jaep@gmail.com).
-                # We need to keep only the one at EPFL
-                subemails = email.split(",")
-                if len(subemails) > 1:
-                    for subemail in subemails:
-                        if "@epfl.ch" in subemail:
-                            email = subemail
-
-                user_exists = False
-
-                try:
-                    db_user = Person.objects.get(email__iexact=email)
-                    messages.info(request, "{} already exists".format(email))
-                    user_exists = True
-                except ObjectDoesNotExist:
-                    person = epfl_ldap.get_user_by_email(settings, email)
-                    if type(person) != type(dict()):
-                        messages.warning(
-                            request, "{} was not found in LDAP".format(email)
-                        )
-                    else:
-                        # We may have a user existing in the database without the email address but with the same username
-                        username = person["username"]
-                        sciper = person["sciper"]
-
-                        user_exists_with_same_username = False
-                        try:
-                            user_with_same_username = Person.objects.get(
-                                username__iexact=username
-                            )
-                            user_exists_with_same_username = True
-                        except ObjectDoesNotExist:
-                            pass
-
-                        user_exists_with_same_sciper = False
-                        try:
-                            user_with_same_sciper = Person.objects.get(sciper=sciper)
-                            user_exists_with_same_sciper = True
-                        except ObjectDoesNotExist:
-                            pass
-
-                        if (
-                            user_exists_with_same_sciper == False
-                            and user_exists_with_same_username == False
-                        ):  # if we are sure that the user does not exist in the db
-                            db_user = Person()
-                            db_user.sciper = person["sciper"]
-                            db_user.username = person["username"]
-                            db_user.email = person["mail"]
-                            db_user.first_name = person["first_name"]
-                            db_user.last_name = person["last_name"]
-                            db_user.save()
-                            messages.success(
-                                request, "{} successfully added".format(email)
-                            )
-                            user_exists = True
-                        else:
-                            if user_exists_with_same_username == True:
-                                db_user = user_with_same_username
-                                user_exists = True
-                            elif user_exists_with_same_sciper == True:
-                                db_user = user_with_same_sciper
-                                user_exists = True
-
-                # time to deal with the group membership
-                if user_exists:
-                    try:
-                        group = Group.objects.get(name="phds")
-                    except ObjectDoesNotExist:
-                        group = Group()
-                        group.name = "phds"
-                        group.save()
-
-                    if db_user not in group.user_set.all():
-                        group.user_set.add(db_user)
-                        db_user.save()
-                        group.save()
-                        messages.success(request, "{} added to group".format(email))
-
-    context = {"form": upload_form}
-
+    context = {}
     return render(request, "web/forms/students/batchupload.html", context)
+
+
+def load_emails(emails):
+    return_value = []
+
+    for email in emails:
+        # The email address might contain multiple email addresses on the same line (e.g. emmanuel.jaep@epfl.ch,emmanuel.jaep@gmail.com).
+        # We need to keep only the one at EPFL
+        subemails = email.split(",")
+        if len(subemails) > 1:
+            for subemail in subemails:
+                if "@epfl.ch" in subemail:
+                    email = subemail
+
+        user_exists = False
+
+        try:
+            db_user = Person.objects.get(email__iexact=email)
+            return_value.append(
+                {"email": email, "level": "info", "msg": "The user already exists"}
+            )
+            user_exists = True
+        except ObjectDoesNotExist:
+            person = epfl_ldap.get_user_by_email(settings, email)
+            if type(person) != type(dict()):
+                return_value.append(
+                    {
+                        "email": email,
+                        "level": "warning",
+                        "msg": "User not found in LDAP",
+                    }
+                )
+            else:
+                # We may have a user existing in the database without the email address but with the same username
+                username = person["username"]
+                sciper = person["sciper"]
+
+                user_exists_with_same_username = False
+                try:
+                    user_with_same_username = Person.objects.get(
+                        username__iexact=username
+                    )
+                    user_exists_with_same_username = True
+                except ObjectDoesNotExist:
+                    pass
+
+                user_exists_with_same_sciper = False
+                try:
+                    user_with_same_sciper = Person.objects.get(sciper=sciper)
+                    user_exists_with_same_sciper = True
+                except ObjectDoesNotExist:
+                    pass
+
+                if (
+                    user_exists_with_same_sciper == False
+                    and user_exists_with_same_username == False
+                ):  # if we are sure that the user does not exist in the db
+                    db_user = Person()
+                    db_user.sciper = person["sciper"]
+                    db_user.username = person["username"]
+                    db_user.email = person["mail"]
+                    db_user.first_name = person["first_name"]
+                    db_user.last_name = person["last_name"]
+                    db_user.save()
+                    return_value.append(
+                        {
+                            "email": email,
+                            "level": "success",
+                            "msg": "User successfully added",
+                        }
+                    )
+                    user_exists = True
+                else:
+                    if user_exists_with_same_username == True:
+                        db_user = user_with_same_username
+                        user_exists = True
+                    elif user_exists_with_same_sciper == True:
+                        db_user = user_with_same_sciper
+                        user_exists = True
+
+        # time to deal with the group membership
+        if user_exists:
+            try:
+                group = Group.objects.get(name="phds")
+            except ObjectDoesNotExist:
+                group = Group()
+                group.name = "phds"
+                group.save()
+
+            if db_user not in group.user_set.all():
+                group.user_set.add(db_user)
+                db_user.save()
+                group.save()
+                return_value.append(
+                    {
+                        "email": email,
+                        "level": "success",
+                        "msg": "user successfully added to group",
+                    }
+                )
+
+    return return_value
+
+
+@is_staff()
+def batch_upload_phds_ajax(request):
+    if request.is_ajax():
+        emails = request.POST.get("emails", None)
+        if emails:
+            emails = emails.split("\n")
+            details = load_emails(emails)
+            response = {"msg": "Your form has been submitted", "details": details}
+            return JsonResponse(response)
 
 
 @is_staff_or_teacher()
