@@ -54,13 +54,37 @@
         <td class="text-right">{{ course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
         <td class="text-right">{{ course.applications_accepted|default_if_none:"&nbsp;" }}</td>
         <td class="text-right">{{ course.approvedNumberOfTAs|sub:course.applications_accepted|default_if_none:"&nbsp;" }}</td>
-        <td><a class="btn btn-outline-success btn-sm" href="{% url "web:accept_theoretical_number_of_tas" course_id=course.id %}" data-toggle="tooltip" title="Accept theoretical number of Teaching Assistants"><i class="fas fa-user-check"></i></a></td>
+        <td>
+          <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#AcceptNumberOfTAsConfirmationModal{{course.id}}" data-toggle="tooltip" title="Accept theoretical number of Teaching Assistants"><i class="fas fa-user-check"></i></button>
+        </td>
         <td><a class="btn btn-outline-primary btn-sm" href="{% url "web:request_for_TA" course_id=course.id %}" data-toggle="tooltip" title="Request for a different number of Teaching Assistants"><i class="fas fa-user-edit"></i></a></td>
       </tr>
     {% endfor %}
   </tbody>
-
 </table>
+
+<!-- Modals -->
+{% for course in courses %}
+  <div class="modal fade" id="AcceptNumberOfTAsConfirmationModal{{ course.id }}" tabindex="-1" role="dialog" aria-labelledby="AcceptNumberOfTAsConfirmationModalLongTitle{{ course.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="AcceptNumberOfTAsConfirmationModalLongTitle{{ course.id }}">Confirmation</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to accept the the number of TAs that was calculated for your "{{ course.subject }}" course ({{ course.calculatedNumberOfTAs|default_if_none:"0" }} TA(s))?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">No</button>
+          <a class="btn btn-success btn-sm" href="{% url "web:accept_theoretical_number_of_tas" course_id=course.id %}">Yes</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endfor %}
 {% endblock maincontent %}
 {% block scriptsblock %}
 <script type="text/javascript">
