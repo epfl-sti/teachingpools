@@ -1,12 +1,13 @@
 {% extends "web/base.html" %}
 {% load bootstrap4 %}
 {% load extra_tags %}
+{% load mailer_tags %}
 {% load static %}
 
 {% block maincontent %}
 <h1>Email campaigns</h1>
-<table class="table">
-    <thead>
+<table class="table table-striped table-hover">
+    <thead class="thead-dark">
         <tr>
             <th>Created at</th>
             <th>Created by</th>
@@ -17,12 +18,12 @@
     </thead>
     <tbody>
     {% for campaign in campaigns %}
-        <tr>
+        <tr class="{{ campaign|get_campaign_row_class }}">
             <td>{{ campaign.created_at }}</td>
             <td>{{ campaign.created_by.last_name }}, {{ campaign.created_by.first_name }}</td>
             <td>{{campaign.mail_message_set.all|length }}</td>
             <td>{{ campaign.subject }}</td>
-            <td><a href="{% url "web:get_campaign_details" campaign.id %}">{{ campaign.status }}</a></td>
+            <td><a href="{% url "web:get_campaign_details" campaign.id %}">{{ campaign|get_campaign_status_icon|safe }}&nbsp;{{ campaign.status }}</a></td>
         </tr>
     {% endfor %}
     </tbody>
