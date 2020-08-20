@@ -1,0 +1,34 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load extra_tags %}
+{% load static %}
+
+{% block maincontent %}
+<h1>Email campaigns</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Created at</th>
+            <th>Created by</th>
+            <th>Recipients</th>
+            <th>Subject</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for campaign in campaigns %}
+        <tr>
+            <td>{{ campaign.created_at }}</td>
+            <td>{{ campaign.created_by.last_name }}, {{ campaign.created_by.first_name }}</td>
+            <td>{{campaign.mail_message_set.all|length }}</td>
+            <td>{{ campaign.subject }}</td>
+            <td><a href="{% url "web:get_campaign_details" campaign.id %}">{{ campaign.status }}</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<a class="btn btn-primary" href="{% url 'web:new_mailer_campaign' %}">New mail campaign</a>
+{% endblock maincontent %}
+
+{% block scripts %}
+{% endblock scripts %}

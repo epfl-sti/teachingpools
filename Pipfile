@@ -29,6 +29,7 @@ sentry-sdk = "*"
 django-crispy-forms = "*"
 openpyxl = "*"
 importlib-metadata = "*"
+html2text = "*"
 
 [requires]
 python_version = "3.7"

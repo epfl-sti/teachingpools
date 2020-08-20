@@ -1224,3 +1224,47 @@ class TimeReport(ValidateModelMixin, models.Model):
 
         if not is_valid:
             raise ValidationError(errors)
+
+class Mail_campaign(models.Model):
+    created_by = models.ForeignKey(Person, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=now)
+    to = models.TextField()
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    STATUS_CHOICES = [
+        ("pending", "pending"),
+        ("in-progress", "in-progress"),
+        ("successfully finished", "successfully finished"),
+        ("finished with errors", "finished with errors"),
+    ]
+    status = models.CharField(max_length=255, choices=STATUS_CHOICES, default="pending")
+
+    def __str__(self):
+        return "<Mail_campaign: ({})>".format(self.id)
+
+    class Meta:
+        verbose_name = "mail campaign"
+        verbose_name_plural = "mail campaigns"
+
+
+class Mail_message(models.Model):
+    created_by = models.ForeignKey(Person, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=now)
+    campaign = models.ForeignKey(Mail_campaign, on_delete=models.CASCADE)
+    to = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    STATUS_CHOICES = [("pending", "pending"), ("sent", "sent"), ("error", "error")]
+    status = models.CharField(max_length=255, choices=STATUS_CHOICES, default="pending")
+    error_message = models.CharField(
+        max_length=255, blank=True, null=True, default=None
+    )
+    retry_count = models.IntegerField(default=0)
+    sent_at = models.DateTimeField(blank=True, null=True, default=None)
+
+    def __str__(self):
+        return "<Mail_message: ({}), status: {}>".format(self.id, self.status)
+
+    class Meta:
+        verbose_name = "mail message"
+        verbose_name_plural = "mail messages"

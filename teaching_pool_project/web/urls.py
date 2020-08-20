@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 
-from web.views import views, timereporting_views
+from web.views import views, timereporting_views, mailer_views
 
 app_name = 'web'
 
@@ -59,4 +59,8 @@ urlpatterns = [
     path('api/search/teachers', timereporting_views.autocomplete_all_teachers, name='autocomplete_all_teachers'),
     path('api/search/students', timereporting_views.autocomplete_all_students, name="autocomplete_all_students"),
     path('api/search/units', timereporting_views.autocomplete_all_units, name="autocomplete_all_units"),
+    path('tools/mailer/new_campaign', mailer_views.new_mailer_campaign, name="new_mailer_campaign"),
+    path('tools/mailer', mailer_views.get_mail_campaigns, name="get_mail_campaigns"),
+    re_path(r'tools/mailer/campaign_details/(?P<id>\d*)', mailer_views.get_campaign_details, name="get_campaign_details"),
+    path('api/tools/mailer/new_campaign_post', mailer_views.new_mailer_campaign_post, name="new_mailer_campaign_post"),
 ]
