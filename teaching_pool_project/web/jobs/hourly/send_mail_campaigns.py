@@ -37,13 +37,18 @@ class Job(HourlyJob):
             error_messages = campaign.mail_message_set.filter(
                 retry_count__gte=4
             ).count()
+            processed_messages = sent_messages + error_messages
 
-            if sent_messages == total_messages:
-                campaign.status = "successfully finished"
-            elif pending_messages > 0 and pending_messages != total_messages:
+            if processed_messages == total_messages:
+                if error_messages != 0:
+                    campaign.status = "finished with errors"
+                else:
+                    campaign.status = "successfully finished"
+            elif processed_messages > 0:
                 campaign.status = "in-progress"
-            elif error_messages >= total_messages:
-                campaign.status = "finished with errors"
+            else:
+                campaign.status = "pending"
+
             campaign.save()
 
     def send_message(self, message):
@@ -64,7 +69,7 @@ class Job(HourlyJob):
         tos = list()
         tos.append(message.to)
 
-        #send the message
+        # send the message
         try:
             logger.debug("sending")
             msg = EmailMultiAlternatives(
