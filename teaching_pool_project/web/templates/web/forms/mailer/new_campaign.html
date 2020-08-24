@@ -3,10 +3,23 @@
 {% load extra_tags %}
 {% load static %}
 
+{% block headers %}
+<link rel="stylesheet" href="{% static 'web/css/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css' %}" />
+{% endblock headers %}
 {% block maincontent %}
 <h1>New email campaign</h1>
 <div id="output"></div>
 <form id="form" method="POST">
+    <div class="form-group">
+        <label for="DoNotSendBefore">Do not send before</label>
+        <div class='input-group' id='datetimepicker1' aria-describedby="ToAddressesHelp">
+            <input required type='text' class="form-control" id="DoNotSendBefore" placeholder="dd.mm.yyyy HH:MM"/>
+            <div class="input-group-append">
+                <span class="input-group-text"><i class="icon-th far fa-calendar-alt"></i></span>
+            </div>
+        </div>
+        <small id="DoNotSendBeforeHelp" class="form-text text-muted">You can select a date in the future if you don't want to send the campaign immediately</small>
+    </div>
     <div class="form-group">
         <label for="ToAddresses">To</label>
         <textarea required id="ToAddresses" class="form-control" aria-describedby="ToAddressesHelp" placeholder="destination email addresses"></textarea>
@@ -33,5 +46,9 @@
     let post_url = "{% url 'web:new_mailer_campaign_post' %}";
     let success_redirect_url = "{% url 'web:get_mail_campaigns' %}";
 </script>
+
+<script src="{% static 'web/js/forms/mailer/bootstrap-datetimepicker.min.js' %}"></script>
+<script src="{% static 'web/js/moment.min.js' %}"></script>
+
 <script type="text/javascript" src="{% static 'web/js/forms/mailer/new_campaign.js' %}"></script>
 {% endblock scripts %}

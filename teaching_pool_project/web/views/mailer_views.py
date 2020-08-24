@@ -5,6 +5,7 @@ import json
 import logging
 import re
 from datetime import date, datetime
+import datetime
 from functools import wraps
 
 import pandas as pd
@@ -112,12 +113,19 @@ def new_mailer_campaign_post(request):
         to = request.POST.get("to", None)
         subject = request.POST.get("subject", None)
         message = request.POST.get("message", None)
+        doNotSendBefore = request.POST.get("doNotSendBefore", None)
+        try:
+            doNotSendBefore = datetime.strptime(doNotSendBefore, "%d.%m.%Y %H:%M")
+        except Exception as ex:
+            logger.warning("unable to parse date and time. Defaulting to now.")
+            doNotSendBefore = datetime.now()
 
         if to:
             emails = to.split("\n")
 
             campaign = Mail_campaign()
             campaign.created_by = request.user
+            campaign.do_not_send_before = doNotSendBefore
             campaign.to = to
             campaign.subject = "[STI Teaching Assistants] {}".format(subject)
             campaign.message = message
@@ -135,5 +143,31 @@ def new_mailer_campaign_post(request):
             response = {
                 "msg": "Your message has been submitted and will be sent shortly."
             }
-            messages.success(request, "The mail campaign has been successfully submitted. It should be distributed shortly.")
+            messages.success(
+                request,
+                "The mail campaign has been successfully submitted. It should be distributed shortly.",
+            )
             return JsonResponse(response)
+
+
+@is_staff()
+def get_campaign_message_preview(request):
+    if request.is_ajax():
+        id = request.POST.get("id", None)
+        msg = Mail_campaign.objects.get(pk=id).message
+
+        response = {"msg": msg}
+        return JsonResponse(response)
+
+
+@is_staff()
+def delete_campaign(request):
+    if request.is_ajax():
+        id = request.POST.get("id", None)
+
+        campaign = Mail_campaign.objects.get(pk=id)
+        campaign.delete()
+
+        destination = reverse("web:get_mail_campaigns")
+        response = {"destination": destination}
+        return JsonResponse(response)

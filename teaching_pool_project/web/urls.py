@@ -63,4 +63,6 @@ urlpatterns = [
     path('tools/mailer', mailer_views.get_mail_campaigns, name="get_mail_campaigns"),
     re_path(r'tools/mailer/campaign_details/(?P<id>\d*)', mailer_views.get_campaign_details, name="get_campaign_details"),
     path('api/tools/mailer/new_campaign_post', mailer_views.new_mailer_campaign_post, name="new_mailer_campaign_post"),
+    path('api/tools/mailer/campaign/msg_preview', mailer_views.get_campaign_message_preview, name="get_campaign_message_preview"),
+    path('api/tools/mailer/campaign/delete', mailer_views.delete_campaign, name="delete_campaign"),
 ]

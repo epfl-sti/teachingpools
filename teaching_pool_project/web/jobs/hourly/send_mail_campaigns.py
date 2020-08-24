@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 import html2text
 from django.conf import settings
@@ -18,7 +19,7 @@ class Job(HourlyJob):
         logger.info("processing mail campaigns to be sent")
 
         campaigns = Mail_campaign.objects.filter(
-            status__in=["pending", "in-progress"]
+            status__in=["pending", "in-progress"], do_not_send_before__lte = datetime.now()
         ).all()
         logger.debug("{} campaigns".format(len(campaigns)))
 

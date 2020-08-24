@@ -1228,6 +1228,7 @@ class TimeReport(ValidateModelMixin, models.Model):
 class Mail_campaign(models.Model):
     created_by = models.ForeignKey(Person, on_delete=models.CASCADE)
     created_at = models.DateTimeField(default=now)
+    do_not_send_before = models.DateTimeField(default=now)
     to = models.TextField()
     subject = models.CharField(max_length=255)
     message = models.TextField()

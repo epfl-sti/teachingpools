@@ -11,6 +11,20 @@ tinymce.init({
     },
 });
 
+// Set the datetime picker to now
+$("#DoNotSendBefore").val(moment(Date.now()).format('DD.MM.YYYY HH:mm'));
+
+
+// check documentation at https://www.malot.fr/bootstrap-datetimepicker/demo.php
+$("#DoNotSendBefore").datetimepicker({
+    format: "dd.mm.yyyy hh:ii",
+    todayBtn: true,
+    todayHighlight: true,
+    weekStart: 1,
+    autoclose: true,
+    minuteStep: 15,
+});
+
 function toggleSpinner() {
     var el = document.getElementById("loading_spinner");
     if (el.style.display === "none") {
@@ -32,6 +46,7 @@ $('#form').on('submit', function(e) {
             to: $('#ToAddresses').val(),
             subject: $('#Subject').val(),
             message: $('#Message').val(),
+            doNotSendBefore: $('#DoNotSendBefore').val(),
             csrfmiddlewaretoken: csrf_token,
             datatype: "json"
         },

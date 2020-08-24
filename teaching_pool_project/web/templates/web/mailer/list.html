@@ -13,23 +13,75 @@
             <th>Created by</th>
             <th>Recipients</th>
             <th>Subject</th>
+            <th>Message</th>
+            <th>Scheduled</th>
             <th>Status</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
     {% for campaign in campaigns %}
-        <tr class="{{ campaign|get_campaign_row_class }}">
-            <td>{{ campaign.created_at }}</td>
+        <tr class="{{ campaign|get_campaign_row_class }}" data-campaign-id="{{ campaign.id }}">
+            <td>{{ campaign.created_at }} <div class="text-muted">(<span class="DT">{{ campaign.created_at.isoformat }}</span>)</div></td>
             <td>{{ campaign.created_by.last_name }}, {{ campaign.created_by.first_name }}</td>
             <td>{{campaign.mail_message_set.all|length }}</td>
             <td>{{ campaign.subject }}</td>
+            <td><button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#previewModal" data-id="{{ campaign.id }}"><i class="far fa-eye"></i></button></td>
+            <td class="DT">{{ campaign.do_not_send_before.isoformat }}</td>
             <td><a href="{% url "web:get_campaign_details" campaign.id %}">{{ campaign|get_campaign_status_icon|safe }}&nbsp;{{ campaign.status }}</a></td>
+            <td><button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#exampleModal" data-id="{{ campaign.id }}"><i class="far fa-trash-alt"></i></button></td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
 <a class="btn btn-primary" href="{% url 'web:new_mailer_campaign' %}">New mail campaign</a>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Are you sure?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div>are you sure you want to delete this mail campaign?</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">No</button>
+        <button type="button" class="btn btn-danger bt-sm button-confirm">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewModalLabel">Preview</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="previewContent"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock maincontent %}
 
 {% block scripts %}
+<script>
+    let post_url = "{% url "web:get_campaign_message_preview" %}";
+    let csrf_token = "{{ csrf_token }}";
+    let delete_url = "{% url "web:delete_campaign" %}";
+</script>
+<script src="{% static 'web/js/moment.min.js' %}"></script>
+<script src="{% static 'web/js/mailer/list.js' %}"></script>
 {% endblock scripts %}
