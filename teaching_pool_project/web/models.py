@@ -809,20 +809,6 @@ class TimeReport(ValidateModelMixin, models.Model):
         if self.master_thesis_student_name is None:
             msg = "When selecting a 'master thesis' activity, you should provide the name of the student you supervised"
             validation_errors.append({'master_thesis_student_name': msg})
-        else:
-            pattern = r".*\s\((?P<sciper>\d+)\)"
-            p = re.compile(pattern)
-
-            if not p.match(self.master_thesis_student_name):
-                msg = "The name of the student is not valid"
-                validation_errors.append({'master_thesis_student_name': msg})
-            else:
-                m = p.search(self.master_thesis_student_name)
-                sciper = m.group('sciper')
-                student = ldap.get_student_by_sciper(settings, sciper)
-                if student is None:
-                    msg = "Could not find the student with the given sciper"
-                    validation_errors.append({'master_thesis_student_name': msg})
 
         if self.master_thesis_teacher_in_charge is None:
             msg = "When selecting a 'master thesis' activity, you should provide the name of the teacher supervising the thesis"
@@ -855,20 +841,6 @@ class TimeReport(ValidateModelMixin, models.Model):
         if self.semester_project_student_name is None:
             msg = "When selecting a 'semester project' activity, you should provide the name of the student you supervised"
             validation_errors.append({'semester_project_student_name': msg})
-        else:
-            pattern = r".*\s\((?P<sciper>\d+)\)"
-            p = re.compile(pattern)
-
-            if not p.match(self.semester_project_student_name):
-                msg = "The name of the student is not valid"
-                validation_errors.append({'semester_project_student_name': msg})
-            else:
-                m = p.search(self.semester_project_student_name)
-                sciper = m.group('sciper')
-                student = ldap.get_student_by_sciper(settings, sciper)
-                if student is None:
-                    msg = "Could not find the student with the given sciper"
-                    validation_errors.append({'semester_project_student_name': msg})
 
         if self.semester_project_teacher_in_charge is None:
             msg = "When selecting a 'semester project' activity, you should provide the name of the teacher supervising the thesis"
