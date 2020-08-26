@@ -1,0 +1,54 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load extra_tags %}
+{% load static %}
+
+{% block headers %}
+<link rel="stylesheet" href="{% static 'web/css/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css' %}" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock headers %}
+{% block maincontent %}
+<h1>New application</h1>
+<div id="output" class="alert" role="alert"></div>
+<form id="form">
+    <div class="form-group">
+        <label for="applicantInputGroup">Applicant</label>
+        <div class='input-group' id='applicantInputGroup' aria-describedby="applicantHelp">
+            <select required class="form-control" id="applicant"></select>
+        </div>
+        <small id="applicantHelper" class="form-text text-muted">Name or sciper of the applicant</small>
+    </div>
+    <div class="form-group">
+        <label for="courseInputGroup">Course</label>
+        <div class='input-group' id='courseInputGroup' aria-describedby="courseHelp">
+            <select required class="form-control" id="course"></select>
+        </div>
+        <small id="courseHelp" class="form-text text-muted">subject or code of the course</small>
+    </div>
+        <div class="form-group">
+        <label for="statusInputGroup">Status</label>
+        <div class='input-group' id='statusInputGroup' aria-describedby="statusHelp">
+            <select required class="form-control" id="status"></select>
+        </div>
+        <small id="statusHelp" class="form-text text-muted">status of the application</small>
+    </div>
+    <div class="form-group">
+        <button class="btn btn-primary" type="submit" form="form" value="Submit">Save</button>
+        <a class="btn btn-secondary" href="{% url "web:get_applications_html" %}">Back to list</a>
+    </div>
+</form>
+{% endblock maincontent %}
+
+{% block scripts %}
+<script src="{% static 'web/js/forms/mailer/bootstrap-datetimepicker.min.js' %}"></script>
+<script src="{% static 'web/js/moment.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+<script>
+    let applicants_endpoint = '{% url "web:get_applicants" %}';
+    let courses_endpoint = '{% url "web:get_courses" %}';
+    let status_endpoint = '{% url "web:get_applications_statuses" %}';
+    let post_endpoint = '{% url "web:save_application_endpoint" %}';
+    let csrf_token = '{{csrf_token }}';
+</script>
+<script type="text/javascript" src="{% static 'web/js/applications/new.js' %}"></script>
+{% endblock scripts %}

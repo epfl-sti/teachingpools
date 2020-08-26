@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 
-from web.views import views, timereporting_views, mailer_views
+from web.views import views, timereporting_views, mailer_views, application_views
 
 app_name = 'web'
 
@@ -65,4 +65,12 @@ urlpatterns = [
     path('api/tools/mailer/new_campaign_post', mailer_views.new_mailer_campaign_post, name="new_mailer_campaign_post"),
     path('api/tools/mailer/campaign/msg_preview', mailer_views.get_campaign_message_preview, name="get_campaign_message_preview"),
     path('api/tools/mailer/campaign/delete', mailer_views.delete_campaign, name="delete_campaign"),
+
+    path('tools/applications', application_views.get_applications_html, name="get_applications_html"),
+    path('tools/applications/new', application_views.new_application, name="new_application"),
+    path('api/tools/applications/applicants', application_views.get_applicants, name="get_applicants"),
+    path('api/tools/applications/courses', application_views.get_courses, name="get_courses"),
+    path('api/tools/applications/status', application_views.get_applications_statuses, name="get_applications_statuses"),
+    path('api/tools/applications/save', application_views.save_application_endpoint, name="save_application_endpoint"),
+    path('api/tools/applications/delete', application_views.delete_application_endpoint, name="delete_application_endpoint"),
 ]

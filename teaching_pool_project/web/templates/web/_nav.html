@@ -99,6 +99,9 @@
               <a class="dropdown-item" href="{% url "web:edit_config" %}">Configuration</a>
               <a class="dropdown-item" href="{% url "web:batch_upload_phds" %}">Batch add phds</a>
               <a class="dropdown-item" href="{% url "web:get_mail_campaigns" %}">Mailer</a>
+              {% if request.user.is_superuser %}
+              <a class="dropdown-item" href="{% url "web:get_applications_html" %}">Applications</a>
+              {% endif %}
             </div>
       {% else %}
         {{ request.user|get_badge }}

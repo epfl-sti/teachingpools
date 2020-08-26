@@ -1,0 +1,71 @@
+{% extends "web/base.html" %}
+{% load bootstrap4 %}
+{% load extra_tags %}
+{% load static %}
+{% block headers%}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
+{% endblock headers%}
+
+{% block maincontent %}
+<h1>Applications</h1>
+<table class="table table-striped table-hover" id="applications">
+    <thead class="thead-dark">
+        <tr>
+            <th>id</th>
+            <th>Created at</th>
+            <th>Applicant</th>
+            <th>Course</th>
+            <th>Closed at</th>
+            <th>Closed by</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for application in applications %}
+        <tr data-application-id="{{ application.id }}">
+            <td>{{ application.id }}</td>
+            <td>{{ application.openedAt.isoformat }}</td>
+            <td>{{ application.applicant.last_name}}, {{ application.applicant.first_name }}</td>
+            <td>{{ application.course.subject }} ({{ application.course.code }})</td>
+            <td>{{ application.closedAt.isoformat|default_if_none:"" }} </td>
+            <td>{% if application.closedBy %}{{ application.closedBy.last_name }}, {{ application.closedBy.first_name }}{% else %}&nbsp;{% endif %}</td>
+            <td>{{ application.status }}</td>
+            <td><button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#exampleModal" data-id="{{ application.id }}"><i class="far fa-trash-alt"></i></button></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<a class="btn btn-primary" href="{% url 'web:new_application' %}">New application</a>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Are you sure?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div>are you sure you want to delete this application?</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">No</button>
+        <button type="button" class="btn btn-danger bt-sm button-confirm">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock maincontent %}
+
+{% block scripts %}
+<script>
+    let csrf_token = "{{ csrf_token }}";
+    let delete_url = "{% url "web:delete_application_endpoint" %}";
+</script>
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<script src="{% static 'web/js/moment.min.js' %}"></script>
+<script src="{% static 'web/js/applications/list.js' %}"></script>
+{% endblock scripts %}
