@@ -23,7 +23,7 @@
                     <span class="badge badge-pill badge-secondary">withdrawn</span>
                 {% endif %}
                 {% if application.status == "Pending" %}
-                    <a class="btn btn-primary btn-sm" href="{{ application_review_url }}">Review</a>
+                    <a class="btn btn-primary btn-sm" href="{{ application.application_review_url }}">Review</a>
                 {% endif %}
 
             </p>
