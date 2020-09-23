@@ -171,26 +171,37 @@ def courses_list_year_teacher(request, year):
 
 @group_required("teachers")
 def get_applications_for_my_courses(request):
-    teachings = (
-        Teaching.objects.filter(person=request.user).prefetch_related("course").all()
-    )
-    courses_ids = [item.course.pk for item in teachings]
-    applications = (
-        Applications.objects.filter(course_id__in=courses_ids)
-        .select_related("course")
-        .order_by(
-            "course__year",
-            "course__term",
-            "course__subject",
-            "applicant__last_name",
-            "applicant__first_name",
+    if request.is_ajax():
+        teachings = (
+            Teaching.objects.filter(person=request.user)
+            .prefetch_related("course")
+            .all()
         )
-        .all()
-    )
+        courses_ids = [item.course.pk for item in teachings]
+        applications = (
+            Applications.objects.filter(course_id__in=courses_ids)
+            .select_related("course")
+            .all()
+        )
+        data = []
+        for application in applications:
+            current_application = {}
+            current_application["year"]=application.course.year
+            current_application["term"]=application.course.term
+            current_application["subject"]=application.course.subject
+            current_application["code"]=application.course.code
+            current_application["first_name"]=application.applicant.first_name
+            current_application["last_name"]=application.applicant.last_name
+            current_application["email"]=application.applicant.email
+            current_application["status"]=application.status
+            current_application["applicant_profile_url"] = reverse('web:view_profile', args=[application.applicant.pk])
+            current_application["application_review_url"] = reverse('web:review_application', args=[application.pk])
+            data.append(current_application)
 
-    context = {
-        "applications": applications,
-    }
+        response = {"applications": data}
+        return JsonResponse(response)
+
+    context = {"STATIC_URL": settings.STATIC_URL}
     return render(request, "web/applications_to_my_courses.html", context)
 
 

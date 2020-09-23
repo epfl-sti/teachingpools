@@ -1,52 +1,16 @@
 {% extends "web/base.html" %}
 {% load bootstrap4 %}
-{% load applications_tags %}
+{% load static %}
 
 {% block maincontent %}
-<div class="row">
-<div class="col">
-    <div class="card-columns">
-    {% regroup applications by course as applications_by_course %}
-    {% for course in applications_by_course %}
 
-    <div class="card">
-        <div class="card-header">
-        {{ course.grouper.year }} - {{ course.grouper.term }} - {{ course.grouper.subject }} ({{ course.grouper.code }})
-        </div>
-        <div class="card-body">
-            {% for application in course.list %}
-            <p>
-                <i class="fas fa-user-graduate"></i>&nbsp;
-                <a href="{% url 'web:view_profile' application.applicant.id %}">{{ application.applicant.first_name }} {{ application.applicant.last_name }}</a>
-                {% get_badge application %}
-                {% if application.status == "Pending" %}
-                <a class="btn btn-primary btn-sm" href="{% url 'web:review_application' application_id=application.id %}">Review</a>
-                {% endif %}
-
-            </p>
-            {% endfor %}
-            {% if course.grouper|has_applications %}
-            <p class="card-header"><i class="fas fa-envelope"></i>&nbsp;Contact the TAs</p>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item"><a href="mailto:{% for application in course.list %}{{ application.applicant.email }},{% endfor %}?subject=TA duty for {{ course.grouper.subject|urlencode }}">All TAs</a></li>
-                {% if course.grouper|has_accepted_applications %}
-                <li class="list-group-item"><a href="mailto:{% for application in course.list %}{% if application.status == 'Hired' %}{{ application.applicant.email }},{% endif %}{% endfor %}?subject=TA duty for {{ course.grouper.subject|urlencode }}">All accepted TAs</a></li>
-                {% endif %}
-                {% if course.grouper|has_rejected_applications %}
-                <li class="list-group-item"><a href="mailto:{% for application in course.list %}{% if application.status == 'Declined' %}{{ application.applicant.email }},{% endif %}{% endfor %}?subject=TA duty for {{ course.grouper.subject|urlencode }}">All rejected TAs</a></li>
-                {% endif %}
-                {% if course.grouper|has_withdrawn_applications %}
-                <li class="list-group-item"><a href="mailto:{% for application in course.list %}{% if application.status == 'Withdrawn' %}{{ application.applicant.email }},{% endif %}{% endfor %}?subject=TA duty for {{ course.grouper.subject|urlencode }}">All TAs who withdrew their application</a></li>
-                {% endif %}
-            </ul>
-            {% endif %}
-        </div>
-    </div>
-    {% endfor %}
-    </div>
-</div>
-</div>
+<div id="applications"></div>
 
 {% endblock maincontent %}
 {% block scripts%}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nunjucks/3.0.1/nunjucks.min.js"></script>
+<script>
+    const STATIC_URL = '{{ STATIC_URL }}';
+</script>
+<script src="{% static 'web/js/applications/applications_to_my_courses.js' %}"></script>
 {%endblock scripts%}

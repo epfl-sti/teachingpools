@@ -1,0 +1,59 @@
+<div class="card">
+    <div class="card-header">
+        {{ applications[0].year }}
+        -
+        {{ applications[0].term }}
+        -
+        {{ applications[0].subject }}
+        ({{ applications[0].code }})
+    </div>
+    <div class="card-body">
+        {% for application in applications %}
+            <p>
+                <i class="fas fa-user-graduate"></i>&nbsp;
+                <a href="{{ application.applicant_profile_url }}">{{ application.first_name }}
+                    {{ application.last_name }}</a>
+                {% if application.status == "Pending" %}
+                    <span class="badge badge-pill badge-info">pending</span>
+                {% elif application.status == "Hired" %}
+                    <span class="badge badge-pill badge-success">accepted</span>
+                {% elif application.status == "Rejected" %}
+                    <span class="badge badge-pill badge-danger">rejected</span>
+                {% elif application.status == "Withdrawn" %}
+                    <span class="badge badge-pill badge-secondary">withdrawn</span>
+                {% endif %}
+                {% if application.status == "Pending" %}
+                    <a class="btn btn-primary btn-sm" href="{{ application_review_url }}">Review</a>
+                {% endif %}
+
+            </p>
+        {% endfor %}
+        <p class="card-header">
+            <i class="fas fa-envelope"></i>&nbsp;Contact the TAs</p>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+                <a href="mailto:{% for application in applications %}{{ application.email }},{% endfor %}?subject=TA duty for {{ applications[0].subject|urlencode }}">All TAs</a>
+            </li>
+            {% if has_accepted_applications %}
+                <li class="list-group-item">
+                    <a href="mailto:{% for application in accepted_applications %}{{ application.email }},{% endfor %}?subject=TA duty for {{ accepted_applications[0].subject|urlencode }}">All accepted TAs</a>
+                </li>
+            {% endif %}
+            {% if has_rejected_applications %}
+                <li class="list-group-item">
+                    <a href="mailto:{% for application in rejected_applications %}{{ application.email }},{% endfor %}?subject=TA duty for {{ rejected_applications[0].subject|urlencode }}">All rejected TAs</a>
+                </li>
+            {% endif %}
+            {% if has_withdrawn_applications %}
+                <li class="list-group-item">
+                    <a href="mailto:{% for application in withdrawn_applications %}{{ application.email }},{% endfor %}?subject=TA duty for {{ withdrawn_applications[0].subject|urlencode }}">All withdrawn TAs</a>
+                </li>
+            {% endif %}
+            {% if has_pending_applications %}
+                <li class="list-group-item">
+                    <a href="mailto:{% for application in pending_applications %}{{ application.email }},{% endfor %}?subject=TA duty for {{ pending_applications[0].subject|urlencode }}">All pending TAs</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
