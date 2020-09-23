@@ -46,7 +46,26 @@ const build_output = (data, template) => {
     // DOM manipulation
     const root_node = document.getElementById('applications');
 
-    const uniqueYears = Array.from(new Set(all_applications.map(item => item.year)));
+    // if there are no data (aka no application to the courses of that given prof.)
+    if (all_applications.length === 0) {
+        const empty_applications_node = document.createElement("div");
+        const empty_applications_text = document.createTextNode("There are no applications for your course(s) yet.");
+        empty_applications_node.appendChild(empty_applications_text);
+        empty_applications_node.classList.add("alert");
+        empty_applications_node.classList.add("alert-info");
+        root_node.appendChild(empty_applications_node);
+        return;
+    }
+
+    const uniqueYears = Array.from(new Set(all_applications.map(item => item.year))).sort((a, b) => {
+        a = a.toUpperCase();
+        b = b.toUpperCase();
+        if (a < b) {
+            return 1;
+        }
+        if (a > b) { return -1; }
+        return 0;
+    });
     for (const year of uniqueYears) {
 
         // DOM manipulation
@@ -61,7 +80,15 @@ const build_output = (data, template) => {
         const this_year_applications = all_applications.filter(item => item.year === year);
 
         // get all the terms present in this list of courses
-        const uniqueTerms = Array.from(new Set(this_year_applications.map(item => item.term)));
+        const uniqueTerms = Array.from(new Set(this_year_applications.map(item => item.term))).sort((a, b) => {
+            a = a.toUpperCase();
+            b = b.toUpperCase();
+            if (a < b) {
+                return 1;
+            }
+            if (a > b) { return -1; }
+            return 0;
+        });
 
         for (const term of uniqueTerms) {
             // DOM manipulation
