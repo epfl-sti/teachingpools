@@ -186,16 +186,20 @@ def get_applications_for_my_courses(request):
         data = []
         for application in applications:
             current_application = {}
-            current_application["year"]=application.course.year
-            current_application["term"]=application.course.term
-            current_application["subject"]=application.course.subject
-            current_application["code"]=application.course.code
-            current_application["first_name"]=application.applicant.first_name
-            current_application["last_name"]=application.applicant.last_name
-            current_application["email"]=application.applicant.email
-            current_application["status"]=application.status
-            current_application["applicant_profile_url"] = reverse('web:view_profile', args=[application.applicant.pk])
-            current_application["application_review_url"] = reverse('web:review_application', args=[application.pk])
+            current_application["year"] = application.course.year
+            current_application["term"] = application.course.term
+            current_application["subject"] = application.course.subject
+            current_application["code"] = application.course.code
+            current_application["first_name"] = application.applicant.first_name
+            current_application["last_name"] = application.applicant.last_name
+            current_application["email"] = application.applicant.email
+            current_application["status"] = application.status
+            current_application["applicant_profile_url"] = reverse(
+                "web:view_profile", args=[application.applicant.pk]
+            )
+            current_application["application_review_url"] = reverse(
+                "web:review_application", args=[application.pk]
+            )
             data.append(current_application)
 
         response = {"applications": data}
