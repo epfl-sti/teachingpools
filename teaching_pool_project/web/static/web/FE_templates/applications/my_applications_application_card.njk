@@ -1,0 +1,34 @@
+<div class="card">
+    <div class="card-header">
+        {{ application.year }}
+        -
+        {{ application.term }}
+        -
+        {{ application.subject }}
+        ({{ application.code }})&nbsp;
+        {% if application.status == 'Pending' %}
+            <span class="badge badge-pill badge-info">pending</span>
+        {% elseif application.status == 'Hired' %}
+            <span class="badge badge-pill badge-success">accepted</span>
+        {% elseif application.status == 'Rejected' %}
+            <span class="badge badge-pill badge-danger">rejected</span>
+        {% elseif application.status == 'Withdrawn' %}
+            <span class="badge badge-pill badge-secondary">withdrawn</span>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <p>Status:
+            {{ application.status }}</p>
+        {% if application.decisionReason %}
+            <p>Reason:
+                {{ application.decisionReason }}</p>
+        {% endif %}
+        {% if application.status != 'Rejected' and application.status != 'Withdrawn' %}
+            {% if canWithdraw %}
+                <a class="btn btn-danger" href="#" data-href="{{ application.withdraw_url }}" data-toggle="modal" data-target="#confirm-delete">Withdraw</a>
+            {% else %}
+                <span data-toggle="tooltip" data-placement="top" title="Applications cannot be withdrawn at the moment." class="btn btn-outline-secondary">Withdraw</span>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>

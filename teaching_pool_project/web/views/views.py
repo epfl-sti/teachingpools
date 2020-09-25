@@ -673,13 +673,34 @@ def view_profile(request, person_id):
 
 @group_required("phds")
 def my_applications(request):
-    applications = (
-        Applications.objects.filter(applicant=request.user)
-        .prefetch_related("course")
-        .all()
-    )
+    if request.is_ajax():
+        applications = (
+            Applications.objects.filter(applicant=request.user)
+            .prefetch_related("course")
+            .all()
+        )
+        data = []
+        for application in applications:
+            item = {}
+            item["year"] = application.course.year
+            item["term"] = application.course.term
+            item["code"] = application.course.code
+            item["subject"] = application.course.subject
+            item["status"] = application.status
+            item["decision_reason"] = application.decisionReason
+            item["withdraw_url"] = reverse(
+                "web:withdraw_application", args=[application.pk]
+            )
+            data.append(item)
+        return JsonResponse(
+            {
+                "can_withdraw": config.get_config("phds_can_withdraw_applications"),
+                "data": data,
+            }
+        )
+
     context = {
-        "applications": applications,
+        "STATIC_URL": settings.STATIC_URL,
     }
     return render(request, "web/applications.html", context)
 

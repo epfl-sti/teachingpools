@@ -1,34 +1,9 @@
 {% extends "web/base.html" %}
 {% load bootstrap4 %}
-{% load applications_tags %}
+{% load static %}
 
 {% block maincontent %}
-<div class="row">
-<div class="col">
-    <div class="card-columns">
-    {% for application in applications %}
-    <div class="card">
-        <div class="card-header">
-        {{ application.course.subject }}({{ application.course.code }}){% get_badge application %}
-        </div>
-        <div class="card-body">
-        <p>Status: {{ application.status }}</p>
-        {% if application.decisionReason %}
-        <p>Reason: {{ application.decisionReason }}</p>
-        {% endif %}
-        {% if application.status != 'Rejected' and application.status != 'Withdrawn' %}
-            {% if PHD_CAN_WITHDRAW_APPLICATION %}
-                <a class="btn btn-danger" href="#" data-href="{% url 'web:withdraw_application' application.pk %}" data-toggle="modal" data-target="#confirm-delete">Withdraw</a>
-            {% else %}
-                <span data-toggle="tooltip" data-placement="top" title="Applications cannot be withdrawn at the moment." class="btn btn-outline-secondary">Withdraw</span>
-            {% endif %}
-        {% endif %}
-        </div>
-    </div>
-    {% endfor %}
-    </div>
-</div>
-</div>
+<div id="applications"></div>
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -47,14 +22,9 @@
 </div>
 {% endblock maincontent %}
 {% block scripts%}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nunjucks/3.0.1/nunjucks.min.js"></script>
 <script>
-$('#confirm-delete').on('show.bs.modal', function(e) {
-    $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
-})
+    const STATIC_URL = '{{ STATIC_URL }}';
 </script>
-<script>
-$(function () {
-  $('[data-toggle="tooltip"]').tooltip()
-})
-</script>
+<script src="{% static 'web/js/applications/my_applications.js' %}"></script>
 {%endblock scripts%}
