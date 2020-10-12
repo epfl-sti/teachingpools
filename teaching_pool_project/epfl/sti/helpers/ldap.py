@@ -83,6 +83,56 @@ def get_users(settings, scipers):
     return return_value
 
 
+def get_phds_status_by_scipers(settings, scipers=[]):
+    return_value = {}
+    for sciper in scipers:
+        return_value[sciper] = False
+
+    filter = "(&(memberOf=STI_TA_Students)(|"
+    for sciper in scipers:
+        filter += "(uniqueIdentifier={})".format(sciper)
+    filter += "))"
+
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search("o=epfl,c=ch", filter, attributes=["uniqueIdentifier"])
+    for entry in conn.entries:
+        return_value[int(str(entry["uniqueIdentifier"]))] = True
+
+    return return_value
+
+
+def get_STI_TA_Students(settings):
+    return_value = {}
+
+    filter = "(memberOf=STI_TA_Students)"
+
+    ldap_server = Server(settings.LDAP_SERVER, use_ssl=True, get_info=ALL)
+    conn = Connection(ldap_server, auto_bind=True)
+    conn.search(
+        "o=epfl,c=ch",
+        filter,
+        attributes=["uid", "uniqueIdentifier", "sn", "givenName", "mail"],
+    )
+    for entry in conn.entries:
+        sciper = int(str(entry["uniqueIdentifier"]))
+        username = str(min(entry["uid"]))
+        if "@" in username:
+            username = username.split("@")[0]
+        last_name = str(min(entry["sn"]))
+        first_name = str(min(entry["givenName"]))
+        mail = str(min(entry["mail"]))
+        return_value[sciper] = {
+            "sciper": sciper,
+            "username": username,
+            "last_name": last_name,
+            "first_name": first_name,
+            "mail": mail,
+        }
+
+    return return_value
+
+
 def get_user_by_partial_first_name_and_partial_last_name(
     settings, partial_first_name="", partial_last_name=""
 ):
