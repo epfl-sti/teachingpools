@@ -891,7 +891,7 @@ def phds_report(request, year, term):
     phds_ids = list()
 
     # Get base information about the phd
-    phds = Group.objects.get(name="phds").user_set.all()
+    phds = Person.active_TAs.all()
     for phd in phds:
         phd_to_add = dict()
         phd_to_add["id"] = phd.id
@@ -977,7 +977,7 @@ def download_phds_report(request, year, term):
     phds_ids = list()
 
     # Get base information about the phd
-    phds = Group.objects.get(name="phds").user_set.all()
+    phds = Person.active_TAs.all()
     for phd in phds:
         phd_to_add = dict()
         phd_to_add["id"] = phd.id
@@ -1127,7 +1127,7 @@ def phds_profiles(request):
     students_ids = list()
 
     # get the base info about the students
-    students = Group.objects.get(name="phds").user_set.all()
+    students = Person.active_TAs.all()
     for student in students:
         student_to_add = dict()
         student_to_add["id"] = student.id
@@ -1425,7 +1425,7 @@ def autocomplete_phds_from_person(request):
         q = request.GET.get("term", "")
         if re.match(r"^\d*$", q):
             # get all the phds having that sciper
-            phds = Group.objects.get(name="phds").user_set.filter(sciper=q).all()
+            phds = Person.active_TAs.filter(sciper=q).all()
 
             # get all the aes having that sciper
             aes = Group.objects.get(name="aes").user_set.filter(sciper=q).all()
@@ -1434,11 +1434,9 @@ def autocomplete_phds_from_person(request):
             persons = (phds | aes).distinct()
         else:
             # get all the phds having a partial matching name
-            phds = (
-                Group.objects.get(name="phds")
-                .user_set.filter(Q(last_name__icontains=q) | Q(first_name__icontains=q))
-                .all()
-            )
+            phds = Person.active_TAs.filter(
+                Q(last_name__icontains=q) | Q(first_name__icontains=q)
+            ).all()
 
             # get all the aes having a partial matching name
             aes = (
@@ -1529,7 +1527,7 @@ def add_assignment(request):
                 sciper_pattern, add_assignment_form.cleaned_data["person"]
             ).group(1)
             try:
-                applicant = Person.objects.get(sciper=sciper)
+                applicant = Person.active_TAs.get(sciper=sciper)
             except ObjectDoesNotExist:
                 applicant = None
                 messages.error(request, "The user was not found in the database")

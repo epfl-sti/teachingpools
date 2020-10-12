@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.manager import Manager
 from django.utils.text import slugify
 from django.utils.timezone import now
 
@@ -18,6 +19,16 @@ from .models_mixins import ValidateModelMixin
 from .validators import validate_year_config
 
 logger = logging.getLogger(__name__)
+
+
+class ActiveTAsManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True, groups__name="phds")
+
+
+class ActiveTeachersManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True, groups__name="teachers")
 
 
 class Person(AbstractUser):
@@ -39,6 +50,10 @@ class Person(AbstractUser):
         "web.Topic", through="Interests", blank=True)
     section = models.ForeignKey(
         'Section', default=None, blank=True, null=True, on_delete=models.CASCADE)
+
+    objects = models.Manager()
+    active_TAs = ActiveTAsManager()
+    active_teachers = ActiveTeachersManager()
 
     def __str__(self):
         return "{last}, {first} ({id})".format(last=self.last_name, first=self.first_name, id=self.id)
