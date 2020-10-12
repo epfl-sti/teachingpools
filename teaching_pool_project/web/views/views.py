@@ -1164,10 +1164,7 @@ def phds_profiles(request):
 
 
 @is_staff()
-def applications_list(request):
-    year = config.get_config("current_year")
-    term = config.get_config("current_term")
-
+def applications_list(request, year, term):
     courses = Course.objects.filter(year=year, term=term).all()
     applications = (
         Applications.objects.filter(course__in=courses)
@@ -1177,6 +1174,8 @@ def applications_list(request):
 
     context = {
         "applications": applications,
+        "year": year,
+        "term": term
     }
     return render(request, "web/reports/applications_list.html", context)
 
@@ -1615,10 +1614,7 @@ def phds_with_multiple_hirings_report(request):
 
 
 @is_staff()
-def get_courses_without_numberOfTARequests(request):
-    year = config.get_config("current_year")
-    term = config.get_config("current_term")
-
+def get_courses_without_numberOfTARequests(request, year, term):
     this_term_courses = Course.objects.filter(year=year, term=term).all()
     this_term_requests = (
         NumberOfTAUpdateRequest.objects.filter(course__year=year, course__term=term)
@@ -1633,7 +1629,7 @@ def get_courses_without_numberOfTARequests(request):
     courses_without_requests = this_term_courses.exclude(
         id__in=courses_with_requests_ids
     ).prefetch_related("teachers")
-    context = {"courses": courses_without_requests}
+    context = {"courses": courses_without_requests, "year": year, "term":term}
 
     return render(
         request, "web/reports/TARequests/courses_without_requests.html", context=context

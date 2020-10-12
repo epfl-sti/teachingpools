@@ -11,8 +11,8 @@
 <div class="card">
     <div class="card-body">
         <h4 class="card-title">Base information</h4>
-        <p class="card-text">Year: {{ CURRENT_YEAR }}</p>
-        <p class="card-text">Term: {{ CURRENT_TERM }}</p>
+        <p class="card-text">Year: {{ year }}</p>
+        <p class="card-text">Term: {{ term }}</p>
         <div id="ButtonBar"></div>
     </div>
 </div>
@@ -98,7 +98,7 @@ $(document).ready(function() {
                     extension: '.xlsx',
                     filename: 'applications_' + moment().format('YMMDD_HHmmss'),
                     title: 'List of applications',
-                    messageTop: 'applications as of ' + moment().format('DD.MM.Y') + ' at ' + moment().format('HH:mm:ss')
+                    messageTop: 'applications as of ' + moment().format('DD.MM.Y') + ' at ' + moment().format('HH:mm:ss') + ' - year: {{ year }} - term: {{ term }}'
                 }
             ]
         }
