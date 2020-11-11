@@ -35,6 +35,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", os.urandom(32))
 # Application definition
 
 INSTALLED_APPS = [
+    "sslserver",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
