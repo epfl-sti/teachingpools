@@ -202,6 +202,7 @@ def get_time_reports_api(request, year, term):
             .annotate(
                 created_by_first_name=F("created_by__first_name"),
                 created_by_last_name=F("created_by__last_name"),
+                created_by_sciper = F("created_by__sciper"),
             )
             .all()
             .values()

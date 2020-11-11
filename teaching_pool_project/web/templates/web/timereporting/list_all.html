@@ -194,7 +194,7 @@ $(document).ready(function() {
                     data: null,
                     'defaultContent': '',
                     'render': function(data, type, row){
-                        return `${data.created_by_last_name}, ${data.created_by_first_name}`;
+                        return `${data.created_by_last_name}, ${data.created_by_first_name} (${data.created_by_sciper})`;
                     },
                 },
                 {"data": "year"},
