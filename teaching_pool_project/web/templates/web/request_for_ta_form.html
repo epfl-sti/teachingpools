@@ -38,6 +38,8 @@
         <p class="card-text">Number of students registered last year: {{ course.numberOfStudents }}</p>
         <p class="card-text">Calculated number of TAs: {{ course.calculatedNumberOfTAs }}</p>
         <p class="card-text">Currently requested number of TAs: {{ course.requestedNumberOfTAs }}</p>
+        <p class="card-text">Approved number of TAs (prev year): {{ course.prev_year_approved_TAs }}</p>
+        <p class="card-text">Number of TAs hired (prev year): {{ course.prev_year_accepted_applications }}</p>
         <p class="card-text">Currently approved number of TAs: {{ course.approvedNumberOfTAs }}</p>
       </div>
     </div>

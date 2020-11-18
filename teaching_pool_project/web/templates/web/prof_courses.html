@@ -8,7 +8,7 @@
   <thead>
     <tr>
       <th colspan="7" class="align-top text-left">Course</th>
-      <th colspan="5" class="align-top text-left">Teaching assistants</th>
+      <th colspan="7" class="align-top text-left">Teaching assistants</th>
       <th rowspan="2" colspan="2" class="align-top text-center">Actions</th>
     </tr>
     <tr>
@@ -21,7 +21,9 @@
       <th class="align-top text-right">students (prev. year)</th>
       <th class="align-top text-right">theory</th>
       <th class="align-top text-right">requested</th>
+      <th class="align-top text-right">approved (prev. year)</th>
       <th class="align-top text-right">approved</th>
+      <th class="align-top text-right">hired (prev. year)</th>
       <th class="align-top text-right">hired</th>
       <th class="align-top text-right">to be filled</th>
     </tr>
@@ -51,7 +53,9 @@
         <td class="text-right">{{ course.numberOfStudents|default_if_none:"&nbsp;" }}</td>
         <td class="text-right">{{ course.calculatedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
         <td class="text-right">{{ course.requestedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td class="text-right">{{course.prev_year_approved_TAs|default_if_none:"&nbsp;"}}</td>
         <td class="text-right">{{ course.approvedNumberOfTAs|default_if_none:"&nbsp;" }}</td>
+        <td class="text-right">{{course.prev_year_accepted_applications|default_if_none:"&nbsp;"}}</td>
         <td class="text-right">{{ course.applications_accepted|default_if_none:"&nbsp;" }}</td>
         <td class="text-right">{{ course.approvedNumberOfTAs|sub:course.applications_accepted|default_if_none:"&nbsp;" }}</td>
         <td>
