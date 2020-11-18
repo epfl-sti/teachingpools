@@ -163,6 +163,25 @@ def courses_list_year_teacher(request, year):
         .all()
     )
 
+    # handle the stats about the previous year's course
+    prev_year_start = int(year[:4]) - 1
+    prev_year_end = prev_year_start + 1
+    prev_year = "{}-{}".format(prev_year_start, prev_year_end)
+
+    for course in courses:
+        course.prev_year_approved_TAs = None
+        course.prev_year_accepted_applications = None
+        try:
+            prev_year_course = Course.objects.get(
+                year=prev_year, term=term, code=course.code
+            )
+            course.prev_year_approved_TAs = prev_year_course.approvedNumberOfTAs
+            course.prev_year_accepted_applications = (
+                prev_year_course.applications_accepted
+            )
+        except ObjectDoesNotExist:
+            pass
+
     context = {
         "courses": courses,
     }
@@ -290,6 +309,24 @@ def request_for_TA(request, course_id):
             "The requests for Teaching Assistants are not open for this year / term",
         )
         return render(request, "web/blank.html")
+
+    # get the stats for the previous year course
+    prev_year_start = int(year[:4]) - 1
+    prev_year_end = prev_year_start + 1
+    prev_year = "{}-{}".format(prev_year_start, prev_year_end)
+
+    course.prev_year_approved_TAs = None
+    course.prev_year_accepted_applications = None
+    try:
+        prev_year_course = Course.objects.get(
+            year=prev_year, term=term, code=course.code
+        )
+        course.prev_year_approved_TAs = prev_year_course.approvedNumberOfTAs
+        course.prev_year_accepted_applications = (
+            prev_year_course.applications_accepted
+        )
+    except ObjectDoesNotExist:
+        pass
 
     try:
         ta_request = NumberOfTAUpdateRequest.objects.get(
@@ -427,6 +464,24 @@ def validate_request_for_TA(request, request_id):
         form.fields["reason_for_request"].initial = requestForTA.requestReason
 
         course = requestForTA.course
+
+        # get the stats for the previous year course
+        prev_year_start = int(course.year[:4]) - 1
+        prev_year_end = prev_year_start + 1
+        prev_year = "{}-{}".format(prev_year_start, prev_year_end)
+
+        course.prev_year_approved_TAs = None
+        course.prev_year_accepted_applications = None
+        try:
+            prev_year_course = Course.objects.get(
+                year=prev_year, term=course.term, code=course.code
+            )
+            course.prev_year_approved_TAs = prev_year_course.approvedNumberOfTAs
+            course.prev_year_accepted_applications = (
+                prev_year_course.applications_accepted
+            )
+        except ObjectDoesNotExist:
+            pass
         context = {"request_id": request_id, "course": course, "form": form}
         return render(request, "web/request_for_ta_review_form.html", context)
 
@@ -449,6 +504,25 @@ def view_request_for_TA(request, request_id):
     form.fields["reason_for_decision"].initial = ta_request.decisionReason
 
     course = ta_request.course
+
+    # get the stats for the previous year course
+    prev_year_start = int(course.year[:4]) - 1
+    prev_year_end = prev_year_start + 1
+    prev_year = "{}-{}".format(prev_year_start, prev_year_end)
+
+    course.prev_year_approved_TAs = None
+    course.prev_year_accepted_applications = None
+    try:
+        prev_year_course = Course.objects.get(
+            year=prev_year, term=course.term, code=course.code
+        )
+        course.prev_year_approved_TAs = prev_year_course.approvedNumberOfTAs
+        course.prev_year_accepted_applications = (
+            prev_year_course.applications_accepted
+        )
+    except ObjectDoesNotExist:
+        pass
+
     context = {"course": course, "request_id": request_id, "form": form}
 
     return render(request, "web/request_for_ta_view_form.html", context)
@@ -1172,11 +1246,7 @@ def applications_list(request, year, term):
         .all()
     )
 
-    context = {
-        "applications": applications,
-        "year": year,
-        "term": term
-    }
+    context = {"applications": applications, "year": year, "term": term}
     return render(request, "web/reports/applications_list.html", context)
 
 
@@ -1629,9 +1699,8 @@ def get_courses_without_numberOfTARequests(request, year, term):
     courses_without_requests = this_term_courses.exclude(
         id__in=courses_with_requests_ids
     ).prefetch_related("teachers")
-    context = {"courses": courses_without_requests, "year": year, "term":term}
+    context = {"courses": courses_without_requests, "year": year, "term": term}
 
     return render(
         request, "web/reports/TARequests/courses_without_requests.html", context=context
     )
-
