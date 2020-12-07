@@ -667,15 +667,18 @@ def update_my_profile(request):
             complete_form_is_OK = False
 
         # Topics
-        if topics_form.is_valid():
-            topics_form.save()
+        try:
+            if topics_form.is_valid():
+                topics_form.save()
 
-        else:
-            messages.error(
-                request,
-                "The list of selected topics contains error(s). Please review it",
-            )
-            complete_form_is_OK = False
+            else:
+                messages.error(
+                    request,
+                    "The list of selected topics contains error(s). Please review it",
+                )
+                complete_form_is_OK = False
+        except:
+            logger.exception("unable to save topics from profile")
 
         if complete_form_is_OK:
             messages.success(request, "Your profile has been succesfully updated.")
