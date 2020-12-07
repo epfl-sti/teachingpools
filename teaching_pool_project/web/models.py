@@ -48,7 +48,6 @@ class Person(AbstractUser):
         "Section", default=None, blank=True, null=True, on_delete=models.CASCADE
     )
 
-    objects = models.Manager()
     active_TAs = ActiveTAsManager()
     active_teachers = ActiveTeachersManager()
 
