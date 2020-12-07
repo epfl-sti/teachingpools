@@ -681,7 +681,7 @@ def update_my_profile(request):
             logger.exception("unable to save topics from profile")
 
         if complete_form_is_OK:
-            messages.success(request, "Your profile has been succesfully updated.")
+            messages.success(request, "Your profile has been successfully updated.")
 
     context = {
         "year": year,
