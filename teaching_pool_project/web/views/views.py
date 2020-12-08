@@ -6,6 +6,8 @@ import logging
 import re
 from functools import wraps
 
+from web.models import Interests, Topic
+
 import xlwt
 from django.conf import settings
 from django.contrib import messages
@@ -668,15 +670,20 @@ def update_my_profile(request):
 
         # Topics
         try:
-            if topics_form.is_valid():
-                topics_form.save()
+            selected_topics = request.POST.getlist("topics", [])
+            selected_topics = list(map(int, selected_topics))
 
-            else:
-                messages.error(
-                    request,
-                    "The list of selected topics contains error(s). Please review it",
-                )
-                complete_form_is_OK = False
+            current_interests = Interests.objects.filter(person=request.user).all()
+            for current_interest in current_interests:
+                if current_interest.topic.pk not in selected_topics:
+                    current_interest.delete()
+
+            for selected_topic in selected_topics:
+                matching_topic = Interests.objects.filter(person=request.user, topic__pk=selected_topic).count()
+                if matching_topic == 0:
+                    topic = Topic.objects.get(pk=selected_topic)
+                    interest = Interests(person=request.user, topic=topic)
+                    interest.save()
         except:
             logger.exception("unable to save topics from profile")
 
