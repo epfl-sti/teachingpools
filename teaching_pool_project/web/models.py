@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.manager import Manager
+from django.contrib.auth.base_user import BaseUserManager
 from django.utils.text import slugify
 from django.utils.timezone import now
 
@@ -21,12 +21,12 @@ from .validators import validate_year_config
 logger = logging.getLogger(__name__)
 
 
-class ActiveTAsManager(models.Manager):
+class ActiveTAsManager(BaseUserManager):
     def get_queryset(self):
         return super().get_queryset().filter(is_active=True, groups__name="phds")
 
 
-class ActiveTeachersManager(models.Manager):
+class ActiveTeachersManager(BaseUserManager):
     def get_queryset(self):
         return super().get_queryset().filter(is_active=True, groups__name="teachers")
 
@@ -48,7 +48,10 @@ class Person(AbstractUser):
         "Section", default=None, blank=True, null=True, on_delete=models.CASCADE
     )
 
-    objects = models.Manager()
+    # HACK: The below line is required. Without overriding the objects, the Tequila middleware will fail to authenticate the user
+    # HACK: taking something different from BaseUserManager will lead to exceptions when saving any user because the normalize_email method will be missing
+    objects = BaseUserManager()
+
     active_TAs = ActiveTAsManager()
     active_teachers = ActiveTeachersManager()
 
