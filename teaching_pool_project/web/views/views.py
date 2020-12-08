@@ -6,8 +6,6 @@ import logging
 import re
 from functools import wraps
 
-from web.models import Interests, Topic
-
 import xlwt
 from django.conf import settings
 from django.contrib import messages
@@ -24,12 +22,11 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.views import generic
-
 from epfl.sti.helpers import ldap as epfl_ldap
-from web.helpers import config
-
 from web.forms.forms import *
+from web.helpers import config
 from web.models import *
+from web.models import Interests, Topic
 
 logger = logging.getLogger(__name__)
 
@@ -324,9 +321,7 @@ def request_for_TA(request, course_id):
             year=prev_year, term=term, code=course.code
         )
         course.prev_year_approved_TAs = prev_year_course.approvedNumberOfTAs
-        course.prev_year_accepted_applications = (
-            prev_year_course.applications_accepted
-        )
+        course.prev_year_accepted_applications = prev_year_course.applications_accepted
     except ObjectDoesNotExist:
         pass
 
@@ -519,9 +514,7 @@ def view_request_for_TA(request, request_id):
             year=prev_year, term=course.term, code=course.code
         )
         course.prev_year_approved_TAs = prev_year_course.approvedNumberOfTAs
-        course.prev_year_accepted_applications = (
-            prev_year_course.applications_accepted
-        )
+        course.prev_year_accepted_applications = prev_year_course.applications_accepted
     except ObjectDoesNotExist:
         pass
 
@@ -679,7 +672,9 @@ def update_my_profile(request):
                     current_interest.delete()
 
             for selected_topic in selected_topics:
-                matching_topic = Interests.objects.filter(person=request.user, topic__pk=selected_topic).count()
+                matching_topic = Interests.objects.filter(
+                    person=request.user, topic__pk=selected_topic
+                ).count()
                 if matching_topic == 0:
                     topic = Topic.objects.get(pk=selected_topic)
                     interest = Interests(person=request.user, topic=topic)
