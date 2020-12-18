@@ -38,6 +38,7 @@ class Person(AbstractUser):
     ]
 
     sciper = models.IntegerField(null=True, blank=True, default=None)
+    group = models.TextField(null=True, blank=True)
     role = models.CharField(max_length=255, choices=ROLE_CHOICES, default="teacher")
     courses = models.ManyToManyField("web.Course", through="Teaching")
     canTeachInFrench = models.BooleanField(null=True, blank=True, default=None)
