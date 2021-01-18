@@ -1220,6 +1220,7 @@ def phds_profiles(request):
         students_ids.append(student.id)
 
     # Get the profile information about the phds
+    # Availabilities
     availabilities = Availability.objects.filter(
         year=year, term=term, person_id__in=students_ids
     ).all()
@@ -1236,6 +1237,30 @@ def phds_profiles(request):
         if "availability" not in students_infos[student]:
             students_infos[student]["availability"] = ""
             students_infos[student]["availability_reason"] = ""
+
+    # interests
+    topics = dict()
+    db_topics = Topic.objects.all()
+    for db_topic in db_topics:
+        topics[db_topic.pk] = db_topic.name
+
+    interests = dict()
+    db_interests = Interests.objects.filter(person_id__in=students_ids).all()
+    for db_interest in db_interests:
+        person_id = db_interest.person_id
+        topic = topics[db_interest.topic_id]
+        if person_id in interests:
+            interests[person_id].append(topic)
+            pass
+        else:
+            interests[person_id] = [topic]
+
+    # add the interests to the students info returned
+    for person_id in students_infos:
+        if person_id in interests:
+            students_infos[person_id]["interests"] = ", ".join(interests[person_id])
+        else:
+            students_infos[person_id]["interests"] = ""
 
     # time to render the template
     context = {"students": students_infos.values}

@@ -31,33 +31,39 @@
         </tr>-->
         <tr>
             <th class="align-top">Name</th>
+            <th class="align-top">Sciper</th>
             <th class="align-top">French</th>
             <th class="align-top">English</th>
             <th class="align-top">German</th>
             <th class="align-top">Availability</th>
             <th class="align-top">Reason</th>
+            <th class="align-top">Interests</th>
         </tr>
         </thead>
         <tbody>
             {% for student in students %}
             <tr>
                 <td>{{ student.last_name }}, {{ student.first_name }}<a href="{% url "web:view_profile" student.id %}" target="_blank"><i style="margin-left: 5px;" class="fas fa-external-link-alt"></i></a></td>
+                <td>{{ student.sciper }}</td>
                 <td>{{ student.french|yesno:"yes,no," }}</td>
                 <td>{{ student.english|yesno:"yes,no," }}</td>
                 <td>{{ student.german|yesno:"yes,no," }}</td>
                 <td>{{ student.availability|default:"N/A" }}</td>
                 <td>{{ student.availability_reason|default_if_none:"" }}</td>
+                <td>{{ student.interests }}</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot class="thead-inverse">
         <tr>
             <th>Name</th>
+            <th>Sciper</th>
             <th>French</th>
             <th>English</th>
             <th>German</th>
             <th>Availability</th>
             <th></th>
+            <th>Interests</th>
         </tr>
         </tfoot>
 </table>
