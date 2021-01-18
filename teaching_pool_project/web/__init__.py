@@ -14,6 +14,11 @@ def on_login(sender, user, request, **kwargs):
     try:
         if user.group:
             if "STI_TA_Students" in user.group:
+                if user.is_active is False:
+                    logger.debug("re-enabling account")
+                    user.is_active = True
+                    user.save()
+
                 from django.contrib.auth.models import Group
 
                 logger.debug("yes")
