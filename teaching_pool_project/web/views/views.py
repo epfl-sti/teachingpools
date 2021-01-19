@@ -1285,7 +1285,12 @@ def delete_application(request, application_id):
     application = get_object_or_404(Applications, id=application_id)
     application.delete()
     messages.success(request, "The application was successfully deleted")
-    return HttpResponseRedirect(reverse("web:applications_list"))
+    return HttpResponseRedirect(
+        reverse(
+            "web:applications_list",
+            args=[config.get_config("current_year"), config.get_config("current_term")],
+        )
+    )
 
 
 @is_staff()
